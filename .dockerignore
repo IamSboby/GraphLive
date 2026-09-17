@@ -1,0 +1,9 @@
+node_modules
+.bench
+.next
+.git
+.env*
+data
+test-results
+playwright-report
+*.zip

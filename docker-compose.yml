@@ -1,0 +1,18 @@
+services:
+  graphlive:
+    build: .
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file: .env.local
+    environment:
+      DATA_DIR: /app/data
+      NODE_ENV: production
+    volumes:
+      - graphlive-data:/app/data
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  graphlive-data:
