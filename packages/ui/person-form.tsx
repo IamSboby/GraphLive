@@ -49,6 +49,16 @@ export function PersonForm({
       metAt: null,
     },
   );
+  const hasOwnerConnection = Boolean(
+    person &&
+    data.connections.some(
+      (edge) =>
+        [edge.sourceId, edge.targetId].includes(person.id) &&
+        [edge.sourceId, edge.targetId].includes(data.ownerId!),
+    ),
+  );
+  const [knowsDirectly, setKnowsDirectly] = useState(false);
+  const connectToOwner = person ? hasOwnerConnection : knowsDirectly;
   const [relationship, setRelationship] = useState<RelationshipType>(
       person ? ownerRelationship(data, person.id) : "friend",
     ),
@@ -85,7 +95,7 @@ export function PersonForm({
       } else p = createPerson(s, parsed.data);
       p.customFields = fields;
       savedId = p.id;
-      if (p.id !== s.ownerId) {
+      if (p.id !== s.ownerId && connectToOwner) {
         const old = s.connections.find(
           (e) =>
             [e.sourceId, e.targetId].includes(p.id) &&
@@ -138,7 +148,17 @@ export function PersonForm({
               />
             </Field>
           ))}
-          {person?.id !== data.ownerId && (
+          {!person && (
+            <label>
+              <input
+                type="checkbox"
+                checked={knowsDirectly}
+                onChange={(e) => setKnowsDirectly(e.target.checked)}
+              />{" "}
+              {t("knowsDirectly")}
+            </label>
+          )}
+          {person?.id !== data.ownerId && connectToOwner && (
             <Field label={t("relationOwner")}>
               <select
                 value={relationship}

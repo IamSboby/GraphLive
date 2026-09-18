@@ -237,6 +237,7 @@ export const es = {
   download: "Descargar",
   birth: "Nacimiento",
   relationOwner: "Relación contigo",
+  knowsDirectly: "Conozco directamente a esta persona",
 };
 export const en: Record<keyof typeof es, string> = {
   accessHeading: "Your space is one step away.",
@@ -471,6 +472,7 @@ export const en: Record<keyof typeof es, string> = {
   download: "Download",
   birth: "Born",
   relationOwner: "Relationship to you",
+  knowsDirectly: "I know this person directly",
 };
 if (!i18next.isInitialized)
   void i18next.use(initReactI18next).init({

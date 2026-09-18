@@ -1,5 +1,11 @@
 # Changelog
 
+## Conexiones directas opcionales — 2026-09-18
+
+- Las personas nuevas solo se conectan con la persona principal al marcar «Conozco directamente a esta persona», desmarcado por defecto.
+- Editar una persona sin conexión directa conserva esa ausencia de vínculo. Las conexiones existentes siguen siendo editables.
+- Etiqueta disponible en español e inglés y prueba de regresión para ambos casos.
+
 ## Navegación y transiciones — 2026-09-18
 
 - Páginas independientes de inicio, acceso y grafo (`/`, `/login`, `/graph`).
