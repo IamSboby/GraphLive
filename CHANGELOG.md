@@ -1,5 +1,12 @@
 # Changelog
 
+## Navegación y transiciones — 2026-09-18
+
+- Páginas independientes de inicio, acceso y grafo (`/`, `/login`, `/graph`).
+- Logotipo enlazado al inicio y acceso para retomar la red abierta sin perder el estado en la navegación interna.
+- Presentación con acciones y ventajas, transiciones de entrada y paneles, animación decorativa y respeto al movimiento reducido.
+- Redirección segura a acceso cuando no hay una red abierta, callbacks OAuth coherentes y selector de tema en las páginas públicas.
+
 ## Corrección de zoom — 2026-09-18
 
 - Dimensiones explícitas en los SVG de banderas para impedir que Chromium recorte el dibujo al ampliar el lienzo.

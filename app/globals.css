@@ -1,4 +1,122 @@
 @import "tailwindcss";
+.brand-link {
+  text-decoration: none;
+  color: var(--text);
+  border-radius: 8px;
+}
+.brand-link:hover {
+  color: var(--accent);
+}
+.brand-link:focus-visible,
+a.button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 5px;
+}
+a.button {
+  text-decoration: none;
+}
+.home-actions h2 {
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -1px;
+  margin: 15px 0;
+}
+.home-actions > p {
+  margin-bottom: 25px;
+  color: var(--muted);
+}
+.home-actions > .button {
+  margin-top: 10px;
+}
+.home-features {
+  display: grid;
+  gap: 17px;
+  margin-top: 30px;
+  padding-top: 25px;
+  border-top: 1px solid var(--border);
+}
+.home-features > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.home-features svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.route-loading {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+@keyframes page-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes panel-reveal {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes orbit-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .welcome-copy {
+    animation: page-reveal 500ms ease-out both;
+  }
+  .setup-card {
+    animation: page-reveal 500ms 90ms ease-out both;
+  }
+  .workspace {
+    animation: page-reveal 280ms ease-out both;
+  }
+  .details-panel {
+    animation: panel-reveal 220ms ease-out both;
+  }
+  .modal {
+    animation: modal-reveal 180ms ease-out both;
+  }
+  .welcome-network circle {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: orbit-breathe 5s ease-in-out 3;
+  }
+  .welcome-network circle:nth-of-type(even) {
+    animation-delay: 600ms;
+  }
+  .button,
+  .brand-link,
+  .person-row {
+    transition:
+      background-color 160ms,
+      color 160ms,
+      box-shadow 160ms;
+  }
+  .home-actions > .button:hover {
+    box-shadow: 0 5px 18px #335eaa20;
+  }
+}
 @media (max-width: 560px) {
   .topbar .brand > svg {
     display: none;
@@ -1437,4 +1555,13 @@ th {
 
 .welcome > .brand {
   flex-wrap: wrap;
+}
+
+@keyframes modal-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

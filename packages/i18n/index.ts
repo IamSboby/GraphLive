@@ -2,6 +2,17 @@
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 export const es = {
+  accessHeading: "Tu espacio, a un paso.",
+  accessIntro:
+    "Accede y elige dónde guardar tu red. Tus conexiones, siempre contigo.",
+  yourSpace: "TU ESPACIO PERSONAL",
+  homeHeading: "Las personas que dan forma a tu mundo.",
+  homeDescription:
+    "Conecta los puntos, descubre relaciones y cuida lo que importa.",
+  resumeNetwork: "Volver a mi red",
+  featurePrivate: "Un espacio privado para tus relaciones",
+  featureExplore: "Explora tu mundo de forma visual",
+  featureStorage: "Tú eliges dónde guardar tus datos",
   app: "GraphLive",
   tagline: "Tu mundo, conectado.",
   welcome: "Una red que solo tú conoces.",
@@ -228,6 +239,17 @@ export const es = {
   relationOwner: "Relación contigo",
 };
 export const en: Record<keyof typeof es, string> = {
+  accessHeading: "Your space is one step away.",
+  accessIntro:
+    "Sign in and choose where to save your network. Your connections, always with you.",
+  yourSpace: "YOUR PERSONAL SPACE",
+  homeHeading: "The people who shape your world.",
+  homeDescription:
+    "Connect the dots, discover relationships and nurture what matters.",
+  resumeNetwork: "Back to my network",
+  featurePrivate: "A private space for your relationships",
+  featureExplore: "Explore your world visually",
+  featureStorage: "You choose where your data lives",
   app: "GraphLive",
   tagline: "Your world, connected.",
   welcome: "A network only you know.",

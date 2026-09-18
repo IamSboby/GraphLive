@@ -20,6 +20,14 @@ En Windows, `Copy-Item .env.example .env.local` y, si hace falta, `npm.cmd`. Abr
 
 Sin autenticación, la instancia es compartida: los comandos escuchan solo en loopback. Antes de exponerla a otras personas, configurar OAuth o protección externa. No colocar `DATA_DIR` dentro de una carpeta pública.
 
+## Páginas
+
+- `/`: presentación, acceso a la demo y regreso a la red abierta.
+- `/login`: acceso, selección de almacenamiento y apertura de una red.
+- `/graph`: editor del grafo. Si se abre sin una red en memoria, vuelve a `/login`.
+
+El logotipo GraphLive vuelve al inicio sin cerrar la red durante la navegación interna. Una recarga completa requiere volver a abrir los datos guardados; la demo vive solo en memoria. Las transiciones respetan la preferencia de movimiento reducido.
+
 ## Uso
 
 - Añadir/editar personas y relaciones desde la ficha; cada conexión aparece en ambos extremos.

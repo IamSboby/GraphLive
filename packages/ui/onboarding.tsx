@@ -1,4 +1,6 @@
 "use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { signIn, signOut } from "next-auth/react";
@@ -21,12 +23,14 @@ import type { Repository } from "../storage-core";
 import { useNetwork } from "./store";
 import { Field } from "./primitives";
 export function Onboarding({
+  page,
   theme,
   onThemeChange,
   config,
   authenticated,
   authError,
 }: {
+  page: "home" | "login";
   theme: "light" | "dark" | "system";
   onThemeChange: (theme: "light" | "dark" | "system") => void;
   config: Configuration;
@@ -34,6 +38,8 @@ export function Onboarding({
   authError: boolean;
 }) {
   const { t, i18n } = useTranslation();
+  const router = useRouter();
+  const active = useNetwork((s) => s.data);
   const [provider, setProvider] = useState(config.server ? "server" : "local"),
     [name, setName] = useState(""),
     [busy, setBusy] = useState(false),
@@ -42,7 +48,11 @@ export function Onboarding({
       data: Snapshot;
       repo: Repository;
     } | null>(null);
-  const open = useNetwork((s) => s.open);
+  const openNetwork = useNetwork((s) => s.open);
+  const open = (data: Snapshot, repo: Repository | null, demo = false) => {
+    openNetwork(data, repo, demo);
+    router.push("/graph");
+  };
   async function start() {
     setBusy(true);
     setError("");
@@ -71,12 +81,18 @@ export function Onboarding({
     }
   }
   return (
-    <main className="welcome">
+    <main
+      className={
+        "welcome page-enter " + (page === "home" ? "home-page" : "login-page")
+      }
+    >
       <header className="brand">
-        <Network size={27} />
-        <strong>
-          GraphLive<span> / </span>
-        </strong>
+        <Link href="/" className="brand brand-link" aria-label="GraphLive">
+          <Network size={27} />
+          <strong>
+            GraphLive<span> / </span>
+          </strong>
+        </Link>
         <span>{t("tagline")}</span>
         <select
           className="language"
@@ -109,11 +125,11 @@ export function Onboarding({
             <LockKeyhole size={15} />
             {t("footer")}
           </div>
-          <h1>{t("welcome")}</h1>
-          <p>{t("intro")}</p>
+          <h1>{t(page === "home" ? "welcome" : "accessHeading")}</h1>
+          <p>{t(page === "home" ? "intro" : "accessIntro")}</p>
           <div className="welcome-network" aria-hidden="true">
             <svg viewBox="0 0 500 290">
-              <g stroke="#b8c5d9" strokeWidth="1.5">
+              <g fill="none" stroke="#b8c5d9" strokeWidth="1.5">
                 <path d="M250 130L100 60L55 180L210 245L250 130L390 60L445 200L320 255L250 130L160 145L100 60M160 145L55 180M390 60L445 200M210 245L320 255M250 130L445 200" />
               </g>
               {[
@@ -140,7 +156,37 @@ export function Onboarding({
           </div>
         </section>
         <section className="setup-card">
-          {config.auth && !authenticated ? (
+          {page === "home" ? (
+            <div className="home-actions">
+              <span className="eyebrow">{t("yourSpace")}</span>
+              <h2>{t("homeHeading")}</h2>
+              <p className="muted-copy">{t("homeDescription")}</p>
+              <Link href="/login" className="button primary full">
+                {t("login")}
+                <ArrowUpRight size={18} />
+              </Link>
+              {active && (
+                <Link href="/graph" className="button full">
+                  {t("resumeNetwork")}
+                  <Network size={18} />
+                </Link>
+              )}
+              <div className="home-features">
+                <div>
+                  <LockKeyhole size={19} />
+                  <span>{t("featurePrivate")}</span>
+                </div>
+                <div>
+                  <Network size={19} />
+                  <span>{t("featureExplore")}</span>
+                </div>
+                <div>
+                  <FolderOpen size={19} />
+                  <span>{t("featureStorage")}</span>
+                </div>
+              </div>
+            </div>
+          ) : config.auth && !authenticated ? (
             <>
               <h2>{t("login")}</h2>
               {authError ? (
@@ -150,14 +196,18 @@ export function Onboarding({
                   <button
                     disabled={!config.googleLogin}
                     className="primary full"
-                    onClick={() => void signIn("google")}
+                    onClick={() =>
+                      void signIn("google", { callbackUrl: "/login" })
+                    }
                   >
                     {t("google")}
                   </button>
                   <button
                     disabled={!config.microsoftLogin}
                     className="full"
-                    onClick={() => void signIn("azure-ad")}
+                    onClick={() =>
+                      void signIn("azure-ad", { callbackUrl: "/login" })
+                    }
                   >
                     {t("microsoft")}
                   </button>
@@ -244,7 +294,9 @@ export function Onboarding({
                 </>
               )}
               {authenticated && (
-                <button onClick={() => void signOut()}>{t("logout")}</button>
+                <button onClick={() => void signOut({ callbackUrl: "/" })}>
+                  {t("logout")}
+                </button>
               )}
             </>
           )}

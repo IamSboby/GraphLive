@@ -15,10 +15,12 @@ test("welcome follows system theme, persists overrides and shares theme with dem
   await expect(theme).toHaveValue("dark");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.getByRole("button", { name: "Explorar una red ficticia" }).click();
+  await expect(page).toHaveURL(/\/graph$/);
   await expect(theme).toHaveValue("dark");
   await theme.selectOption("system");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.getByRole("button", { name: "Salir de la demo" }).click();
+  await expect(page).toHaveURL(/\/$/);
   await expect(theme).toHaveValue("system");
   await page.emulateMedia({ colorScheme: "dark" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");

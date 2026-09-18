@@ -24,6 +24,10 @@ Nationality flags are locally served SVG icons, including in the graph and PNG e
 
 Authentication is disabled in the example configuration. Keep that configuration on localhost; configure OAuth or external access control before exposing the instance. Never put the data directory inside `public/`.
 
+## Pages
+
+`/` is the home page, `/login` handles access and storage selection, and `/graph` is the graph editor. Clicking the GraphLive brand returns home while preserving the open network during internal navigation. A full reload requires reopening saved data; the fictional demo remains memory-only. Animations respect reduced-motion preferences.
+
 ## Validation and deployment
 
 ```sh

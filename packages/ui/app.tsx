@@ -1,5 +1,7 @@
 "use client";
 import "../i18n";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -51,14 +53,17 @@ import { FilterFields, emptyFilters } from "./filters";
 import { exportJson } from "../storage-core/export";
 
 export function App({
+  screen,
   config,
   authenticated,
   authError,
 }: {
+  screen: "home" | "login" | "graph";
   config: Configuration;
   authenticated: boolean;
   authError: boolean;
 }) {
+  const router = useRouter();
   const { t, i18n } = useTranslation(),
     s = useNetwork(),
     data = s.data;
@@ -83,8 +88,20 @@ export function App({
     [themeReady, setThemeReady] = useState(false),
     [actionError, setActionError] = useState("");
   const graph = useRef<GraphControls>(null);
+  const leavingGraph = useRef(false);
+  useEffect(() => {
+    if (
+      screen === "graph" &&
+      !leavingGraph.current &&
+      (!data || (config.auth && !authenticated && !s.demo))
+    )
+      router.replace("/login");
+  }, [screen, data, config.auth, authenticated, s.demo, router]);
   const [mobileSidebar, setMobileSidebar] = useState(false);
-  const theme = data?.preferences.theme ?? welcomeTheme;
+  const theme =
+    screen === "graph"
+      ? (data?.preferences.theme ?? welcomeTheme)
+      : welcomeTheme;
   const dark = theme === "dark" || (theme === "system" && systemDark);
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -104,13 +121,13 @@ export function App({
     return () => media.removeEventListener("change", change);
   }, [i18n]);
   useEffect(() => {
-    if (data) {
+    if (data && screen === "graph") {
       document.documentElement.lang = data.preferences.language;
       setWelcomeTheme(data.preferences.theme);
       localStorage.setItem("graphlive-language", data.preferences.language);
       void i18n.changeLanguage(data.preferences.language);
     }
-  }, [dark, data?.preferences.language, data?.preferences.theme, data, i18n]);
+  }, [screen, data?.preferences.language, data?.preferences.theme, data, i18n]);
   useEffect(() => {
     if (!themeReady) return;
     document.documentElement.dataset.theme = dark ? "dark" : "light";
@@ -193,15 +210,22 @@ export function App({
       data && selected && pathTo ? shortestPath(data, selected, pathTo) : [],
     [data, selected, pathTo],
   );
-  if (!data)
+  if (screen !== "graph")
     return (
       <Onboarding
+        page={screen}
         theme={welcomeTheme}
         onThemeChange={setWelcomeTheme}
         config={config}
         authenticated={authenticated}
         authError={authError}
       />
+    );
+  if (!data || (config.auth && !authenticated && !s.demo))
+    return (
+      <main className="route-loading" role="status">
+        {t("loading")}
+      </main>
     );
   const person = data.people.find((p) => p.id === selected);
   const shown = data.people.filter((p) => visible.has(p.id));
@@ -212,6 +236,7 @@ export function App({
   };
   const disconnect = () => {
     if (s.dirty && !window.confirm(t("exportFirst"))) return;
+    leavingGraph.current = true;
     useNetwork.setState({
       data: null,
       base: null,
@@ -223,18 +248,19 @@ export function App({
     setSettings(false);
     setFilters(emptyFilters);
     setQuery("");
+    router.push("/");
   };
   const busy = s.saving || Boolean(s.conflict);
   return (
     <main className="workspace">
       <header className="topbar">
-        <div className="brand">
+        <Link href="/" className="brand brand-link" aria-label="GraphLive">
           <Network size={24} />
           <strong>
             GraphLive<span> / </span>
           </strong>
           <span className="private-label">{t("network")}</span>
-        </div>
+        </Link>
         <div className="topbar-center">
           <span
             className={"sync-state " + (s.error ? "error" : "")}
@@ -304,7 +330,7 @@ export function App({
               <button
                 className="icon-button"
                 aria-label={t("logout")}
-                onClick={() => void signOut()}
+                onClick={() => void signOut({ callbackUrl: "/" })}
               >
                 <LogOut size={18} />
               </button>

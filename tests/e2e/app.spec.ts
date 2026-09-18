@@ -77,7 +77,7 @@ test("demo supports graph, CRUD, relationships, language, theme, search, filters
 test("server onboarding persists and reopens existing data", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/login");
   await page
     .getByRole("textbox", { name: "Tu nombre o sobrenombre" })
     .fill("Owner E2E");

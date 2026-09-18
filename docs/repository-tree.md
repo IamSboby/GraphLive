@@ -30,8 +30,12 @@ GraphLive/
 │   │       │   └── route.ts
 │   │       └── route.ts
 │   ├── globals.css
+│   ├── graph/
+│   │   └── page.tsx
 │   ├── icon.svg
 │   ├── layout.tsx
+│   ├── login/
+│   │   └── page.tsx
 │   └── page.tsx
 ├── docker-compose.yml
 ├── docs/
@@ -43,6 +47,8 @@ GraphLive/
 │   ├── sbobypishare-integration.md
 │   ├── screenshots/
 │   │   ├── alpha-form-en.png
+│   │   ├── home.png
+│   │   ├── login.png
 │   │   ├── mobile.png
 │   │   └── network.png
 │   ├── security.md
@@ -85,6 +91,7 @@ GraphLive/
 │   │   └── merge.ts
 │   └── ui/
 │       ├── app.tsx
+│       ├── application-page.tsx
 │       ├── connection-form.tsx
 │       ├── details.tsx
 │       ├── filters.tsx
@@ -383,6 +390,7 @@ GraphLive/
 │   │   ├── alpha.spec.ts
 │   │   ├── app.spec.ts
 │   │   ├── flags.spec.ts
+│   │   ├── navigation.spec.ts
 │   │   └── theme.spec.ts
 │   ├── integration/
 │   │   ├── local.test.ts

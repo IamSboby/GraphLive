@@ -19,7 +19,7 @@ export default async function RootLayout({
           nonce={nonce}
           dangerouslySetInnerHTML={{
             __html:
-              "try{var t=localStorage.getItem('graphlive-theme');document.documentElement.dataset.theme=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(e){}",
+              "try{var t=localStorage.getItem('graphlive-theme');document.documentElement.dataset.theme=t==='dark'||((!t||t==='system')&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light'}catch(e){}",
           }}
         />
       </head>
