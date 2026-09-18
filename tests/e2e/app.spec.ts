@@ -47,9 +47,9 @@ test("demo supports graph, CRUD, relationships, language, theme, search, filters
     .click();
   await page
     .getByLabel("Persona conectada")
-    .selectOption({ label: "Lucía · " });
+    .selectOption({ label: "Emily · " });
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
-  await expect(page.locator(".connection-list")).toContainText("Lucía");
+  await expect(page.locator(".connection-list")).toContainText("Emily");
   await page
     .getByRole("combobox", { name: "Tema", exact: true })
     .selectOption("dark");
