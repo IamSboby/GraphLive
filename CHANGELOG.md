@@ -1,5 +1,10 @@
 # Changelog
 
+## Corrección de zoom — 2026-09-18
+
+- Dimensiones explícitas en los SVG de banderas para impedir que Chromium recorte el dibujo al ampliar el lienzo.
+- Prueba de regresión que verifica las tres franjas de Francia en siete cambios de zoom y la descarga PNG.
+
 ## 0.1.0-alpha.1 — 2026-09-17
 
 - Primera alpha del núcleo local/servidor de GraphLive, con datos JSON, grafo, relaciones, filtros, métricas, backups y exportación.

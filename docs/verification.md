@@ -58,3 +58,7 @@ Layout incluye 150 iteraciones ForceAtlas2 y separación espacial. En la aplicac
 - ESLint se actualizó a 10.10.0 al detectar que la rama 9 ya no tiene soporte. Los plugins React/import/a11y incluidos por Next aún declaran peers de ESLint 9: npm emite advertencias ERESOLVE. La configuración usa @eslint/compat 2.1.1, la utilidad oficial de compatibilidad, y el lint final pasa con salida 0. No se desactivan sus reglas. El postinstall de unrs-resolver permanece bloqueado por la política de npm del entorno; los comandos reales funcionan sin ejecutarlo.
 
 Capturas: [grafo](screenshots/network.png) y [móvil](screenshots/mobile.png). Las capturas contienen únicamente datos de demostración.
+
+## Corrección de banderas al ampliar — 18 de septiembre de 2026
+
+Reproducido en Edge: los SVG sin dimensiones explícitas se recortaban hasta mostrar un único color al ampliar. Se añadieron dimensiones según el viewBox a 271 SVG. Una prueba nueva inspecciona los píxeles reales del lienzo para comprobar las franjas azul, blanca y roja de Francia en siete cambios de zoom (0,5; 1; 2; 3; 0,5; 3; 1,25), además de la descarga PNG. Pasa en 20,3 segundos.
