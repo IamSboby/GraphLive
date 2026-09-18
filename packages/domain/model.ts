@@ -132,7 +132,7 @@ export const connectionSchema = edgeInputSchema
 export const preferencesSchema = z
   .object({
     language: z.enum(["es", "en"]).default("es"),
-    theme: z.enum(["light", "dark", "system"]).default("light"),
+    theme: z.enum(["light", "dark", "system"]).default("system"),
     showLabels: z.boolean().default(true),
     showOwner: z.boolean().default(true),
     sizeMode: z

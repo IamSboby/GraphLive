@@ -382,7 +382,8 @@ GraphLive/
 │   ├── e2e/
 │   │   ├── alpha.spec.ts
 │   │   ├── app.spec.ts
-│   │   └── flags.spec.ts
+│   │   ├── flags.spec.ts
+│   │   └── theme.spec.ts
 │   ├── integration/
 │   │   ├── local.test.ts
 │   │   └── storage.test.ts

@@ -21,10 +21,14 @@ import type { Repository } from "../storage-core";
 import { useNetwork } from "./store";
 import { Field } from "./primitives";
 export function Onboarding({
+  theme,
+  onThemeChange,
   config,
   authenticated,
   authError,
 }: {
+  theme: "light" | "dark" | "system";
+  onThemeChange: (theme: "light" | "dark" | "system") => void;
   config: Configuration;
   authenticated: boolean;
   authError: boolean;
@@ -57,6 +61,7 @@ export function Onboarding({
         return;
       }
       createPerson(data, { nickname: name });
+      data.preferences.theme = theme;
       data.preferences.language = i18n.language === "en" ? "en" : "es";
       open(await repo.save(data, 0), repo);
     } catch (e) {
@@ -84,6 +89,18 @@ export function Onboarding({
         >
           <option value="es">ES</option>
           <option value="en">EN</option>
+        </select>
+        <select
+          className="welcome-theme"
+          aria-label={t("theme")}
+          value={theme}
+          onChange={(e) => onThemeChange(e.target.value as typeof theme)}
+        >
+          {["system", "light", "dark"].map((value) => (
+            <option key={value} value={value}>
+              {t(value)}
+            </option>
+          ))}
         </select>
       </header>
       <div className="welcome-layout">
@@ -241,6 +258,7 @@ export function Onboarding({
               className="text-button"
               onClick={() => {
                 const demo = demoNetwork();
+                demo.preferences.theme = theme;
                 demo.preferences.language =
                   i18n.language === "en" ? "en" : "es";
                 open(demo, null, true);

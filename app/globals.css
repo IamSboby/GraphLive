@@ -1429,3 +1429,12 @@ th {
   box-shadow: 0 0 0 1px #8898ac33;
   flex-shrink: 0;
 }
+
+.welcome-theme {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.welcome > .brand {
+  flex-wrap: wrap;
+}

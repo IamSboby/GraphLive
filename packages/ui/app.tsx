@@ -77,15 +77,26 @@ export function App({
     [paused, setPaused] = useState(false),
     [pathTo, setPathTo] = useState(""),
     [systemDark, setSystemDark] = useState(false),
+    [welcomeTheme, setWelcomeTheme] = useState<"light" | "dark" | "system">(
+      "system",
+    ),
+    [themeReady, setThemeReady] = useState(false),
     [actionError, setActionError] = useState("");
   const graph = useRef<GraphControls>(null);
   const [mobileSidebar, setMobileSidebar] = useState(false);
-  const dark =
-    data?.preferences.theme === "dark" ||
-    (data?.preferences.theme === "system" && systemDark);
+  const theme = data?.preferences.theme ?? welcomeTheme;
+  const dark = theme === "dark" || (theme === "system" && systemDark);
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     setSystemDark(media.matches);
+    const savedTheme = localStorage.getItem("graphlive-theme");
+    if (
+      savedTheme === "light" ||
+      savedTheme === "dark" ||
+      savedTheme === "system"
+    )
+      setWelcomeTheme(savedTheme);
+    setThemeReady(true);
     const change = () => setSystemDark(media.matches);
     media.addEventListener("change", change);
     const lang = localStorage.getItem("graphlive-language");
@@ -94,13 +105,18 @@ export function App({
   }, [i18n]);
   useEffect(() => {
     if (data) {
-      document.documentElement.dataset.theme = dark ? "dark" : "light";
       document.documentElement.lang = data.preferences.language;
-      localStorage.setItem("graphlive-theme", data.preferences.theme);
+      setWelcomeTheme(data.preferences.theme);
       localStorage.setItem("graphlive-language", data.preferences.language);
       void i18n.changeLanguage(data.preferences.language);
     }
   }, [dark, data?.preferences.language, data?.preferences.theme, data, i18n]);
+  useEffect(() => {
+    if (!themeReady) return;
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    document.documentElement.style.colorScheme = dark ? "dark" : "light";
+    localStorage.setItem("graphlive-theme", theme);
+  }, [theme, dark, themeReady]);
   useEffect(() => {
     const timer = setInterval(
       () => void useNetwork.getState().refresh(),
@@ -180,6 +196,8 @@ export function App({
   if (!data)
     return (
       <Onboarding
+        theme={welcomeTheme}
+        onThemeChange={setWelcomeTheme}
         config={config}
         authenticated={authenticated}
         authError={authError}
