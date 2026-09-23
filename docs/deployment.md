@@ -6,11 +6,11 @@ Requisitos: Node.js 22.13+ (rama 22) o 24+, npm y navegador moderno. El proyecto
 
 ```sh
 npm ci
-cp .env.example .env.local
+touch .env.local
 npm run dev
 ```
 
-PowerShell: usar `Copy-Item .env.example .env.local`. Si la política de PowerShell bloquea scripts npm, usar `npm.cmd`. Abrir `http://localhost:3000`.
+PowerShell: usar `New-Item .env.local -ItemType File`. Si la política de PowerShell bloquea scripts npm, usar `npm.cmd`. Abrir `http://localhost:3000`.
 
 En npm 12.0.2 se observó `EALLOWREMOTE` al resolver un tarball opcional de Tailwind alojado en el propio registro npm. La instalación comprobada en ese entorno utiliza `npm ci --allow-remote=all --registry=https://registry.npmjs.org`. El lockfile entregado solo contiene URLs de `registry.npmjs.org`. No se cambia la configuración global de npm ni se habilitan scripts de instalación desconocidos. En npm anteriores, usar primero el `npm ci` normal.
 

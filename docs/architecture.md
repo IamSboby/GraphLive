@@ -34,4 +34,3 @@ ESLint 10.10.0 se combina con `@eslint/compat` 2.1.1 para los plugins de la conf
 
 La centralidad actual es centralidad de grado. «Componente» significa componente conexo real, no una comunidad detectada por Louvain. El modo combinado promedia grado e importancia normalizada. No se hacen inferencias sobre las personas, ni peticiones a servicios de analítica.
 
-No se ofrecen como activas las capacidades que carecen de implementación o verificación externa. Véase `status.md`.

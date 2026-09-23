@@ -5,6 +5,12 @@ import { createHash } from "node:crypto";
 import { zipSync } from "fflate";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const excluded = new Set([
+  "AGENTS.md",
+  "CLAUDE.md",
+  "ENTREGA.md",
+  ".ai",
+  ".codex",
+  ".agents",
   "node_modules",
   ".pages-build",
   "pages-dist",
@@ -19,7 +25,7 @@ function walk(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     if (
       excluded.has(entry.name) ||
-      (entry.name.startsWith(".env") && entry.name !== ".env.example") ||
+      entry.name.startsWith(".env") ||
       entry.name.endsWith(".tsbuildinfo") ||
       entry.name === "next-env.d.ts"
     )

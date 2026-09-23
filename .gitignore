@@ -2,7 +2,6 @@ node_modules/
 .bench/
 .next/
 .env*
-!.env.example
 data/
 test-results/
 playwright-report/
@@ -11,3 +10,12 @@ next-env.d.ts
 
 .pages-build/
 pages-dist/
+
+AGENTS.md
+CLAUDE.md
+ENTREGA.md
+docs/status.md
+docs/verification.md
+.ai/
+.codex/
+.agents/

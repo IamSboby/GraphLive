@@ -6,7 +6,6 @@ Español · [English](README.en.md)
 
 Red privada de personas y relaciones, con grafo interactivo, archivos JSON, interfaz en español e inglés y modo claro/oscuro. Proyecto TypeScript estricto, React y Next.js, preparado para instalarse en un servidor propio.
 
-**Esta entrega implementa el núcleo local/servidor. No declara completado todo el prompt maestro:** consultar [estado y pendientes](docs/status.md) y [verificación](docs/verification.md). No se han usado datos personales reales ni credenciales externas.
 
 ## Inicio rápido
 
@@ -14,11 +13,11 @@ Node.js 22.13+ (rama 22) o 24+ y npm:
 
 ```sh
 npm ci
-cp .env.example .env.local
+touch .env.local
 npm run dev
 ```
 
-En Windows, `Copy-Item .env.example .env.local` y, si hace falta, `npm.cmd`. Abrir **http://localhost:3000**. Elegir almacenamiento, crear el perfil principal y añadir personas. «Explorar una red ficticia» usa 28 personas aisladas en memoria.
+En Windows, `New-Item .env.local -ItemType File` y, si hace falta, `npm.cmd`. Abrir **http://localhost:3000**. Elegir almacenamiento, crear el perfil principal y añadir personas. «Explorar una red ficticia» usa 28 personas aisladas en memoria.
 
 Sin autenticación, la instancia es compartida: los comandos escuchan solo en loopback. Antes de exponerla a otras personas, configurar OAuth o protección externa. No colocar `DATA_DIR` dentro de una carpeta pública.
 
@@ -67,7 +66,6 @@ Las pruebas E2E usan Microsoft Edge de forma predeterminada y puerto 3100. Para 
 - [SbobyPiShare: endpoints reales y requisitos pendientes](docs/sbobypishare-integration.md)
 - [Contribución](docs/contributing.md)
 - [Árbol del repositorio](docs/repository-tree.md)
-- [Resultados de comprobaciones](docs/verification.md)
 
 ## Estructura
 

@@ -5,18 +5,14 @@ Se omiten dependencias instaladas, compilación, datos, metadatos Git y temporal
 ```text
 GraphLive/
 ├── .dockerignore
-├── .env.example
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml
 │       └── pages.yml
 ├── .gitignore
 ├── .prettierignore
-├── AGENTS.md
 ├── CHANGELOG.md
-├── CLAUDE.md
 ├── Dockerfile
-├── ENTREGA.md
 ├── LICENSE
 ├── README.en.md
 ├── README.md
@@ -54,10 +50,8 @@ GraphLive/
 │   │   ├── mobile.png
 │   │   └── network.png
 │   ├── security.md
-│   ├── status.md
 │   ├── storage.md
-│   ├── synchronization.md
-│   └── verification.md
+│   └── synchronization.md
 ├── eslint.config.mjs
 ├── instrumentation.ts
 ├── next.config.ts

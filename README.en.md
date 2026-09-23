@@ -6,7 +6,6 @@ Serverless web edition: [GraphLive on GitHub Pages](https://iamsboby.github.io/G
 
 A private, self-hosted relationship graph. Explore people and connections on an interactive canvas, keep records in JSON files, and choose Spanish or English and light or dark mode.
 
-This alpha implements the local-folder and private-server core. Cloud storage providers and real OAuth deployments still require integration work and verification. See [implementation status](docs/status.md).
 
 ## Run locally
 
@@ -14,11 +13,11 @@ Use Node.js 22.13+ on the 22 release line, or Node.js 24+.
 
 ```sh
 npm ci
-cp .env.example .env.local
+touch .env.local
 npm run dev
 ```
 
-On Windows, use `Copy-Item .env.example .env.local`. Open http://localhost:3000 and choose storage, or explore the fictional demo. The demo does not save personal data.
+On Windows, use `New-Item .env.local -ItemType File`. Open http://localhost:3000 and choose storage, or explore the fictional demo. The demo does not save personal data.
 
 Select **EN** in the language menu on the welcome screen or in the network toolbar. Gender is a dropdown with optional and inclusive choices. New filenames automatically use M for men, F for women, L for other identities, and U for unspecified or undisclosed gender. Existing filenames and UUIDs remain stable when editing. Legacy custom gender text is preserved.
 
