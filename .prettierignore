@@ -6,8 +6,7 @@ package-lock.json
 test-results
 playwright-report
 
-AGENTS.md
-CLAUDE.md
-ENTREGA.md
 .pages-build
 pages-dist
+
+/*.md

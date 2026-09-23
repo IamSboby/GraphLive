@@ -8,8 +8,7 @@ test-results
 playwright-report
 *.zip
 
-AGENTS.md
-CLAUDE.md
-ENTREGA.md
 .pages-build
 pages-dist
+
+/*.md

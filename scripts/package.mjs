@@ -1,42 +1,20 @@
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { resolve, relative, join } from "node:path";
+import { readFileSync, writeFileSync } from "node:fs";
+import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { zipSync } from "fflate";
 const root = fileURLToPath(new URL("../", import.meta.url));
-const excluded = new Set([
-  "AGENTS.md",
-  "CLAUDE.md",
-  "ENTREGA.md",
-  ".ai",
-  ".codex",
-  ".agents",
-  "node_modules",
-  ".pages-build",
-  "pages-dist",
-  ".git",
-  ".next",
-  ".bench",
-  "data",
-  "test-results",
-  "playwright-report",
-]);
-function walk(directory) {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    if (
-      excluded.has(entry.name) ||
-      entry.name.startsWith(".env") ||
-      entry.name.endsWith(".tsbuildinfo") ||
-      entry.name === "next-env.d.ts"
-    )
-      return [];
-    const path = join(directory, entry.name);
-    return entry.isDirectory()
-      ? walk(path)
-      : entry.isFile()
-        ? [relative(root, path).replaceAll("\\", "/")]
-        : [];
-  });
+// Package only versioned source; local configuration and temporary files stay local.
+function walk() {
+  return execFileSync(
+    "git",
+    ["-c", "safe.directory=" + root, "ls-files", "-z"],
+    { cwd: root, encoding: "utf8" },
+  )
+    .split("\0")
+    .filter(Boolean)
+    .filter((name) => !name.split("/").some((part) => part.startsWith(".env")));
 }
 const treePath = "docs/repository-tree.md";
 const names = [...new Set([...walk(root), treePath])].sort();

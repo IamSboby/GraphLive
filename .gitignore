@@ -11,11 +11,14 @@ next-env.d.ts
 .pages-build/
 pages-dist/
 
-AGENTS.md
-CLAUDE.md
-ENTREGA.md
 docs/status.md
 docs/verification.md
-.ai/
-.codex/
-.agents/
+
+# Keep local root documents and hidden workspaces out of source control.
+/*.md
+!/README.md
+!/README.en.md
+!/CHANGELOG.md
+!/THIRD_PARTY_NOTICES.md
+/.*/
+!/.github/
