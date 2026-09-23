@@ -57,7 +57,7 @@ export async function pickDirectory() {
     }
   ).showDirectoryPicker;
   if (!picker) throw new Error("folderUnsupported");
-  return picker({ mode: "readwrite", id: "graphlive" });
+  return picker.call(window, { mode: "readwrite", id: "graphlive" });
 }
 export class LocalRepository implements Repository {
   private root: Promise<FileSystemDirectoryHandle>;

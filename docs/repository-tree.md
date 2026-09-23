@@ -8,7 +8,8 @@ GraphLive/
 ├── .env.example
 ├── .github/
 │   └── workflows/
-│       └── ci.yml
+│       ├── ci.yml
+│       └── pages.yml
 ├── .gitignore
 ├── .prettierignore
 ├── AGENTS.md
@@ -43,6 +44,7 @@ GraphLive/
 │   ├── contributing.md
 │   ├── data-model.md
 │   ├── deployment.md
+│   ├── github-pages.md
 │   ├── repository-tree.md
 │   ├── sbobypishare-integration.md
 │   ├── screenshots/
@@ -82,6 +84,7 @@ GraphLive/
 │   ├── storage-adapters/
 │   │   ├── api.ts
 │   │   ├── browser.ts
+│   │   ├── indexeddb.ts
 │   │   ├── sbobypishare.ts
 │   │   └── server.ts
 │   ├── storage-core/
@@ -103,6 +106,7 @@ GraphLive/
 │       ├── settings.tsx
 │       └── store.ts
 ├── playwright.config.ts
+├── playwright.pages.config.ts
 ├── postcss.config.mjs
 ├── proxy.ts
 ├── public/
@@ -382,7 +386,9 @@ GraphLive/
 ├── scripts/
 │   ├── benchmark.mjs
 │   ├── benchmark.ts
-│   └── package.mjs
+│   ├── build-pages.mjs
+│   ├── package.mjs
+│   └── serve-pages.mjs
 ├── tests/
 │   ├── auth.test.ts
 │   ├── domain.test.ts
@@ -397,6 +403,8 @@ GraphLive/
 │   │   ├── local.test.ts
 │   │   └── storage.test.ts
 │   ├── layout.test.ts
+│   ├── pages/
+│   │   └── storage.spec.ts
 │   ├── security.test.ts
 │   └── store.test.ts
 ├── tsconfig.json

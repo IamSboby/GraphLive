@@ -1,5 +1,12 @@
 # Changelog
 
+## GitHub Pages — 2026-09-19
+
+- Exportación estática con rutas bajo `/GraphLive/`, sin API ni almacenamiento remoto.
+- Almacenamiento IndexedDB local con transacciones, copias y reapertura; despliegue automático con prueba de persistencia.
+- Selector de carpeta vinculado a `window` y errores de permisos/cancelación específicos.
+- Creación inicial usando la revisión cargada para evitar conflictos cuando una red vacía ya tiene historial.
+
 ## Conexiones directas opcionales — 2026-09-18
 
 - Las personas nuevas solo se conectan con la persona principal al marcar «Conozco directamente a esta persona», desmarcado por defecto.

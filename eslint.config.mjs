@@ -7,6 +7,8 @@ export default defineConfig([
   ...fixupConfigRules(nextTs),
   globalIgnores([
     ".next/**",
+    ".pages-build/**",
+    "pages-dist/**",
     ".bench/**",
     "data/**",
     "playwright-report/**",

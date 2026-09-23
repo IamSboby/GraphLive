@@ -1,5 +1,7 @@
 # GraphLive — 0.1.0-alpha.1
 
+Serverless web edition: [GraphLive on GitHub Pages](https://iamsboby.github.io/GraphLive/). Store your network in this browser or a local folder. Browser data stays on this device; export JSON to keep an independent copy. Clearing site data removes the network and its local backups.
+
 [Español](README.md) · English
 
 A private, self-hosted relationship graph. Explore people and connections on an interactive canvas, keep records in JSON files, and choose Spanish or English and light or dark mode.

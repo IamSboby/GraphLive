@@ -236,6 +236,8 @@ export const es = {
   newPerson: "Nueva persona",
   download: "Descargar",
   birth: "Nacimiento",
+  browserStorage: "En este navegador",
+  browserWarning: "Tus datos se guardan solo en este navegador y dispositivo. Exporta una copia JSON para conservarlos: borrar los datos del navegador también elimina tu red.",
   relationOwner: "Relación contigo",
   knowsDirectly: "Conozco directamente a esta persona",
 };
@@ -471,6 +473,8 @@ export const en: Record<keyof typeof es, string> = {
   newPerson: "New person",
   download: "Download",
   birth: "Born",
+  browserStorage: "In this browser",
+  browserWarning: "Your data stays in this browser and device. Export a JSON copy to keep it safe: clearing browser data also deletes your network.",
   relationOwner: "Relationship to you",
   knowsDirectly: "I know this person directly",
 };

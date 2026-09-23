@@ -250,6 +250,7 @@ export const countryCodes: string[] = [
   "ZW",
 ];
 export const flagUrl = (code: string) =>
+  (process.env.NEXT_PUBLIC_BASE_PATH ?? "") +
   "/flags/" +
   (countryCodes.includes(code.toUpperCase()) ? code.toLowerCase() : "xx") +
   ".svg";

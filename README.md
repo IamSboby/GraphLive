@@ -1,5 +1,7 @@
 # GraphLive — 0.1.0-alpha.1
 
+Edición web sin servidor: [GraphLive en GitHub Pages](https://iamsboby.github.io/GraphLive/). Guarda la red en el navegador o en una carpeta local. [Despliegue y límites de almacenamiento](docs/github-pages.md).
+
 Español · [English](README.en.md)
 
 Red privada de personas y relaciones, con grafo interactivo, archivos JSON, interfaz en español e inglés y modo claro/oscuro. Proyecto TypeScript estricto, React y Next.js, preparado para instalarse en un servidor propio.

@@ -6,6 +6,8 @@ import { zipSync } from "fflate";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const excluded = new Set([
   "node_modules",
+  ".pages-build",
+  "pages-dist",
   ".git",
   ".next",
   ".bench",

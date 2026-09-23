@@ -13,7 +13,8 @@
     "test:e2e": "playwright test",
     "check": "npm run typecheck && npm run lint && npm test",
     "benchmark": "node scripts/benchmark.mjs",
-    "package:source": "node scripts/package.mjs"
+    "package:source": "node scripts/package.mjs",
+    "build:pages": "node scripts/build-pages.mjs"
   },
   "engines": {
     "node": "^22.13.0 || >=24.0.0"

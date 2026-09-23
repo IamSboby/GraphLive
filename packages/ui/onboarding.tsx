@@ -19,6 +19,7 @@ import {
   LocalRepository,
   pickDirectory,
 } from "../storage-adapters/browser";
+import { BrowserRepository } from "../storage-adapters/indexeddb";
 import type { Repository } from "../storage-core";
 import { useNetwork } from "./store";
 import { Field } from "./primitives";
@@ -40,7 +41,9 @@ export function Onboarding({
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const active = useNetwork((s) => s.data);
-  const [provider, setProvider] = useState(config.server ? "server" : "local"),
+  const [provider, setProvider] = useState(
+      config.server ? "server" : "browser",
+    ),
     [name, setName] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -58,9 +61,11 @@ export function Onboarding({
     setError("");
     try {
       const repo =
-        provider === "local"
-          ? new LocalRepository(await pickDirectory())
-          : new HttpRepository();
+        provider === "browser"
+          ? new BrowserRepository()
+          : provider === "local"
+            ? new LocalRepository(await pickDirectory())
+            : new HttpRepository();
       const data = await repo.load();
       if (data.people.length) {
         setExisting({ data, repo });
@@ -73,9 +78,17 @@ export function Onboarding({
       createPerson(data, { nickname: name });
       data.preferences.theme = theme;
       data.preferences.language = i18n.language === "en" ? "en" : "es";
-      open(await repo.save(data, 0), repo);
+      open(await repo.save(data, data.revision), repo);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "storageError");
+      if (e instanceof DOMException && e.name === "AbortError") return;
+      setError(
+        e instanceof DOMException &&
+          ["SecurityError", "NotAllowedError"].includes(e.name)
+          ? "folderPermission"
+          : e instanceof Error
+            ? e.message
+            : "storageError",
+      );
     } finally {
       setBusy(false);
     }
@@ -249,6 +262,16 @@ export function Onboarding({
                   </Field>
                   <fieldset className="storage-choices">
                     <legend>{t("storage")}</legend>
+                    <label className={provider === "browser" ? "active" : ""}>
+                      <input
+                        type="radio"
+                        name="storage"
+                        checked={provider === "browser"}
+                        onChange={() => setProvider("browser")}
+                      />
+                      <HardDrive size={21} />
+                      {t("browserStorage")}
+                    </label>
                     {config.server && (
                       <label className={provider === "server" ? "active" : ""}>
                         <input
@@ -274,13 +297,19 @@ export function Onboarding({
                       </label>
                     )}
                   </fieldset>
-                  {(provider === "local" || !config.auth) && (
+                  {(provider !== "server" || !config.auth) && (
                     <p className="notice">
-                      {t(provider === "local" ? "localWarning" : "authWarning")}
+                      {t(
+                        provider === "browser"
+                          ? "browserWarning"
+                          : provider === "local"
+                            ? "localWarning"
+                            : "authWarning",
+                      )}
                     </p>
                   )}
                   <button
-                    disabled={busy || (!config.server && !config.local)}
+                    disabled={busy}
                     className="primary full"
                     onClick={() => void start()}
                   >
