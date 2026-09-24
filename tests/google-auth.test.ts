@@ -1,8 +1,25 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { GoogleSession } from "../packages/storage-adapters/google-auth";
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+});
+it("times out when the browser never returns from the Google popup", async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal("window", {
+    google: {
+      accounts: {
+        oauth2: {
+          initTokenClient: () => ({ requestAccessToken: () => {} }),
+        },
+      },
+    },
+  });
+  const connection = new GoogleSession().connect();
+  const rejected = expect(connection).rejects.toThrow("driveCancelled");
+  await vi.advanceTimersByTimeAsync(90000);
+  await rejected;
 });
 function mockGoogle(scope = "https://www.googleapis.com/auth/drive.appdata") {
   vi.stubGlobal("window", {

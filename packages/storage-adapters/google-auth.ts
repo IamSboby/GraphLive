@@ -44,12 +44,19 @@ export class GoogleSession {
   connect(): Promise<void> {
     const google = identity();
     if (!google) return Promise.reject(new Error("driveUnavailable"));
-    return new Promise((resolve, reject) => {
+    let expired = false;
+    let timer: ReturnType<typeof setTimeout>;
+    return new Promise<void>((resolve, reject) => {
+      timer = setTimeout(() => {
+        expired = true;
+        reject(new Error("driveCancelled"));
+      }, 90000);
       google.accounts.oauth2
         .initTokenClient({
           client_id: clientId,
           scope,
           callback: async (result) => {
+            if (expired) return;
             if (
               !result.access_token ||
               !result.scope?.split(" ").includes(scope)
@@ -63,6 +70,7 @@ export class GoogleSession {
                 {
                   headers: { Authorization: "Bearer " + result.access_token },
                   cache: "no-store",
+                  signal: AbortSignal.timeout(15000),
                 },
               );
               if (!response.ok) throw new Error("drivePermission");
@@ -75,6 +83,7 @@ export class GoogleSession {
               const lifetime = Number(result.expires_in);
               if (!Number.isFinite(lifetime) || lifetime <= 60)
                 throw new Error("driveExpired");
+              if (expired) return;
               this.account = account;
               this.token = result.access_token;
               this.expires = Date.now() + (lifetime - 60) * 1000;
@@ -86,6 +95,9 @@ export class GoogleSession {
           error_callback: () => reject(new Error("driveCancelled")),
         })
         .requestAccessToken({ prompt: "select_account" });
+    }).finally(() => {
+      expired = true;
+      clearTimeout(timer);
     });
   }
   async request(url: string, options: RequestInit = {}) {
