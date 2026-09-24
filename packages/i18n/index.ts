@@ -2,6 +2,28 @@
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 export const es = {
+  guideTitle: "Tu red empieza contigo",
+  guideName: "¿Cómo quieres aparecer?",
+  guideNameHelp: "Usa tu nombre o un apodo. Así aparecerás en tu pizarra.",
+  guideAbout: "Un poco más sobre ti",
+  guideOptional:
+    "Todo aquí es opcional. Puedes cambiarlo después desde tu perfil.",
+  guideSave: "Guardar mi perfil",
+  guideSkip: "Omitir por ahora",
+  guideBack: "Atrás",
+  guideProgress: "Paso {{step}} de 3",
+  guideInvite: "Ahora, añade a alguien",
+  guideInviteHelp:
+    "Pulsa el + iluminado para añadir tu primera persona. Marca «Conozco directamente a esta persona» solo si quieres crear un vínculo contigo.",
+  guideSuccess: "Tu red ya ha empezado",
+  guideConnected:
+    "Tu primera conexión está guardada. Pulsa una persona para ver o editar sus detalles.",
+  guideIndependent:
+    "La persona está guardada sin conexiones. Para vincularla después, selecciónala y añade una conexión desde su ficha.",
+  guideExplore:
+    "Arrastra el fondo para moverte y usa + y − para ampliar o reducir la pizarra.",
+  guideFinish: "Explorar mi red",
+  guideResume: "Repetir introducción",
   driveAccountChanged:
     "Selecciona la misma cuenta de Google con la que abriste esta red. No se han enviado datos a la otra cuenta.",
   driveNotice:
@@ -258,6 +280,29 @@ export const es = {
   knowsDirectly: "Conozco directamente a esta persona",
 };
 export const en: Record<keyof typeof es, string> = {
+  guideTitle: "Your network starts with you",
+  guideName: "How would you like to appear?",
+  guideNameHelp:
+    "Use your name or a nickname. This is how you will appear on your canvas.",
+  guideAbout: "A little more about you",
+  guideOptional:
+    "Everything here is optional. You can change it later from your profile.",
+  guideSave: "Save my profile",
+  guideSkip: "Skip for now",
+  guideBack: "Back",
+  guideProgress: "Step {{step}} of 3",
+  guideInvite: "Now, add someone",
+  guideInviteHelp:
+    "Press the glowing + to add your first person. Check “I know this person directly” only if you want to create a connection to yourself.",
+  guideSuccess: "Your network has started",
+  guideConnected:
+    "Your first connection is saved. Select a person to view or edit their details.",
+  guideIndependent:
+    "The person is saved without connections. To connect them later, select them and add a connection from their details.",
+  guideExplore:
+    "Drag the background to move around and use + and − to zoom the canvas.",
+  guideFinish: "Explore my network",
+  guideResume: "Replay introduction",
   driveAccountChanged:
     "Select the same Google account used to open this network. No network data was sent to the other account.",
   driveNotice:

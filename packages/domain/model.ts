@@ -140,6 +140,7 @@ export const preferencesSchema = z
       .default("degree"),
     searchNotes: z.boolean().default(false),
     autoBackup: z.boolean().default(true),
+    introduction: z.enum(["profile", "invite", "done", "skipped"]).optional(),
   })
   .strict();
 export const snapshotSchema = z

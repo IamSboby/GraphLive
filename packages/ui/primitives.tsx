@@ -11,11 +11,13 @@ export function Modal({
   children,
   onClose,
   wide = false,
+  className = "",
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
+  className?: string;
 }) {
   const { t } = useTranslation();
   return (
@@ -28,7 +30,7 @@ export function Modal({
       <Dialog.Portal>
         <Dialog.Overlay className="overlay" />
         <Dialog.Content
-          className={"modal " + (wide ? "wide" : "")}
+          className={"modal " + (wide ? "wide" : "") + " " + className}
           aria-describedby={undefined}
         >
           <header className="modal-header">

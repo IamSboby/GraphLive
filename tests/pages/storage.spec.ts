@@ -20,9 +20,17 @@ test("Pages persists a local network, reopens it and serves graph assets without
     .fill("Local Owner");
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
   await expect(page).toHaveURL(/\/GraphLive\/graph\/$/);
+  await expect(
+    page.getByRole("dialog", { name: "Tu red empieza contigo" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Guardar mi perfil", exact: true })
+    .click();
+  await expect(page.locator(".guide-glow")).toBeVisible();
   await page
     .getByRole("button", { name: "Añadir persona", exact: true })
-    .last()
+    .first()
     .click();
   await page
     .getByRole("textbox", { name: "Sobrenombre", exact: true })
@@ -34,6 +42,10 @@ test("Pages persists a local network, reopens it and serves graph assets without
     .getByRole("checkbox", { name: "Conozco directamente a esta persona" })
     .check();
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Tu red ya ha empezado" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Explorar mi red" }).click();
   await expect(page.locator(".connection-list .connection-row")).toHaveCount(1);
   await expect(page.locator(".graph-canvas")).toHaveAttribute(
     "data-layout",

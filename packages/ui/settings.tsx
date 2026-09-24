@@ -42,6 +42,17 @@ export function Settings({
   return (
     <Modal title={t("settings")} onClose={onClose}>
       <div className="form-content settings">
+        {!s.demo && (
+          <button
+            disabled={s.saving || s.dirty || Boolean(s.conflict)}
+            onClick={() => {
+              change("introduction", "profile");
+              onClose();
+            }}
+          >
+            {t("guideResume")}
+          </button>
+        )}
         <h3>{t("appearance")}</h3>
         <Field label={t("sizeMode")}>
           <select

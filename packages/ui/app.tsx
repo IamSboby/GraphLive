@@ -44,6 +44,7 @@ import {
 } from "../graph-engine/metrics";
 import { useNetwork } from "./store";
 import { GraphView, type GraphControls } from "./graph";
+import { Introduction, introductionStage } from "./introduction";
 import { Onboarding } from "./onboarding";
 import { PersonForm } from "./person-form";
 import { ConnectionForm } from "./connection-form";
@@ -252,6 +253,9 @@ export function App({
     router.push("/");
   };
   const busy = s.saving || Boolean(s.conflict);
+  const guideStage = s.demo ? "done" : introductionStage(s.base ?? data);
+  const guideInvite =
+    guideStage === "invite" && data.people.length === 1 && !form && !settings;
   return (
     <main className="workspace">
       <header className="topbar">
@@ -510,12 +514,14 @@ export function App({
               }
             />
           )}
-          {data.people.length <= 1 && !selected && (
-            <div className="empty-hint">
-              <h2>{t("empty")}</h2>
-              <p>{t("emptyHint")}</p>
-            </div>
-          )}
+          {data.people.length <= 1 &&
+            !selected &&
+            (s.demo || ["done", "skipped"].includes(guideStage)) && (
+              <div className="empty-hint">
+                <h2>{t("empty")}</h2>
+                <p>{t("emptyHint")}</p>
+              </div>
+            )}
           <details className="legend">
             <summary>{t("legend")}</summary>
             <div>
@@ -602,7 +608,7 @@ export function App({
             </div>
           </div>
           <button
-            className="add-fab"
+            className={"add-fab " + (guideInvite ? "guide-glow" : "")}
             title={t("addPerson")}
             aria-label={t("addPerson")}
             disabled={busy}
@@ -650,7 +656,9 @@ export function App({
       </div>
       {(s.error || actionError) && (
         <div className="toast" role="alert">
-          <span>{t(actionError || s.error || "error", { defaultValue: t("error") })}</span>
+          <span>
+            {t(actionError || s.error || "error", { defaultValue: t("error") })}
+          </span>
           {s.repo instanceof GoogleDriveRepository &&
           s.error === "driveExpired" ? (
             <button
@@ -699,6 +707,14 @@ export function App({
           onClose={() => setForm(null)}
         />
       )}
+      {!s.demo &&
+        !form &&
+        !edgeForm &&
+        !settings &&
+        !preview &&
+        !s.conflict && (
+          <Introduction key={data.ownerId} onAdd={() => setForm("new")} />
+        )}
       {edgeForm && (
         <ConnectionForm {...edgeForm} onClose={() => setEdgeForm(null)} />
       )}

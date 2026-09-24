@@ -88,6 +88,7 @@ export function Onboarding({
         return;
       }
       createPerson(data, { nickname: name });
+      data.preferences.introduction = "profile";
       data.preferences.theme = theme;
       data.preferences.language = i18n.language === "en" ? "en" : "es";
       open(await repo.save(data, data.revision), repo);
