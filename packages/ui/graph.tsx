@@ -132,6 +132,18 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
       boxSelectionEnabled: false,
     });
     cy.current = c;
+    const syncGrid = () => {
+      const element = container.current;
+      if (!element) return;
+      const zoom = c.zoom(),
+        pan = c.pan(),
+        spacing = 22 * zoom;
+      element.style.backgroundSize = `${spacing}px ${spacing}px`;
+      element.style.backgroundPosition = `${pan.x - spacing / 2}px ${pan.y - spacing / 2}px`;
+      element.style.setProperty("--grid-dot-radius", `${0.8 * zoom}px`);
+    };
+    c.on("pan zoom", syncGrid);
+    syncGrid();
     c.on("tap", "node", (e) => latest.current.onSelect(e.target.id()));
     c.on("mouseover taphold", "node", (e) => {
       const pos = e.target.renderedPosition();
@@ -148,6 +160,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     });
     return () => {
       worker.current?.terminate();
+      c.off("pan zoom", syncGrid);
       c.destroy();
       cy.current = null;
     };

@@ -716,14 +716,17 @@ small {
   position: relative;
   flex: 1;
   min-width: 0;
-  background-image: radial-gradient(var(--dot) 0.8px, transparent 0.8px);
-  background-size: 22px 22px;
   overflow: hidden;
 }
 .graph-canvas {
   position: absolute;
   inset: 0;
   touch-action: none;
+  background-image: radial-gradient(
+    var(--dot) var(--grid-dot-radius, 0.8px),
+    transparent var(--grid-dot-radius, 0.8px)
+  );
+  background-size: 22px 22px;
 }
 .canvas-top {
   position: absolute;
