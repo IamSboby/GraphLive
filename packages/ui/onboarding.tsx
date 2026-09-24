@@ -1,7 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { GoogleDriveRepository } from "../storage-adapters/google-drive";
+import { prepareGoogleDrive } from "../storage-adapters/google-auth";
 import { useTranslation } from "react-i18next";
 import { signIn, signOut } from "next-auth/react";
 import {
@@ -51,6 +53,13 @@ export function Onboarding({
       data: Snapshot;
       repo: Repository;
     } | null>(null);
+  const [driveReady, setDriveReady] = useState(false);
+  useEffect(() => {
+    if (provider === "drive")
+      void prepareGoogleDrive()
+        .then(() => setDriveReady(true))
+        .catch(() => setError("driveUnavailable"));
+  }, [provider]);
   const openNetwork = useNetwork((s) => s.open);
   const open = (data: Snapshot, repo: Repository | null, demo = false) => {
     openNetwork(data, repo, demo);
@@ -60,12 +69,15 @@ export function Onboarding({
     setBusy(true);
     setError("");
     try {
+      const drive = provider === "drive" ? new GoogleDriveRepository() : null;
+      if (drive) await drive.session.connect();
       const repo =
-        provider === "browser"
+        drive ??
+        (provider === "browser"
           ? new BrowserRepository()
           : provider === "local"
             ? new LocalRepository(await pickDirectory())
-            : new HttpRepository();
+            : new HttpRepository());
       const data = await repo.load();
       if (data.people.length) {
         setExisting({ data, repo });
@@ -296,30 +308,38 @@ export function Onboarding({
                         {t("local")}
                       </label>
                     )}
+                    <label className={provider === "drive" ? "active" : ""}>
+                      <input
+                        type="radio"
+                        name="storage"
+                        checked={provider === "drive"}
+                        onChange={() => setProvider("drive")}
+                      />
+                      <FolderOpen size={21} />
+                      Google Drive
+                    </label>
                   </fieldset>
                   {(provider !== "server" || !config.auth) && (
                     <p className="notice">
                       {t(
-                        provider === "browser"
-                          ? "browserWarning"
-                          : provider === "local"
-                            ? "localWarning"
-                            : "authWarning",
+                        provider === "drive"
+                          ? "driveNotice"
+                          : provider === "browser"
+                            ? "browserWarning"
+                            : provider === "local"
+                              ? "localWarning"
+                              : "authWarning",
                       )}
                     </p>
                   )}
                   <button
-                    disabled={busy}
+                    disabled={busy || (provider === "drive" && !driveReady)}
                     className="primary full"
                     onClick={() => void start()}
                   >
                     {t(busy ? "loading" : "continue")}
                     <ArrowUpRight size={18} />
                   </button>
-                  <div className="unavailable">
-                    <span>{t("cloud")}</span>
-                    <small>{t("unavailable")}</small>
-                  </div>
                 </>
               )}
               {authenticated && (

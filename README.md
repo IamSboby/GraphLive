@@ -1,6 +1,6 @@
 # GraphLive — 0.1.0-alpha.1
 
-Edición web sin servidor: [GraphLive en GitHub Pages](https://iamsboby.github.io/GraphLive/). Guarda la red en el navegador o en una carpeta local. [Despliegue y límites de almacenamiento](docs/github-pages.md).
+Edición web sin servidor: [GraphLive en GitHub Pages](https://iamsboby.github.io/GraphLive/). Guarda la red en Google Drive, en el navegador o en una carpeta local. [Despliegue y límites de almacenamiento](docs/github-pages.md).
 
 Español · [English](README.en.md)
 
@@ -77,6 +77,6 @@ Las pruebas E2E usan Microsoft Edge de forma predeterminada y puerto 3100. Para 
 
 ## Límites principales
 
-Los datos activos son JSON sin cifrar; usar disco cifrado. Backups del servidor pueden cifrarse con AES-256-GCM. Una carpeta local no sincroniza dispositivos. El repositorio servidor se prueba con una instancia y disco local, no con un clúster distribuido. Login OAuth requiere credenciales propias y una prueba real de despliegue. Integraciones cloud, avatares y creación de aristas por arrastre no están habilitados. El ZIP representa la red actual y no incluye el historial de backups.
+Los datos activos son JSON sin cifrar; usar disco cifrado. Backups del servidor pueden cifrarse con AES-256-GCM. Una carpeta local no sincroniza dispositivos. El repositorio servidor se prueba con una instancia y disco local, no con un clúster distribuido. Login OAuth requiere credenciales propias y una prueba real de despliegue. Google Drive está disponible para cuentas OAuth de prueba; OneDrive, SbobyPiShare, avatares y creación de aristas por arrastre siguen pendientes. El ZIP representa la red actual y no incluye el historial de backups.
 
 Licencia MIT. Dependencias fijadas mediante `package-lock.json`.

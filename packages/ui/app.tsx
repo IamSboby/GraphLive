@@ -1,4 +1,5 @@
 "use client";
+import { GoogleDriveRepository } from "../storage-adapters/google-drive";
 import "../i18n";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -649,8 +650,32 @@ export function App({
       </div>
       {(s.error || actionError) && (
         <div className="toast" role="alert">
-          <span>{t(s.error ?? actionError, { defaultValue: t("error") })}</span>
-          <button onClick={() => void s.persist()}>{t("retry")}</button>
+          <span>{t(actionError || s.error || "error", { defaultValue: t("error") })}</span>
+          {s.repo instanceof GoogleDriveRepository &&
+          s.error === "driveExpired" ? (
+            <button
+              onClick={() => {
+                const repo = s.repo as GoogleDriveRepository;
+                void repo.session
+                  .connect()
+                  .then(async () => {
+                    setActionError("");
+                    await s.persist();
+                  })
+                  .catch((error: unknown) =>
+                    setActionError(
+                      error instanceof Error
+                        ? error.message
+                        : "drivePermission",
+                    ),
+                  );
+              }}
+            >
+              {t("driveReconnect")}
+            </button>
+          ) : (
+            <button onClick={() => void s.persist()}>{t("retry")}</button>
+          )}
           <button onClick={() => exportJson(data)}>
             {t("downloadPending")}
           </button>

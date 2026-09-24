@@ -44,3 +44,7 @@ See [deployment](docs/deployment.md), [security](docs/security.md), [architectur
 ## Third-party assets
 
 Country flags come from the pinned `flag-icons` package, under the MIT license. The vendored SVGs and license are in `public/flags/`. See [third-party notices](THIRD_PARTY_NOTICES.md).
+
+## Google Drive
+
+Choose Google Drive on the access page. GraphLive requests only its private application data space, stores authorization in memory, and supports network snapshots and backups. The OAuth application is currently limited to registered test users. Reconnect with the same Google account when the session expires. Backups consume Drive storage. Initialize a new network on one device only. OneDrive remains unavailable.

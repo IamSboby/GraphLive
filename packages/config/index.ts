@@ -12,7 +12,7 @@ export function configuration() {
     server: enabled("SERVER_STORAGE_ENABLED", true),
     local: enabled("LOCAL_FOLDER_ENABLED", true),
     customFields: enabled("CUSTOM_FIELDS_ENABLED", true),
-    googleDrive: false,
+    googleDrive: true,
     oneDrive: false,
     sbobyPiShare: false,
     customEndpoints: false,

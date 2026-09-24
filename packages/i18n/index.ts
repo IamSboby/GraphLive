@@ -2,6 +2,21 @@
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 export const es = {
+  driveAccountChanged:
+    "Selecciona la misma cuenta de Google con la que abriste esta red. No se han enviado datos a la otra cuenta.",
+  driveNotice:
+    "Tu red se guarda en el espacio privado de GraphLive en Google Drive. Solo se solicita acceso a estos datos. Las copias ocupan espacio de tu cuenta. Crea la red por primera vez en un solo dispositivo.",
+  driveUnavailable:
+    "No se pudo cargar Google. Comprueba la conexión y vuelve a elegir Google Drive.",
+  drivePermission:
+    "Google no permitió el acceso. Comprueba los permisos y que tu cuenta sea un usuario de prueba autorizado.",
+  driveCancelled:
+    "Se cerró la conexión con Google. Vuelve a intentarlo y permite la ventana emergente.",
+  driveExpired:
+    "La sesión de Google ha caducado. Pulsa Reconectar Google Drive; tus cambios pendientes siguen aquí.",
+  driveDuplicate:
+    "Hay más de una red en Drive. No se ha sobrescrito ninguna. Contacta con soporte para recuperar las redes.",
+  driveReconnect: "Reconectar Google Drive",
   accessHeading: "Tu espacio, a un paso.",
   accessIntro:
     "Accede y elige dónde guardar tu red. Tus conexiones, siempre contigo.",
@@ -237,11 +252,27 @@ export const es = {
   download: "Descargar",
   birth: "Nacimiento",
   browserStorage: "En este navegador",
-  browserWarning: "Tus datos se guardan solo en este navegador y dispositivo. Exporta una copia JSON para conservarlos: borrar los datos del navegador también elimina tu red.",
+  browserWarning:
+    "Tus datos se guardan solo en este navegador y dispositivo. Exporta una copia JSON para conservarlos: borrar los datos del navegador también elimina tu red.",
   relationOwner: "Relación contigo",
   knowsDirectly: "Conozco directamente a esta persona",
 };
 export const en: Record<keyof typeof es, string> = {
+  driveAccountChanged:
+    "Select the same Google account used to open this network. No network data was sent to the other account.",
+  driveNotice:
+    "Your network is saved in GraphLive’s private Google Drive space. Access is limited to this data. Backups use your account storage. Create your first network on one device only.",
+  driveUnavailable:
+    "Google could not load. Check your connection and select Google Drive again.",
+  drivePermission:
+    "Google denied access. Check permissions and whether your account is an authorized test user.",
+  driveCancelled:
+    "Google connection was closed. Try again and allow the popup.",
+  driveExpired:
+    "Your Google session expired. Select Reconnect Google Drive; your pending changes are still here.",
+  driveDuplicate:
+    "More than one network exists in Drive. None was overwritten. Contact support to recover the networks.",
+  driveReconnect: "Reconnect Google Drive",
   accessHeading: "Your space is one step away.",
   accessIntro:
     "Sign in and choose where to save your network. Your connections, always with you.",
@@ -474,7 +505,8 @@ export const en: Record<keyof typeof es, string> = {
   download: "Download",
   birth: "Born",
   browserStorage: "In this browser",
-  browserWarning: "Your data stays in this browser and device. Export a JSON copy to keep it safe: clearing browser data also deletes your network.",
+  browserWarning:
+    "Your data stays in this browser and device. Export a JSON copy to keep it safe: clearing browser data also deletes your network.",
   relationOwner: "Relationship to you",
   knowsDirectly: "I know this person directly",
 };
