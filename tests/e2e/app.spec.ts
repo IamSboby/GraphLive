@@ -87,9 +87,26 @@ test("server onboarding persists and reopens existing data", async ({
     exact: true,
   });
   await expect(
-    existing.or(page.getByRole("img", { name: "GraphLive", exact: true })),
+    existing
+      .or(page.getByRole("dialog", { name: "Tu red empieza contigo" }))
+      .or(page.getByRole("img", { name: "GraphLive", exact: true })),
   ).toBeVisible();
   if (await existing.isVisible()) await existing.click();
+  await expect(page).toHaveURL(/\/graph$/);
+  const introduction = page.getByRole("dialog", {
+    name: "Tu red empieza contigo",
+  });
+  if (await introduction.isVisible()) {
+    await introduction
+      .getByRole("button", { name: "Continuar", exact: true })
+      .click();
+    await introduction
+      .getByRole("button", { name: "Guardar mi perfil" })
+      .click();
+    await expect(page.locator(".guide-callout")).toBeVisible();
+    await page.getByRole("button", { name: "Omitir por ahora" }).click();
+    await expect(page.locator(".guide-callout")).toHaveCount(0);
+  }
   await expect(
     page.getByRole("img", { name: "GraphLive", exact: true }),
   ).toBeVisible();
