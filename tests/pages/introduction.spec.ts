@@ -7,6 +7,24 @@ for (const mobile of [false, true])
     if (mobile) await page.setViewportSize({ width: 390, height: 844 });
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
+    await page.addInitScript(() => {
+      const put = IDBObjectStore.prototype.put;
+      let failed = false;
+      IDBObjectStore.prototype.put = function (value, key) {
+        if (
+          key === "snapshot" &&
+          value?.preferences?.introduction === "done" &&
+          !failed
+        ) {
+          failed = true;
+          throw new DOMException(
+            "Test completion failure",
+            "QuotaExceededError",
+          );
+        }
+        return put.call(this, value, key);
+      };
+    });
     await page.goto("./login/");
     await page
       .getByRole("textbox", { name: "Tu nombre o sobrenombre" })
@@ -68,6 +86,11 @@ for (const mobile of [false, true])
       }),
     ).toBeVisible();
     await page.getByRole("button", { name: "Explorar mi red" }).click();
+    const completion = page.getByRole("dialog", {
+      name: "Tu red ya ha empezado",
+    });
+    await expect(completion.getByRole("alert")).toBeVisible();
+    await completion.getByRole("button", { name: "Explorar mi red" }).click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page.reload();
     await page.getByRole("button", { name: "Continuar", exact: true }).click();

@@ -163,7 +163,7 @@ export function Introduction({ onAdd }: { onAdd: () => void }) {
         </form>
       </Modal>
     );
-  if (saved.people.length > 1 && !s.dirty && !s.saving)
+  if (saved.people.length > 1)
     return (
       <Modal
         title={t("guideSuccess")}
