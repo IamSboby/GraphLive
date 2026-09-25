@@ -26,6 +26,11 @@ export type GraphControls = {
   center: (id: string) => void;
   position: (id: string) => { x: number; y: number } | undefined;
 };
+const flagValues = <T extends string | number>(
+  n: cytoscape.NodeSingular,
+  value: T,
+) => Array.from({ length: Math.max(1, n.data("flags").length) }, () => value);
+
 type Props = {
   data: Snapshot;
   visible: Set<string>;
@@ -247,10 +252,12 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
           "background-color": "data(color)",
           "background-image": (n: cytoscape.NodeSingular) =>
             n.data("flags").length ? n.data("flags") : "none",
-          "background-width": 20,
-          "background-height": 15,
-          "background-position-x": "50%",
-          "background-position-y": "100%",
+          "background-width": (n: cytoscape.NodeSingular) => flagValues(n, 20),
+          "background-height": (n: cytoscape.NodeSingular) => flagValues(n, 15),
+          "background-position-x": (n: cytoscape.NodeSingular) =>
+            flagValues(n, "50%"),
+          "background-position-y": (n: cytoscape.NodeSingular) =>
+            flagValues(n, "100%"),
           "background-offset-x": (n: cytoscape.NodeSingular) =>
             n
               .data("flags")
@@ -258,9 +265,12 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
                 (_: string, i: number) =>
                   (i - (n.data("flags").length - 1) / 2) * 24,
               ),
-          "background-offset-y": 64,
-          "background-clip": "none",
-          "bounds-expansion": 65,
+          "background-offset-y": (n: cytoscape.NodeSingular) =>
+            flagValues(n, 64),
+          "background-clip": (n: cytoscape.NodeSingular) =>
+            flagValues(n, "none"),
+          "bounds-expansion": (n: cytoscape.NodeSingular) =>
+            Math.max(65, n.data("flags").length * 12),
           width: "data(size)",
           height: "data(size)",
           label: data.preferences.showLabels ? "data(label)" : "",
