@@ -6,6 +6,9 @@ import {
 } from "../domain/model";
 export const affinityWeights: Record<RelationshipType, number> = {
   bestFriend: 100,
+  closeFriends: 90,
+  partner: 100,
+  crush: 60,
   family: 75,
   friend: 70,
   almostFriend: 45,
@@ -151,7 +154,7 @@ export function metrics(s: Snapshot) {
   );
 }
 export function matchesSearch(p: Person, query: string, notes = false) {
-  return normalize(
+  const haystack = normalize(
     [
       p.profile.firstName,
       p.profile.lastName,
@@ -161,5 +164,8 @@ export function matchesSearch(p: Person, query: string, notes = false) {
       ...p.profile.nationalities,
       ...(notes ? [p.profile.notes] : []),
     ].join(" "),
-  ).includes(normalize(query));
+  );
+  return normalize(query)
+    .split(/\s+/)
+    .every((term) => haystack.includes(term));
 }

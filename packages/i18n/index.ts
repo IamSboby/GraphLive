@@ -2,6 +2,12 @@
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 export const es = {
+  closeFriends: "Close friends",
+  partner: "Novios",
+  crush: "Crush",
+  deletePerson: "Eliminar persona",
+  deletePersonConfirm:
+    "¿Eliminar a {{name}}? También se eliminarán sus {{count}} conexiones. Puedes recuperarlo con Deshacer.",
   guideTitle: "Tu red empieza contigo",
   guideName: "¿Cómo quieres aparecer?",
   guideNameHelp: "Usa tu nombre o un apodo. Así aparecerás en tu pizarra.",
@@ -118,7 +124,8 @@ export const es = {
   nationalityHelp: "Códigos ISO separados por comas: ES, IT, AR",
   interests: "Intereses",
   tags: "Etiquetas",
-  tagHelp: "Escribe y pulsa Enter",
+  tagHelp:
+    "Pulsa Enter para añadir. Lo que escribas también se añade al guardar.",
   notes: "Notas privadas",
   importance: "Importancia",
   contactMode: "Tipo de contacto",
@@ -280,6 +287,12 @@ export const es = {
   knowsDirectly: "Conozco directamente a esta persona",
 };
 export const en: Record<keyof typeof es, string> = {
+  closeFriends: "Close friends",
+  partner: "Partners",
+  crush: "Crush",
+  deletePerson: "Delete person",
+  deletePersonConfirm:
+    "Delete {{name}}? Their {{count}} connections will also be removed. You can restore them with Undo.",
   guideTitle: "Your network starts with you",
   guideName: "How would you like to appear?",
   guideNameHelp:
@@ -397,7 +410,7 @@ export const en: Record<keyof typeof es, string> = {
   nationalityHelp: "Comma-separated ISO codes: ES, IT, AR",
   interests: "Interests",
   tags: "Tags",
-  tagHelp: "Type and press Enter",
+  tagHelp: "Press Enter to add. What you type is also added when you save.",
   notes: "Private notes",
   importance: "Importance",
   contactMode: "Contact type",

@@ -1,7 +1,7 @@
 "use client";
 import { useTranslation } from "react-i18next";
 import { Field } from "./primitives";
-import { type Snapshot, relationshipTypes } from "../domain/model";
+import { type Snapshot, relationshipTypes, normalize } from "../domain/model";
 export type Filters = {
   relationship: string;
   country: string;
@@ -28,6 +28,12 @@ export const emptyFilters: Filters = {
   community: "",
   degree: "",
 };
+function uniqueLabels(values: string[]) {
+  const labels = new Map<string, string>();
+  for (const value of values)
+    if (!labels.has(normalize(value))) labels.set(normalize(value), value);
+  return [...labels.values()].sort((a, b) => a.localeCompare(b));
+}
 export function FilterFields({
   data,
   value,
@@ -62,12 +68,12 @@ export function FilterFields({
     {
       key: "interest",
       label: "interests",
-      options: [...new Set(data.people.flatMap((p) => p.profile.interests))],
+      options: uniqueLabels(data.people.flatMap((p) => p.profile.interests)),
     },
     {
       key: "tag",
       label: "tags",
-      options: [...new Set(data.people.flatMap((p) => p.profile.tags))],
+      options: uniqueLabels(data.people.flatMap((p) => p.profile.tags)),
     },
     {
       key: "contact",

@@ -206,3 +206,35 @@ describe("Synchronization", () => {
     expect(Object.values(en).every(Boolean)).toBe(true);
   });
 });
+
+describe("Relationship additions and search terms", () => {
+  it.each(["closeFriends", "partner", "crush"] as const)(
+    "round-trips %s and calculates a finite affinity",
+    (relationshipType) => {
+      const s = emptySnapshot();
+      const owner = createPerson(s, { nickname: "Owner" }),
+        person = createPerson(s, { nickname: "Alex" });
+      upsertConnection(s, {
+        sourceId: owner.id,
+        targetId: person.id,
+        relationshipType,
+      });
+      const loaded = snapshotSchema.parse(JSON.parse(JSON.stringify(s)));
+      expect(loaded.connections[0].relationshipType).toBe(relationshipType);
+      expect(Number.isFinite(metrics(loaded).get(person.id)!.affinity)).toBe(
+        true,
+      );
+    },
+  );
+  it("finds all terms across interests, tags and names regardless of accents or order", () => {
+    const p = createPerson(emptySnapshot(), {
+      nickname: "Alex",
+      interests: ["Escalada lunar", "Música"],
+      tags: ["Ázul"],
+    });
+    expect(matchesSearch(p, "AZUL escalada")).toBe(true);
+    expect(matchesSearch(p, " musica  alex ")).toBe(true);
+    expect(matchesSearch(p, "escalada missing")).toBe(false);
+    expect(matchesSearch(p, "")).toBe(true);
+  });
+});

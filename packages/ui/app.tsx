@@ -35,6 +35,7 @@ import {
   colors,
   relationshipTypes,
   ownerRelationship,
+  normalize,
 } from "../domain/model";
 import {
   metrics,
@@ -187,8 +188,13 @@ export function App({
             (!filters.country ||
               p.profile.nationalities.includes(filters.country)) &&
             (!filters.interest ||
-              p.profile.interests.includes(filters.interest)) &&
-            (!filters.tag || p.profile.tags.includes(filters.tag)) &&
+              p.profile.interests.some(
+                (v) => normalize(v) === normalize(filters.interest),
+              )) &&
+            (!filters.tag ||
+              p.profile.tags.some(
+                (v) => normalize(v) === normalize(filters.tag),
+              )) &&
             (!filters.contact || p.profile.contactMode === filters.contact) &&
             (!filters.status ||
               data.connections.some(

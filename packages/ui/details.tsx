@@ -1,4 +1,6 @@
 "use client";
+import { useState } from "react";
+import { Modal } from "./primitives";
 import { useTranslation } from "react-i18next";
 import { X, Plus, ArrowUpRight, Pencil, Trash2, Pin } from "lucide-react";
 import { useNetwork } from "./store";
@@ -35,6 +37,8 @@ export function Details({
     edges = data.connections.filter(
       (e) => e.sourceId === person.id || e.targetId === person.id,
     );
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const busy = s.saving || s.dirty || Boolean(s.conflict);
   return (
     <aside className="details-panel">
       <header>
@@ -65,7 +69,13 @@ export function Details({
         ))}
         <span>{t(person.profile.contactMode)}</span>
       </div>
-      <div className="relation-badge" style={{ color: colors[relation] }}>
+      <div
+        className="relation-badge"
+        style={{
+          borderColor: colors[relation],
+          backgroundColor: colors[relation] + "20",
+        }}
+      >
         {person.id === data.ownerId ? t("me") : t(relation)}
       </div>
       <div className="profile-actions">
@@ -77,6 +87,16 @@ export function Details({
           <Pin size={15} />
           {t(person.display.positionLocked ? "unlock" : "lock")}
         </button>
+        {person.id !== data.ownerId && (
+          <button
+            className="danger"
+            disabled={busy}
+            onClick={() => setConfirmDelete(true)}
+          >
+            <Trash2 size={15} />
+            {t("deletePerson")}
+          </button>
+        )}
       </div>
       <div className="metric-grid">
         <div>
@@ -105,6 +125,18 @@ export function Details({
           <h3>{t("interests")}</h3>
           <div className="chips">
             {person.profile.interests.map((v) => (
+              <span className="chip" key={v}>
+                {v}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+      {person.profile.tags.length > 0 && (
+        <>
+          <h3>{t("tags")}</h3>
+          <div className="chips">
+            {person.profile.tags.map((v) => (
               <span className="chip" key={v}>
                 {v}
               </span>
@@ -178,19 +210,40 @@ export function Details({
         })}
         {!edges.length && <p className="muted-copy">{t("noConnections")}</p>}
       </div>
-      {person.id !== data.ownerId && (
-        <button
-          className="danger delete-person"
-          onClick={() => {
-            if (window.confirm(t("deleteConfirm"))) {
-              s.mutate((d) => removeEntity(d, person.id, "person"));
-              onClose();
-            }
-          }}
+      {confirmDelete && (
+        <Modal
+          title={t("deletePerson")}
+          onClose={() => setConfirmDelete(false)}
         >
-          <Trash2 size={15} />
-          {t("delete")}
-        </button>
+          <div className="form-content">
+            <p>
+              {t("deletePersonConfirm", {
+                name: displayName(person),
+                count: edges.length,
+              })}
+            </p>
+            <footer className="modal-actions">
+              <button onClick={() => setConfirmDelete(false)}>
+                {t("cancel")}
+              </button>
+              <button
+                className="danger"
+                disabled={busy}
+                onClick={() => {
+                  s.mutate((d) => removeEntity(d, person.id, "person"));
+                  if (
+                    !useNetwork
+                      .getState()
+                      .data?.people.some((p) => p.id === person.id)
+                  )
+                    onClose();
+                }}
+              >
+                {t("deletePerson")}
+              </button>
+            </footer>
+          </div>
+        </Modal>
       )}
     </aside>
   );

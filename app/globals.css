@@ -1688,3 +1688,6 @@ th {
     border-radius: 20px;
   }
 }
+.profile-actions {
+  flex-wrap: wrap;
+}

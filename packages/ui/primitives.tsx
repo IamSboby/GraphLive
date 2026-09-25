@@ -67,30 +67,44 @@ export function TagInput({
   value,
   onChange,
   suggestions = [],
+  onDraftChange,
 }: {
   label: string;
   value: string[];
   onChange: (v: string[]) => void;
   suggestions?: string[];
+  onDraftChange: (value: string) => void;
 }) {
   const { t } = useTranslation(),
     [input, setInput] = useState("");
+  const commit = () => {
+    const v = input.trim();
+    if (
+      v &&
+      value.length < 100 &&
+      !value.some((s) => normalize(s) === normalize(v))
+    )
+      onChange([...value, v]);
+    setInput("");
+    onDraftChange("");
+  };
   return (
     <div className="field">
       <label>
         {label}
         <input
           value={input}
+          maxLength={200}
           placeholder={t("tagHelp")}
           list={label + "-tags"}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            setInput(e.target.value);
+            onDraftChange(e.target.value);
+          }}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
+            if (e.key === "Enter" && !e.nativeEvent.isComposing) {
               e.preventDefault();
-              const v = input.trim();
-              if (v && !value.some((s) => normalize(s) === normalize(v)))
-                onChange([...value, v]);
-              setInput("");
+              commit();
             }
           }}
         />

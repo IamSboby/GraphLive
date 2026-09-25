@@ -10,9 +10,15 @@ export const relationshipTypes = [
   "colleague",
   "almostFriend",
   "awkward",
+  "closeFriends",
+  "partner",
+  "crush",
 ] as const;
 export const colors: Record<RelationshipType, string> = {
   bestFriend: "#D8B24A",
+  closeFriends: "#2ECC71",
+  partner: "#F06473",
+  crush: "#F7A8D8",
   family: "#274C77",
   friend: "#D9B94E",
   enemy: "#8C2F39",

@@ -1,5 +1,5 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useState, useRef, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
   type Person,
@@ -31,6 +31,7 @@ export function PersonForm({
   const { t } = useTranslation(),
     data = useNetwork((s) => s.data)!,
     mutate = useNetwork((s) => s.mutate);
+  const drafts = useRef({ interests: "", tags: "" });
   const [profile, setProfile] = useState<Profile>(
     person?.profile ?? {
       firstName: "",
@@ -67,10 +68,22 @@ export function PersonForm({
     ),
     [error, setError] = useState("");
   const set = <K extends keyof Profile>(key: K, value: Profile[K]) =>
-    setProfile({ ...profile, [key]: value });
+    setProfile((current) => ({ ...current, [key]: value }));
   function submit(e: FormEvent) {
     e.preventDefault();
-    const parsed = profileSchema.safeParse(profile);
+    const parsed = profileSchema.safeParse({
+      ...profile,
+      interests: [
+        ...profile.interests,
+        ...(drafts.current.interests.trim()
+          ? [drafts.current.interests.trim()]
+          : []),
+      ],
+      tags: [
+        ...profile.tags,
+        ...(drafts.current.tags.trim() ? [drafts.current.tags.trim()] : []),
+      ],
+    });
     if (!parsed.success) {
       setError(
         profile.firstName || profile.lastName || profile.nickname
@@ -240,6 +253,9 @@ export function PersonForm({
           </Field>
           <TagInput
             label={t("interests")}
+            onDraftChange={(v) => {
+              drafts.current.interests = v;
+            }}
             value={profile.interests}
             onChange={(v) => set("interests", v)}
             suggestions={[
@@ -248,6 +264,9 @@ export function PersonForm({
           />
           <TagInput
             label={t("tags")}
+            onDraftChange={(v) => {
+              drafts.current.tags = v;
+            }}
             value={profile.tags}
             onChange={(v) => set("tags", v)}
             suggestions={[
