@@ -227,7 +227,7 @@ test("import preview replaces only demo data and server backups are available", 
   await page
     .getByRole("button", { name: "Configuración", exact: true })
     .click();
-  await page.locator("input[type=file]").setInputFiles({
+  await page.getByLabel("Importar copia", { exact: true }).setInputFiles({
     name: "GraphLive.json",
     mimeType: "application/json",
     buffer: Buffer.from(JSON.stringify(snapshot)),
