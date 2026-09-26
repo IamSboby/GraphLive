@@ -1,3 +1,10 @@
+import {
+  backupPolicy,
+  backupTime,
+  isAutomaticBackup,
+  isLegacyBackup,
+  needsAutomaticBackup,
+} from "../storage-core/backup-policy";
 import { emptySnapshot, snapshotSchema, type Snapshot } from "../domain/model";
 import type { Repository } from "../storage-core";
 import { ConflictError } from "../sync-engine/merge";
@@ -7,6 +14,8 @@ const upload = "https://www.googleapis.com/upload/drive/v2/files";
 type DriveFile = { id: string; title: string; etag: string };
 export class GoogleDriveRepository implements Repository {
   constructor(readonly session = new GoogleSession()) {}
+  backupWarning: string | null = null;
+  private backupNames = new Map<string, string>();
   private async files() {
     const files: DriveFile[] = [];
     let pageToken = "";
@@ -34,12 +43,11 @@ export class GoogleDriveRepository implements Repository {
     return snapshotSchema.parse(JSON.parse(text));
   }
   private async current() {
-    const files = (await this.files()).filter(
-      (f) => f.title === "graphlive-network.json",
-    );
+    const inventory = await this.files();
+    const files = inventory.filter((f) => f.title === "graphlive-network.json");
     if (files.length > 1) throw new Error("driveDuplicate");
     const file = files[0];
-    if (!file) return { data: emptySnapshot(), file: undefined };
+    if (!file) return { data: emptySnapshot(), file: undefined, inventory };
     // Read metadata first: an intervening write makes the conditional update fail.
     const metadata: DriveFile = await (
       await this.session.request(
@@ -47,7 +55,7 @@ export class GoogleDriveRepository implements Repository {
       )
     ).json();
     if (!metadata.etag) throw new Error("storageError");
-    return { data: await this.read(file.id), file: metadata };
+    return { data: await this.read(file.id), file: metadata, inventory };
   }
   async load() {
     return (await this.current()).data;
@@ -69,7 +77,7 @@ export class GoogleDriveRepository implements Repository {
     ).json()) as DriveFile;
   }
   async save(input: Snapshot, expectedRevision: number) {
-    const { data, file } = await this.current();
+    const { data, file, inventory } = await this.current();
     if (data.revision !== expectedRevision) throw new ConflictError(data);
     const next = snapshotSchema.parse({
       ...input,
@@ -81,11 +89,14 @@ export class GoogleDriveRepository implements Repository {
     if (new TextEncoder().encode(body).length > 10485760)
       throw new Error("tooLarge");
     if (file) {
-      if (next.preferences.autoBackup)
-        await this.create(
-          "backup-" + Date.now() + "-" + crypto.randomUUID(),
-          data,
-        );
+      if (
+        next.preferences.autoBackup &&
+        needsAutomaticBackup(inventory.map((f) => f.title))
+      ) {
+        const title = "auto-backup-" + Date.now() + "-" + crypto.randomUUID();
+        const created = await this.create(title, data);
+        inventory.push({ ...created, title });
+      }
       const result = await this.session.request(
         upload + "/" + encodeURIComponent(file.id) + "?uploadType=media",
         {
@@ -103,20 +114,77 @@ export class GoogleDriveRepository implements Repository {
       // Simultaneous first-time initialization never silently selects one network.
       await this.current();
     }
+    try {
+      await this.removeBackups(
+        inventory
+          .filter((f) => isAutomaticBackup(f.title))
+          .sort((a, b) => b.title.localeCompare(a.title))
+          .slice(backupPolicy.automaticLimit),
+      );
+      this.backupWarning = null;
+    } catch {
+      this.backupWarning = "backupCleanupFailed";
+    }
     return next;
   }
   async backup() {
     const file = await this.create(
-      "backup-" + Date.now() + "-" + crypto.randomUUID(),
+      "manual-backup-" + Date.now() + "-" + crypto.randomUUID(),
       await this.load(),
     );
     return file.id;
   }
   async backups() {
+    const files = (await this.files())
+      .filter((f) => /^(?:(?:auto|manual)-)?backup-/.test(f.title))
+      .sort(
+        (a, b) =>
+          backupTime(b.title) - backupTime(a.title) ||
+          b.title.localeCompare(a.title),
+      );
+    this.backupNames = new Map(files.map((f) => [f.id, f.title]));
+    return files.map((f) => f.id);
+  }
+  backupInfo(id: string) {
+    const title = this.backupNames.get(id) ?? "";
+    return {
+      timestamp: backupTime(title),
+      kind: title.startsWith("auto-")
+        ? "backupAuto"
+        : title.startsWith("manual-")
+          ? "backupManual"
+          : "backupLegacy",
+    };
+  }
+  async legacyCleanupPlan() {
     return (await this.files())
-      .filter((f) => f.title.startsWith("backup-"))
+      .filter((f) => isLegacyBackup(f.title))
       .sort((a, b) => b.title.localeCompare(a.title))
+      .slice(backupPolicy.legacyKeep)
       .map((f) => f.id);
+  }
+  async cleanupLegacy(ids: string[]) {
+    const eligible = (await this.files())
+      .filter((f) => isLegacyBackup(f.title))
+      .sort((a, b) => b.title.localeCompare(a.title))
+      .slice(backupPolicy.legacyKeep)
+      .filter((f) => ids.includes(f.id));
+    await this.removeBackups(eligible);
+    return eligible.length;
+  }
+  private async removeBackups(files: DriveFile[]) {
+    for (const file of files) {
+      if (
+        !file.etag ||
+        !(isAutomaticBackup(file.title) || isLegacyBackup(file.title))
+      )
+        throw Error("backupCleanupFailed");
+      const result = await this.session.request(
+        api + "/" + encodeURIComponent(file.id),
+        { method: "DELETE", headers: { "If-Match": file.etag } },
+      );
+      if (!result.ok) throw Error("backupCleanupFailed");
+    }
   }
   async restorePreview(id: string) {
     if (!(await this.backups()).includes(id)) throw new Error("invalidPath");

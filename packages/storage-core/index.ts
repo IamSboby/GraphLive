@@ -1,3 +1,4 @@
+import { relationshipPalette, themePalette } from "../appearance/config";
 import type { Snapshot } from "../domain/model";
 export interface StorageMetadata {
   size: number;
@@ -69,6 +70,15 @@ export function fileTree(s: Snapshot): Record<string, string> {
       deviceId: s.deviceId,
     }),
     "settings/preferences.json": json(s.preferences),
+    "settings/relationship-colors.json": json({
+      schemaVersion: 1,
+      colors: relationshipPalette(s.preferences),
+    }),
+    "settings/themes.json": json({
+      schemaVersion: 1,
+      light: themePalette(s.preferences, false),
+      dark: themePalette(s.preferences, true),
+    }),
     "settings/feature-flags.json": json({ schemaVersion: 1 }),
     "settings/storage.json": json({
       schemaVersion: 1,

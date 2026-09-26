@@ -59,6 +59,13 @@ test("Drive opens, saves and reopens a network through the browser adapter", asy
     }
     const id = url.pathname.split("/").at(-1)!,
       file = files.get(id)!;
+    if (request.method() === "DELETE") {
+      expect(request.headers()["if-match"]).toBe(file.etag);
+      expect(file.title).toMatch(/^backup-/);
+      files.delete(id);
+      await route.fulfill({ status: 204 });
+      return;
+    }
     if (request.method() === "PUT") {
       expect(request.headers()["if-match"]).toBe(file.etag);
       file.data = request.postDataJSON();
@@ -95,4 +102,49 @@ test("Drive opens, saves and reopens a network through the browser adapter", asy
   expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain(
     "test-token",
   );
+  await page.getByRole("button", { name: "Omitir por ahora" }).click();
+  const saved = [...files.values()].find(
+    (f) => f.title === "graphlive-network.json",
+  )!;
+  for (let i = 0; i < 23; i++)
+    files.set(`legacy-${i}`, {
+      title: `backup-${Date.now() - i * 1000}-00000000-0000-0000-0000-000000000000`,
+      data: saved.data,
+      etag: '"legacy"',
+    });
+  files.set("manual", {
+    title: `manual-backup-${Date.now()}-00000000-0000-0000-0000-000000000000`,
+    data: saved.data,
+    etag: '"manual"',
+  });
+  await page
+    .getByRole("button", { name: "Configuración", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Revisar copias antiguas", exact: true })
+    .click();
+  const cleanup = page.getByRole("dialog", {
+    name: "Revisar copias antiguas",
+    exact: true,
+  });
+  await expect(cleanup).toBeVisible();
+  expect(
+    [...files.keys()].filter((id) => id.startsWith("legacy-")),
+  ).toHaveLength(23);
+  await cleanup.getByRole("button", { name: "Cancelar", exact: true }).click();
+  expect(files.has("legacy-22")).toBe(true);
+  await page
+    .getByRole("button", { name: "Revisar copias antiguas", exact: true })
+    .click();
+  await cleanup
+    .getByRole("button", { name: "Eliminar copias sobrantes", exact: true })
+    .click();
+  await expect(cleanup).toHaveCount(0);
+  expect(
+    [...files.keys()].filter((id) => id.startsWith("legacy-")),
+  ).toHaveLength(20);
+  expect(files.has("manual")).toBe(true);
+  expect(
+    [...files.values()].some((f) => f.title === "graphlive-network.json"),
+  ).toBe(true);
 });

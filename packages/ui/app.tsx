@@ -1,4 +1,5 @@
 "use client";
+import { relationshipPalette, themePalette } from "../appearance/config";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
 import "../i18n";
 import Link from "next/link";
@@ -32,7 +33,6 @@ import {
   type Person,
   type Connection,
   displayName,
-  colors,
   relationshipTypes,
   ownerRelationship,
   normalize,
@@ -106,6 +106,18 @@ export function App({
       ? (data?.preferences.theme ?? welcomeTheme)
       : welcomeTheme;
   const dark = theme === "dark" || (theme === "system" && systemDark);
+  const colors = useMemo(
+    () => relationshipPalette(data?.preferences),
+    [data?.preferences],
+  );
+  const palette = useMemo(
+    () => themePalette(data?.preferences, dark),
+    [data?.preferences, dark],
+  );
+  useEffect(() => {
+    for (const [key, value] of Object.entries(palette))
+      document.documentElement.style.setProperty("--" + key, value);
+  }, [palette]);
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     setSystemDark(media.matches);
@@ -415,7 +427,7 @@ export function App({
                     style={{
                       background:
                         p.id === data.ownerId
-                          ? "#335eaa"
+                          ? `linear-gradient(135deg, ${palette.ownerStart}, ${palette.ownerEnd})`
                           : colors[ownerRelationship(data, p.id)],
                     }}
                   >

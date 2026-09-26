@@ -1,6 +1,7 @@
 "use client";
 import {
   useEffect,
+  useMemo,
   useRef,
   useImperativeHandle,
   forwardRef,
@@ -8,12 +9,8 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import cytoscape, { type Core, type StylesheetJson } from "cytoscape";
-import {
-  type Snapshot,
-  colors,
-  displayName,
-  ownerRelationship,
-} from "../domain/model";
+import { type Snapshot, displayName, ownerRelationship } from "../domain/model";
+import { relationshipPalette, themePalette } from "../appearance/config";
 import { Flag } from "./primitives";
 import { flagUrl } from "./flags";
 import { metrics, nodeSize } from "../graph-engine/metrics";
@@ -46,6 +43,14 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
   ref,
 ) {
   const { t } = useTranslation();
+  const colors = useMemo(
+    () => relationshipPalette(data.preferences),
+    [data.preferences],
+  );
+  const palette = useMemo(
+    () => themePalette(data.preferences, dark),
+    [data.preferences, dark],
+  );
   const [hover, setHover] = useState<{
     id: string;
     x: number;
@@ -120,7 +125,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
         a.href = c.png({
           full: true,
           scale: 2,
-          bg: dark ? "#111821" : "#f5f7fa",
+          bg: palette.bg,
         });
         a.click();
       }
@@ -207,7 +212,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
               flags: p.profile.nationalities.map(flagUrl),
               color:
                 p.id === data.ownerId
-                  ? "#335eaa"
+                  ? palette.ownerStart
                   : colors[ownerRelationship(data, p.id)],
               size: nodeSize(score, max),
               owner: p.id === data.ownerId,
@@ -241,7 +246,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
       previousIds.current = ids;
       runLayout();
     }
-  }, [data, me]);
+  }, [data, me, colors, palette.ownerStart]);
   useEffect(() => {
     const c = cy.current;
     if (!c) return;
@@ -280,11 +285,11 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
           "text-wrap": "wrap",
           "text-valign": "bottom",
           "text-margin-y": 8,
-          color: dark ? "#e5eaf3" : "#263447",
+          color: palette.text,
           "text-outline-width": 2,
-          "text-outline-color": dark ? "#111821" : "#f5f7fa",
+          "text-outline-color": palette.bg,
           "border-width": 2,
-          "border-color": dark ? "#182331" : "#ffffff",
+          "border-color": palette.surface,
           "overlay-opacity": 0,
           "min-zoomed-font-size": 8,
         },
@@ -293,13 +298,20 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
         selector: "node[?owner]",
         style: {
           "border-width": 5,
-          "border-color": dark ? "#8eb5f0" : "#183c70",
+          "border-color": palette.accent,
+          "background-fill": "linear-gradient",
+          "background-gradient-direction": "to-bottom-right",
+          "background-gradient-stop-colors": [
+            palette.ownerStart,
+            palette.ownerEnd,
+          ],
+          "background-gradient-stop-positions": [0, 100],
         },
       },
       {
         selector: "node[?bestFriend]",
         style: {
-          "underlay-color": "#D8B24A",
+          "underlay-color": colors.bestFriend,
           "underlay-opacity": 0.12,
           "underlay-padding": 6,
         },
@@ -352,7 +364,15 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
             .addClass("route");
       }
     });
-  }, [visible, selected, path, dark, data.preferences.showLabels]);
+  }, [
+    visible,
+    selected,
+    path,
+    dark,
+    data.preferences.showLabels,
+    colors,
+    palette,
+  ]);
   useEffect(() => {
     const observer = new ResizeObserver(() => cy.current?.resize());
     if (container.current) observer.observe(container.current);

@@ -1,33 +1,15 @@
 import { genderClassification } from "./gender";
 import { z } from "zod";
 
-export const relationshipTypes = [
-  "bestFriend",
-  "family",
-  "friend",
-  "enemy",
-  "acquaintance",
-  "colleague",
-  "almostFriend",
-  "awkward",
-  "closeFriends",
-  "partner",
-  "crush",
-] as const;
-export const colors: Record<RelationshipType, string> = {
-  bestFriend: "#D8B24A",
-  closeFriends: "#2ECC71",
-  partner: "#F06473",
-  crush: "#F7A8D8",
-  family: "#274C77",
-  friend: "#D9B94E",
-  enemy: "#8C2F39",
-  acquaintance: "#8B929A",
-  colleague: "#4F8F8B",
-  almostFriend: "#D9822B",
-  awkward: "#735784",
-};
+import {
+  relationshipTypes,
+  appearancePreferencesShape,
+} from "../appearance/config";
 export type RelationshipType = (typeof relationshipTypes)[number];
+export {
+  relationshipTypes,
+  defaultRelationshipColors as colors,
+} from "../appearance/config";
 const text = z.string().trim().max(200);
 const date = z
   .string()
@@ -137,6 +119,7 @@ export const connectionSchema = edgeInputSchema
   );
 export const preferencesSchema = z
   .object({
+    ...appearancePreferencesShape,
     language: z.enum(["es", "en"]).default("es"),
     theme: z.enum(["light", "dark", "system"]).default("system"),
     showLabels: z.boolean().default(true),

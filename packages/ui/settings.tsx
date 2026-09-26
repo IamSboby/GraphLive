@@ -1,4 +1,8 @@
 "use client";
+import { DriveBackupSettings } from "./drive-backup-settings";
+import { GoogleDriveRepository } from "../storage-adapters/google-drive";
+
+import { AppearanceSettings } from "./appearance-settings";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNetwork } from "./store";
@@ -54,6 +58,7 @@ export function Settings({
           </button>
         )}
         <h3>{t("appearance")}</h3>
+        <AppearanceSettings />
         <Field label={t("sizeMode")}>
           <select
             value={data.preferences.sizeMode}
@@ -80,6 +85,7 @@ export function Settings({
             {t(["labels", "owner", "searchNotes", "autoBackup"][i])}
           </label>
         ))}
+        <DriveBackupSettings />
         <h3>{t("data")}</h3>
         <div className="action-grid">
           <button onClick={() => exportJson(data)}>{t("exportJson")}</button>
@@ -121,7 +127,7 @@ export function Settings({
                 JSON.stringify(
                   {
                     app: "GraphLive",
-                    version: "0.1.0",
+                    version: "0.2.0-pre-beta.1",
                     schemaVersion: data.schemaVersion,
                     provider: s.demo ? "demo" : s.repo?.constructor.name,
                     pending: s.dirty,
@@ -150,7 +156,13 @@ export function Settings({
                   )
                 }
               >
-                {t("restore")} · {id.slice(0, 19)}
+                {t("restore")} ·{" "}
+                {s.repo instanceof GoogleDriveRepository &&
+                s.repo.backupInfo(id).timestamp
+                  ? t(s.repo.backupInfo(id).kind) +
+                    " · " +
+                    new Date(s.repo.backupInfo(id).timestamp).toLocaleString()
+                  : id.slice(0, 19)}
               </button>
             ))}
           </div>

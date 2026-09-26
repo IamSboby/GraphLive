@@ -1,4 +1,5 @@
 "use client";
+import { relationshipPalette } from "../appearance/config";
 import { useState } from "react";
 import { Modal } from "./primitives";
 import { useTranslation } from "react-i18next";
@@ -9,7 +10,6 @@ import {
   type Connection,
   displayName,
   ownerRelationship,
-  colors,
   removeEntity,
 } from "../domain/model";
 import { metrics } from "../graph-engine/metrics";
@@ -34,6 +34,7 @@ export function Details({
     data = s.data!,
     m = metrics(data).get(person.id)!,
     relation = ownerRelationship(data, person.id),
+    colors = relationshipPalette(data.preferences),
     edges = data.connections.filter(
       (e) => e.sourceId === person.id || e.targetId === person.id,
     );
@@ -51,7 +52,15 @@ export function Details({
           <X size={18} />
         </button>
       </header>
-      <div className="person-avatar" style={{ background: colors[relation] }}>
+      <div
+        className="person-avatar"
+        style={{
+          background:
+            person.id === data.ownerId
+              ? "linear-gradient(135deg, var(--ownerStart), var(--ownerEnd))"
+              : colors[relation],
+        }}
+      >
         {displayName(person).slice(0, 1)}
       </div>
       <h2>{displayName(person)}</h2>

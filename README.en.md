@@ -1,4 +1,4 @@
-# GraphLive — 0.1.0-alpha.1
+# GraphLive — 0.2.0-pre-beta.1
 
 Serverless web edition: [GraphLive on GitHub Pages](https://iamsboby.github.io/GraphLive/). Store your network in this browser or a local folder. Browser data stays on this device; export JSON to keep an independent copy. Clearing site data removes the network and its local backups.
 
@@ -6,6 +6,12 @@ Serverless web edition: [GraphLive on GitHub Pages](https://iamsboby.github.io/G
 
 A private, self-hosted relationship graph. Explore people and connections on an interactive canvas, keep records in JSON files, and choose Spanish or English and light or dark mode.
 
+
+## Appearance and Drive backups
+
+Open **Settings → Customize colors and themes** to edit relationship colors, choose a preset, and customize its light and dark variants. Import or export `relationship-colors.json` and `themes.json` independently. Appearance is saved with the network, and the owner circle has its own gradient.
+
+When automatic backups are enabled, Drive creates at most one every 15 minutes when saving and retains the latest 20. New manual backups are never automatically removed. **Review old backups** lets you confirm permanent removal of excess legacy copies while keeping the latest 20; legacy copies did not distinguish manual from automatic backups. Cleanup happens while using the application, not while it is closed.
 
 ## Run locally
 

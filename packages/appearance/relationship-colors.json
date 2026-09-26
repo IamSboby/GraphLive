@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "colors": {
+    "bestFriend": "#D8B24A",
+    "family": "#274C77",
+    "friend": "#D9B94E",
+    "enemy": "#8C2F39",
+    "acquaintance": "#8B929A",
+    "colleague": "#4F8F8B",
+    "almostFriend": "#D9822B",
+    "awkward": "#735784",
+    "closeFriends": "#2ECC71",
+    "partner": "#F06473",
+    "crush": "#F7A8D8"
+  }
+}

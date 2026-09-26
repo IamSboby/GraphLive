@@ -222,27 +222,9 @@ a.button {
   color: var(--muted);
 }
 :root {
-  --bg: #f5f7fa;
-  --surface: #fff;
-  --text: #203047;
-  --muted: #728096;
-  --border: #e5eaf0;
-  --accent: #335eaa;
-  --soft: #eef3fb;
-  --danger: #9f3543;
-  --dot: #cfd8e4;
   color-scheme: light;
 }
 :root[data-theme="dark"] {
-  --bg: #111821;
-  --surface: #18222f;
-  --text: #e5eaf3;
-  --muted: #9aa9bd;
-  --border: #293747;
-  --accent: #8fb6f3;
-  --soft: #23344d;
-  --danger: #ee919a;
-  --dot: #2b394b;
   color-scheme: dark;
 }
 * {
@@ -1690,4 +1672,63 @@ th {
 }
 .profile-actions {
   flex-wrap: wrap;
+}
+.appearance-settings {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  margin: 14px 0;
+}
+.appearance-settings > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.appearance-settings fieldset {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.color-grid label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12px;
+}
+.color-grid input[type="color"] {
+  width: 38px;
+  height: 34px;
+  padding: 3px;
+  flex: 0 0 38px;
+  cursor: pointer;
+}
+.theme-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid;
+  padding: 16px;
+  border-radius: 12px;
+  margin: 16px 0;
+}
+.theme-preview p {
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+.owner-preview {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.theme-preview-accent {
+  margin-left: auto;
+  padding: 9px;
+  border-radius: 8px;
 }

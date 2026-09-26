@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
+import { defaultThemeCss } from "../packages/appearance/config";
 export const metadata: Metadata = {
   title: "GraphLive",
   description: "Tu red privada de personas y conexiones.",
@@ -15,6 +16,7 @@ export default async function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
+        <style nonce={nonce}>{defaultThemeCss}</style>
         <script
           nonce={nonce}
           dangerouslySetInnerHTML={{

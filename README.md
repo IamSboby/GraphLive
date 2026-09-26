@@ -1,4 +1,4 @@
-# GraphLive — 0.1.0-alpha.1
+# GraphLive — 0.2.0-pre-beta.1
 
 Edición web sin servidor: [GraphLive en GitHub Pages](https://iamsboby.github.io/GraphLive/). Guarda la red en Google Drive, en el navegador o en una carpeta local. [Despliegue y límites de almacenamiento](docs/github-pages.md).
 
@@ -6,6 +6,12 @@ Español · [English](README.en.md)
 
 Red privada de personas y relaciones, con grafo interactivo, archivos JSON, interfaz en español e inglés y modo claro/oscuro. Proyecto TypeScript estricto, React y Next.js, preparado para instalarse en un servidor propio.
 
+
+## Personalización y copias en Drive
+
+En **Configuración → Personalizar colores y temas** puedes editar los colores de las relaciones, elegir un estilo y personalizar sus variantes clara y oscura. Los archivos `relationship-colors.json` y `themes.json` se importan y exportan por separado. La apariencia se guarda con la red y el círculo principal utiliza un degradado propio.
+
+Con las copias automáticas activadas, Drive crea como máximo una cada 15 minutos al guardar y conserva las 20 más recientes. Las copias manuales nuevas no se eliminan automáticamente. **Revisar copias antiguas** permite confirmar la eliminación permanente del excedente anterior, conservando las 20 últimas; esas copias antiguas no distinguían entre manuales y automáticas. La limpieza ocurre al usar la aplicación, no mientras está cerrada.
 
 ## Inicio rápido
 

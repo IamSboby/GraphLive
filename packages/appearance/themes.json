@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "presets": {
+    "classic": {
+      "light": {
+        "bg": "#f5f7fa",
+        "surface": "#ffffff",
+        "text": "#203047",
+        "muted": "#728096",
+        "border": "#e5eaf0",
+        "accent": "#335eaa",
+        "soft": "#eef3fb",
+        "danger": "#9f3543",
+        "dot": "#cfd8e4",
+        "ownerStart": "#38bdf8",
+        "ownerEnd": "#7c3aed"
+      },
+      "dark": {
+        "bg": "#111821",
+        "surface": "#18222f",
+        "text": "#e5eaf3",
+        "muted": "#9aa9bd",
+        "border": "#293747",
+        "accent": "#8fb6f3",
+        "soft": "#23344d",
+        "danger": "#ee919a",
+        "dot": "#2b394b",
+        "ownerStart": "#38bdf8",
+        "ownerEnd": "#a78bfa"
+      }
+    },
+    "forest": {
+      "light": {
+        "bg": "#f3f8f5",
+        "surface": "#ffffff",
+        "text": "#203047",
+        "muted": "#728096",
+        "border": "#e5eaf0",
+        "accent": "#176b4b",
+        "soft": "#e3f2e9",
+        "danger": "#9f3543",
+        "dot": "#cfd8e4",
+        "ownerStart": "#2dd4bf",
+        "ownerEnd": "#0f766e"
+      },
+      "dark": {
+        "bg": "#101b18",
+        "surface": "#192b24",
+        "text": "#e5eaf3",
+        "muted": "#9aa9bd",
+        "border": "#293747",
+        "accent": "#74d9ac",
+        "soft": "#234333",
+        "danger": "#ee919a",
+        "dot": "#2b394b",
+        "ownerStart": "#5eead4",
+        "ownerEnd": "#10b981"
+      }
+    },
+    "rose": {
+      "light": {
+        "bg": "#fcf5f8",
+        "surface": "#ffffff",
+        "text": "#203047",
+        "muted": "#728096",
+        "border": "#e5eaf0",
+        "accent": "#a23d71",
+        "soft": "#f7e6ef",
+        "danger": "#9f3543",
+        "dot": "#cfd8e4",
+        "ownerStart": "#fb7185",
+        "ownerEnd": "#a855f7"
+      },
+      "dark": {
+        "bg": "#20141e",
+        "surface": "#30202d",
+        "text": "#e5eaf3",
+        "muted": "#9aa9bd",
+        "border": "#293747",
+        "accent": "#f2a5ce",
+        "soft": "#4a2840",
+        "danger": "#ee919a",
+        "dot": "#2b394b",
+        "ownerStart": "#f9a8d4",
+        "ownerEnd": "#a78bfa"
+      }
+    }
+  }
+}

@@ -373,7 +373,7 @@ export function Onboarding({
         </section>
       </div>
       <footer className="welcome-footer">
-        GraphLive · v0.1.0-alpha.1 <span>{t("footer")}</span>
+        GraphLive · v0.2.0-pre-beta.1 <span>{t("footer")}</span>
       </footer>
     </main>
   );
