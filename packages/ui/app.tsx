@@ -1,4 +1,5 @@
 "use client";
+import { IconSelect } from "./icon-select";
 import { relationshipPalette, themePalette } from "../appearance/config";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
 import "../i18n";
@@ -309,7 +310,8 @@ export function App({
           >
             <Search size={18} />
           </button>
-          <select
+          <IconSelect
+            kind="language"
             aria-label={t("language")}
             value={data.preferences.language}
             disabled={busy}
@@ -321,8 +323,9 @@ export function App({
           >
             <option value="es">ES</option>
             <option value="en">EN</option>
-          </select>
-          <select
+          </IconSelect>
+          <IconSelect
+            kind="theme"
             aria-label={t("theme")}
             value={data.preferences.theme}
             disabled={busy}
@@ -338,7 +341,7 @@ export function App({
                 {t(v)}
               </option>
             ))}
-          </select>
+          </IconSelect>
           <button
             className="icon-button"
             aria-label={t("settings")}

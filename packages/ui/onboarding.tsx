@@ -1,4 +1,5 @@
 "use client";
+import { IconSelect } from "./icon-select";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -120,7 +121,8 @@ export function Onboarding({
           </strong>
         </Link>
         <span>{t("tagline")}</span>
-        <select
+        <IconSelect
+          kind="language"
           className="language"
           aria-label={t("language")}
           value={i18n.language}
@@ -131,8 +133,9 @@ export function Onboarding({
         >
           <option value="es">ES</option>
           <option value="en">EN</option>
-        </select>
-        <select
+        </IconSelect>
+        <IconSelect
+          kind="theme"
           className="welcome-theme"
           aria-label={t("theme")}
           value={theme}
@@ -143,7 +146,7 @@ export function Onboarding({
               {t(value)}
             </option>
           ))}
-        </select>
+        </IconSelect>
       </header>
       <div className="welcome-layout">
         <section className="welcome-copy">

@@ -101,6 +101,35 @@ export function AppearanceSettings() {
           </label>
         </div>
         <h3>{t("themeEditor")}</h3>
+        <div
+          className="theme-swatches"
+          role="group"
+          aria-label={t("themePreset")}
+        >
+          {themeNames.map((name) => (
+            <button
+              type="button"
+              key={name}
+              aria-pressed={(draft.themePreset ?? "classic") === name}
+              onClick={() =>
+                setDraft((d) => ({
+                  ...d,
+                  themePreset: name,
+                  customThemes: undefined,
+                }))
+              }
+            >
+              <span
+                className="theme-swatch"
+                aria-hidden="true"
+                style={{
+                  background: themePalette({ themePreset: name }, false).accent,
+                }}
+              />
+              {t("theme_" + name)}
+            </button>
+          ))}
+        </div>
         <Field label={t("themePreset")}>
           <select
             value={draft.themePreset ?? "classic"}
@@ -132,6 +161,11 @@ export function AppearanceSettings() {
             style={{
               background: `linear-gradient(135deg,${palette.ownerStart},${palette.ownerEnd})`,
             }}
+          />
+          <span
+            className="theme-swatch"
+            aria-hidden="true"
+            style={{ background: palette.accent }}
           />
           <div>
             <strong>{t("me")}</strong>
