@@ -1,6 +1,34 @@
 {
   "schemaVersion": 1,
   "presets": {
+    "indigo": {
+      "light": {
+        "bg": "#f4f5fc",
+        "surface": "#ffffff",
+        "text": "#151b46",
+        "muted": "#626b91",
+        "border": "#dce0f3",
+        "accent": "#192586",
+        "soft": "#e9ecfb",
+        "danger": "#a12c49",
+        "dot": "#c4cbe8",
+        "ownerStart": "#6175ed",
+        "ownerEnd": "#192586"
+      },
+      "dark": {
+        "bg": "#0c1029",
+        "surface": "#141a3d",
+        "text": "#edf0ff",
+        "muted": "#a6afd4",
+        "border": "#2d3764",
+        "accent": "#a8b5ff",
+        "soft": "#192586",
+        "danger": "#ff9eb4",
+        "dot": "#303b6b",
+        "ownerStart": "#8495ff",
+        "ownerEnd": "#192586"
+      }
+    },
     "classic": {
       "light": {
         "bg": "#f5f7fa",

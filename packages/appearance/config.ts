@@ -34,7 +34,7 @@ export const themeSchema = z
     ownerEnd: hexColor,
   })
   .strict();
-export const themeNames = ["classic", "forest", "rose"] as const;
+export const themeNames = ["classic", "forest", "rose", "indigo"] as const;
 export const themeFileSchema = z
   .object({
     schemaVersion: z.literal(1),
