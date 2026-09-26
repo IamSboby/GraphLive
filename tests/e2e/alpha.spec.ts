@@ -4,9 +4,8 @@ test("English onboarding, automatic gender filenames and SVG flags", async ({
   page,
 }) => {
   await page.goto("/");
-  await page
-    .getByRole("combobox", { name: "Idioma", exact: true })
-    .selectOption("en");
+  await page.getByRole("combobox", { name: "Idioma", exact: true }).click();
+  await page.locator('[role="option"][data-value="en"]').click();
   await page.getByRole("button", { name: /Explore/ }).click();
   await expect(
     page.getByRole("button", { name: "Settings", exact: true }),

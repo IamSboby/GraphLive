@@ -409,17 +409,101 @@ small {
   align-items: center;
   flex-shrink: 0;
 }
-.icon-select > svg {
-  position: absolute;
-  left: 10px;
-  pointer-events: none;
-  color: var(--text);
-}
-.icon-select > select,
-.topbar-actions .icon-select > select {
-  padding-left: 34px;
-  width: auto;
+.icon-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
   min-height: 36px;
+  border-radius: 14px;
+}
+.icon-select-menu {
+  position: absolute;
+  top: calc(100% + 9px);
+  right: 0;
+  z-index: 100;
+  min-width: 170px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 12px 36px #0003;
+  transform-origin: top right;
+  animation: selector-open 160ms ease-out;
+}
+.icon-select-menu button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 12px;
+  padding: 11px;
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+}
+.icon-select-menu button[aria-selected="true"],
+.icon-select-menu button:hover,
+.icon-select-menu button:focus-visible {
+  background: var(--soft);
+}
+.selector-check {
+  margin-left: auto;
+  color: var(--accent);
+}
+.selector-symbol {
+  flex-shrink: 0;
+  transition: transform 180ms ease;
+}
+.icon-select-trigger .selector-symbol {
+  animation: selector-symbol-in 220ms ease-out;
+}
+.icon-select-trigger:hover .selector-symbol,
+.icon-select-menu button:hover .selector-symbol,
+.icon-select-menu button:focus-visible .selector-symbol {
+  transform: rotate(-10deg) scale(1.12);
+}
+.selector-chevron {
+  transition: transform 160ms ease;
+}
+.icon-select-trigger[aria-expanded="true"] .selector-chevron {
+  transform: rotate(180deg);
+}
+@keyframes selector-open {
+  from {
+    opacity: 0;
+    transform: translateY(-5px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes selector-symbol-in {
+  from {
+    opacity: 0.4;
+    transform: rotate(-18deg) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .icon-select-menu,
+  .icon-select-trigger .selector-symbol {
+    animation: none;
+  }
+  .icon-select .selector-symbol,
+  .selector-chevron {
+    transition: none;
+  }
+  .icon-select-trigger:hover .selector-symbol,
+  .icon-select-menu button:hover .selector-symbol,
+  .icon-select-menu button:focus-visible .selector-symbol {
+    transform: none;
+  }
 }
 .theme-swatches {
   display: grid;
@@ -449,17 +533,15 @@ small {
   box-shadow: 0 0 0 1px var(--border);
 }
 @media (max-width: 560px) {
-  .icon-select > select,
-  .topbar-actions .icon-select > select {
+  .icon-select-trigger {
     width: 38px;
     min-width: 38px;
     padding: 0;
-    color: transparent;
-    appearance: none;
+    justify-content: center;
   }
-  .icon-select option {
-    color: var(--text);
-    background: var(--surface);
+  .icon-select-trigger .selector-label,
+  .icon-select-trigger .selector-chevron {
+    display: none;
   }
 }
 .welcome-layout {

@@ -50,13 +50,11 @@ test("demo supports graph, CRUD, relationships, language, theme, search, filters
     .selectOption({ label: "Emily · " });
   await page.getByRole("button", { name: "Guardar", exact: true }).click();
   await expect(page.locator(".connection-list")).toContainText("Emily");
-  await page
-    .getByRole("combobox", { name: "Tema", exact: true })
-    .selectOption("dark");
+  await page.getByRole("combobox", { name: "Tema", exact: true }).click();
+  await page.locator('[role="option"][data-value="dark"]').click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page
-    .getByRole("combobox", { name: "Idioma", exact: true })
-    .selectOption("en");
+  await page.getByRole("combobox", { name: "Idioma", exact: true }).click();
+  await page.locator('[role="option"][data-value="en"]').click();
   await expect(
     page.getByRole("button", { name: "Settings", exact: true }),
   ).toBeVisible();
