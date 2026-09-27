@@ -25,14 +25,36 @@ test("icon menus support keyboard, outside dismissal, mobile and reduced motion"
   await theme.click();
   await page.getByRole("heading").first().click();
   await expect(menu).toHaveCount(0);
-  await page.getByRole("combobox", { name: "Idioma", exact: true }).click();
+  const language = page.getByRole("combobox", { name: "Idioma", exact: true });
+  await expect(language).toHaveText("");
+  await expect(language.locator('svg[data-language="es"]')).toHaveCount(1);
+  await language.click();
   await expect(
     page.getByRole("listbox").locator(".selector-symbol"),
   ).toHaveCount(2);
+  await expect(
+    page
+      .getByRole("option", { name: "Español", exact: true })
+      .locator(".language-flag"),
+  ).toHaveCount(1);
+  await expect(
+    page
+      .getByRole("option", { name: "English", exact: true })
+      .locator(".language-flag"),
+  ).toHaveCount(1);
+  await page.screenshot({
+    path: "../../work/language-flags-menu.png",
+    animations: "disabled",
+  });
   await page.getByRole("option", { name: "English", exact: true }).click();
   await expect(
     page.getByRole("combobox", { name: "Language", exact: true }),
   ).toHaveAttribute("data-value", "en");
+  await expect(
+    page
+      .getByRole("combobox", { name: "Language", exact: true })
+      .locator('svg[data-language="en"]'),
+  ).toHaveCount(1);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.getByRole("combobox", { name: "Theme", exact: true }).click();

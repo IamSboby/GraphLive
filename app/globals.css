@@ -417,6 +417,16 @@ small {
   min-height: 36px;
   border-radius: 14px;
 }
+.icon-select-trigger[data-kind="language"] {
+  width: 42px;
+  justify-content: center;
+  padding: 8px;
+}
+.language-flag {
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px #80808030;
+}
 .icon-select-menu {
   position: absolute;
   top: calc(100% + 9px);
@@ -435,6 +445,7 @@ small {
   display: flex;
   width: 100%;
   align-items: center;
+  justify-content: flex-start;
   gap: 10px;
   border: 0;
   border-radius: 12px;

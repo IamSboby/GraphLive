@@ -9,14 +9,7 @@ import {
   type ComponentProps,
   type KeyboardEvent,
 } from "react";
-import {
-  Check,
-  ChevronDown,
-  Languages,
-  Monitor,
-  Moon,
-  Sun,
-} from "lucide-react";
+import { Check, ChevronDown, Monitor, Moon, Sun } from "lucide-react";
 type Props = Omit<ComponentProps<"select">, "onChange"> & {
   kind: "language" | "theme";
   onChange?: (event: { target: { value: string } }) => void;
@@ -28,14 +21,34 @@ function SelectorSymbol({
   kind: Props["kind"];
   value: string;
 }) {
-  const Icon =
-    kind === "language"
-      ? Languages
-      : value === "dark"
-        ? Moon
-        : value === "light"
-          ? Sun
-          : Monitor;
+  if (kind === "language")
+    return (
+      <svg
+        className="selector-symbol language-flag"
+        width="24"
+        height="16"
+        viewBox="0 0 24 16"
+        aria-hidden="true"
+        focusable="false"
+        data-language={value}
+      >
+        {value === "es" ? (
+          <>
+            <path fill="#c8102e" d="M0 0h24v16H0z" />
+            <path fill="#ffcc00" d="M0 4h24v8H0z" />
+          </>
+        ) : (
+          <>
+            <path fill="#192586" d="M0 0h24v16H0z" />
+            <path stroke="#fff" strokeWidth="4" d="m0 0 24 16M24 0 0 16" />
+            <path stroke="#c8102e" strokeWidth="1.5" d="m0 0 24 16M24 0 0 16" />
+            <path stroke="#fff" strokeWidth="6" d="M12 0v16M0 8h24" />
+            <path stroke="#c8102e" strokeWidth="3" d="M12 0v16M0 8h24" />
+          </>
+        )}
+      </svg>
+    );
+  const Icon = value === "dark" ? Moon : value === "light" ? Sun : Monitor;
   return <Icon className="selector-symbol" size={18} aria-hidden="true" />;
 }
 export function IconSelect({
@@ -129,6 +142,14 @@ export function IconSelect({
         type="button"
         role="combobox"
         className="icon-select-trigger"
+        data-kind={kind}
+        title={
+          kind === "language"
+            ? value === "es"
+              ? "Español"
+              : "English"
+            : undefined
+        }
         aria-label={label}
         aria-haspopup="listbox"
         aria-expanded={open && !disabled}
@@ -138,12 +159,16 @@ export function IconSelect({
         onClick={() => (open ? close() : show())}
       >
         <SelectorSymbol key={String(value)} kind={kind} value={String(value)} />
-        <span className="selector-label">{items[selected]?.label}</span>
-        <ChevronDown
-          className="selector-chevron"
-          size={13}
-          aria-hidden="true"
-        />
+        {kind !== "language" && (
+          <>
+            <span className="selector-label">{items[selected]?.label}</span>
+            <ChevronDown
+              className="selector-chevron"
+              size={13}
+              aria-hidden="true"
+            />
+          </>
+        )}
       </button>
       {open && !disabled && (
         <div
