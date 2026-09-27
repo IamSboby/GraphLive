@@ -1,4 +1,9 @@
 "use client";
+import {
+  languageCodes,
+  languageNames,
+  resolveLanguage,
+} from "../i18n/languages";
 import { IconSelect } from "./icon-select";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -91,7 +96,7 @@ export function Onboarding({
       createPerson(data, { nickname: name });
       data.preferences.introduction = "profile";
       data.preferences.theme = theme;
-      data.preferences.language = i18n.language === "en" ? "en" : "es";
+      data.preferences.language = resolveLanguage(i18n.language);
       open(await repo.save(data, data.revision), repo);
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") return;
@@ -131,8 +136,11 @@ export function Onboarding({
             void i18n.changeLanguage(e.target.value);
           }}
         >
-          <option value="es">ES</option>
-          <option value="en">EN</option>
+          {languageCodes.map((code) => (
+            <option key={code} value={code}>
+              {languageNames[code]}
+            </option>
+          ))}
         </IconSelect>
         <IconSelect
           kind="theme"
@@ -364,8 +372,7 @@ export function Onboarding({
               onClick={() => {
                 const demo = demoNetwork();
                 demo.preferences.theme = theme;
-                demo.preferences.language =
-                  i18n.language === "en" ? "en" : "es";
+                demo.preferences.language = resolveLanguage(i18n.language);
                 open(demo, null, true);
               }}
             >

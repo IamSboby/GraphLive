@@ -1,5 +1,6 @@
 import { genderClassification } from "./gender";
 import { z } from "zod";
+import { languageCodes } from "../i18n/languages";
 
 import {
   relationshipTypes,
@@ -120,7 +121,7 @@ export const connectionSchema = edgeInputSchema
 export const preferencesSchema = z
   .object({
     ...appearancePreferencesShape,
-    language: z.enum(["es", "en"]).default("es"),
+    language: z.enum(languageCodes).default("es"),
     theme: z.enum(["light", "dark", "system"]).default("system"),
     showLabels: z.boolean().default(true),
     showOwner: z.boolean().default(true),

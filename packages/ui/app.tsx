@@ -1,4 +1,10 @@
 "use client";
+import {
+  languageCodes,
+  languageNames,
+  resolveLanguage,
+  isLanguage,
+} from "../i18n/languages";
 import { IconSelect } from "./icon-select";
 import { relationshipPalette, themePalette } from "../appearance/config";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
@@ -133,9 +139,12 @@ export function App({
     const change = () => setSystemDark(media.matches);
     media.addEventListener("change", change);
     const lang = localStorage.getItem("graphlive-language");
-    if (lang === "es" || lang === "en") void i18n.changeLanguage(lang);
+    if (isLanguage(lang)) void i18n.changeLanguage(lang);
     return () => media.removeEventListener("change", change);
   }, [i18n]);
+  useEffect(() => {
+    document.documentElement.lang = resolveLanguage(i18n.language);
+  }, [i18n.language]);
   useEffect(() => {
     if (data && screen === "graph") {
       document.documentElement.lang = data.preferences.language;
@@ -317,12 +326,15 @@ export function App({
             disabled={busy}
             onChange={(e) =>
               s.mutate((d) => {
-                d.preferences.language = e.target.value as "es" | "en";
+                d.preferences.language = resolveLanguage(e.target.value);
               })
             }
           >
-            <option value="es">ES</option>
-            <option value="en">EN</option>
+            {languageCodes.map((code) => (
+              <option key={code} value={code}>
+                {languageNames[code]}
+              </option>
+            ))}
           </IconSelect>
           <IconSelect
             kind="theme"

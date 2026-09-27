@@ -31,7 +31,7 @@ test("icon menus support keyboard, outside dismissal, mobile and reduced motion"
   await language.click();
   await expect(
     page.getByRole("listbox").locator(".selector-symbol"),
-  ).toHaveCount(2);
+  ).toHaveCount(6);
   await expect(
     page
       .getByRole("option", { name: "Español", exact: true })

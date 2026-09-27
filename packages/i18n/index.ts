@@ -1,6 +1,11 @@
 "use client";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
+import it from "./locales/it.json";
+import de from "./locales/de.json";
+import fr from "./locales/fr.json";
+import pt from "./locales/pt.json";
+import { languageCodes, type Language } from "./languages";
 export const es = {
   appearanceEditor: "Personalizar colores y temas",
   appearanceHelp:
@@ -660,9 +665,16 @@ export const en: Record<keyof typeof es, string> = {
   relationOwner: "Relationship to you",
   knowsDirectly: "I know this person directly",
 };
+export const translations = { es, en, it, de, fr, pt } satisfies Record<
+  Language,
+  Record<keyof typeof es, string>
+>;
 if (!i18next.isInitialized)
   void i18next.use(initReactI18next).init({
-    resources: { es: { translation: es }, en: { translation: en } },
+    resources: Object.fromEntries(
+      languageCodes.map((code) => [code, { translation: translations[code] }]),
+    ),
+    supportedLngs: [...languageCodes],
     lng: "es",
     fallbackLng: "es",
     interpolation: { escapeValue: false },

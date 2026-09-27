@@ -10,6 +10,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { Check, ChevronDown, Monitor, Moon, Sun } from "lucide-react";
+import { languageNames, resolveLanguage } from "../i18n/languages";
 type Props = Omit<ComponentProps<"select">, "onChange"> & {
   kind: "language" | "theme";
   onChange?: (event: { target: { value: string } }) => void;
@@ -36,6 +37,26 @@ function SelectorSymbol({
           <>
             <path fill="#c8102e" d="M0 0h24v16H0z" />
             <path fill="#ffcc00" d="M0 4h24v8H0z" />
+          </>
+        ) : value === "it" || value === "fr" ? (
+          <>
+            <path fill="#fff" d="M0 0h24v16H0z" />
+            <path
+              fill={value === "it" ? "#009246" : "#002395"}
+              d="M0 0h8v16H0z"
+            />
+            <path fill="#ed2939" d="M16 0h8v16h-8z" />
+          </>
+        ) : value === "de" ? (
+          <>
+            <path fill="#ffce00" d="M0 0h24v16H0z" />
+            <path fill="#d00" d="M0 0h24v10.667H0z" />
+            <path fill="#151515" d="M0 0h24v5.333H0z" />
+          </>
+        ) : value === "pt" ? (
+          <>
+            <path fill="#e5222d" d="M0 0h24v16H0z" />
+            <path fill="#006b3f" d="M0 0h9.6v16H0z" />
           </>
         ) : (
           <>
@@ -145,9 +166,7 @@ export function IconSelect({
         data-kind={kind}
         title={
           kind === "language"
-            ? value === "es"
-              ? "Español"
-              : "English"
+            ? languageNames[resolveLanguage(value)]
             : undefined
         }
         aria-label={label}
@@ -195,13 +214,7 @@ export function IconSelect({
                 }}
               >
                 <SelectorSymbol kind={kind} value={item.value} />
-                <span>
-                  {kind === "language"
-                    ? item.value === "es"
-                      ? "Español"
-                      : "English"
-                    : item.label}
-                </span>
+                <span>{item.label}</span>
                 {item.value === value && (
                   <Check
                     size={15}

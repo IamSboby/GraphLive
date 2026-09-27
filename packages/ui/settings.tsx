@@ -161,7 +161,9 @@ export function Settings({
                 s.repo.backupInfo(id).timestamp
                   ? t(s.repo.backupInfo(id).kind) +
                     " · " +
-                    new Date(s.repo.backupInfo(id).timestamp).toLocaleString()
+                    new Date(s.repo.backupInfo(id).timestamp).toLocaleString(
+                      data.preferences.language,
+                    )
                   : id.slice(0, 19)}
               </button>
             ))}
