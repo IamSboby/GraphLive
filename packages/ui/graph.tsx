@@ -273,6 +273,8 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
             source: e.sourceId,
             target: e.targetId,
             color: colors[e.relationshipType],
+            sourceColor: colors[e.sourcePerspective],
+            targetColor: colors[e.targetPerspective],
             width: 0.7 + e.intensity * 0.55,
             opacity: 0.25 + e.frequency * 0.12,
             status: e.status,
@@ -371,6 +373,12 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
         selector: "edge",
         style: {
           "line-color": "data(color)",
+          "line-fill": "linear-gradient",
+          "line-gradient-stop-colors": (e: cytoscape.EdgeSingular) => [
+            e.data("sourceColor"),
+            e.data("targetColor"),
+          ],
+          "line-gradient-stop-positions": [0, 100],
           width: "data(width)",
           opacity: (e: cytoscape.EdgeSingular) => Number(e.data("opacity")),
           "curve-style": "haystack",
@@ -388,7 +396,12 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
       },
       {
         selector: ".route",
-        style: { "line-color": "#548bf0", width: 5, opacity: 1 },
+        style: {
+          "line-color": "#548bf0",
+          "line-fill": "solid",
+          width: 5,
+          opacity: 1,
+        },
       },
       { selector: ".filtered", style: { display: "none" } },
     ];

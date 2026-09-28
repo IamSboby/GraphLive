@@ -9,7 +9,11 @@ import { z } from "zod";
 export const runtime = "nodejs";
 export async function GET(r: Request) {
   try {
-    return response(await (await repository(r)).load());
+    const repo = await repository(r);
+    const result = response(await repo.load());
+    if (repo.requiresMigration)
+      result.headers.set("X-GraphLive-Migration", "1");
+    return result;
   } catch (e) {
     return failure(e);
   }

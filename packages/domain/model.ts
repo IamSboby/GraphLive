@@ -95,13 +95,62 @@ export const personSchema = z
       .refine((v) => Object.keys(v).length <= 30),
   })
   .strict();
-export const edgeInputSchema = z
+const missingPerspective = (value: unknown) =>
+  value == null ||
+  (typeof value === "string" &&
+    [
+      "",
+      "none",
+      "undefined",
+      "null",
+      "not defined",
+      "unspecified",
+      "no definido",
+      "no definida",
+      "no determinado",
+      "no determinada",
+      "sin definir",
+      "sin determinar",
+      "sin especificar",
+      "notdefined",
+      "not set",
+    ].includes(value.trim().toLowerCase().replace(/[_-]/g, " ")));
+function normalizePerspectives(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const edge = value as Record<string, unknown>;
+  return {
+    ...edge,
+    sourcePerspective: missingPerspective(edge.sourcePerspective)
+      ? edge.relationshipType
+      : edge.sourcePerspective,
+    targetPerspective: missingPerspective(edge.targetPerspective)
+      ? edge.relationshipType
+      : edge.targetPerspective,
+  };
+}
+export function needsPerspectiveMigration(value: unknown): boolean {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !("connections" in value) ||
+    !Array.isArray(value.connections)
+  )
+    return false;
+  return value.connections.some(
+    (e) =>
+      e &&
+      typeof e === "object" &&
+      (missingPerspective(e.sourcePerspective) ||
+        missingPerspective(e.targetPerspective)),
+  );
+}
+const edgeObjectSchema = z
   .object({
     sourceId: z.uuid(),
     targetId: z.uuid(),
     relationshipType: z.enum(relationshipTypes),
-    sourcePerspective: z.enum(relationshipTypes).nullable().default(null),
-    targetPerspective: z.enum(relationshipTypes).nullable().default(null),
+    sourcePerspective: z.enum(relationshipTypes),
+    targetPerspective: z.enum(relationshipTypes),
     intensity: z.number().int().min(1).max(5).default(3),
     frequency: z.number().int().min(1).max(5).default(3),
     importance: z.number().int().min(1).max(5).default(3),
@@ -112,12 +161,19 @@ export const edgeInputSchema = z
   })
   .strict()
   .refine((e) => e.sourceId !== e.targetId, "selfEdge");
-export const connectionSchema = edgeInputSchema
-  .safeExtend({ ...metadata, canonicalKey: z.string().max(74) })
-  .refine(
-    (e) => e.canonicalKey === canonicalKey(e.sourceId, e.targetId),
-    "canonicalKey",
-  );
+export const edgeInputSchema = z.preprocess(
+  normalizePerspectives,
+  edgeObjectSchema,
+);
+export const connectionSchema = z.preprocess(
+  normalizePerspectives,
+  edgeObjectSchema
+    .safeExtend({ ...metadata, canonicalKey: z.string().max(74) })
+    .refine(
+      (e) => e.canonicalKey === canonicalKey(e.sourceId, e.targetId),
+      "canonicalKey",
+    ),
+);
 export const preferencesSchema = z
   .object({
     ...appearancePreferencesShape,

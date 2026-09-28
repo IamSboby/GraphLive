@@ -1,3 +1,4 @@
+import { parseStoredSnapshot } from "../storage-core";
 import {
   backupPolicy,
   backupTime,
@@ -13,6 +14,7 @@ const api = "https://www.googleapis.com/drive/v2/files";
 const upload = "https://www.googleapis.com/upload/drive/v2/files";
 type DriveFile = { id: string; title: string; etag: string };
 export class GoogleDriveRepository implements Repository {
+  requiresMigration = false;
   constructor(readonly session = new GoogleSession()) {}
   get journalScope() {
     return this.session.accountId
@@ -48,7 +50,7 @@ export class GoogleDriveRepository implements Repository {
     const text = await response.text();
     if (new TextEncoder().encode(text).length > 10485760)
       throw new Error("tooLarge");
-    return snapshotSchema.parse(JSON.parse(text));
+    return parseStoredSnapshot(JSON.parse(text), this);
   }
   private async current() {
     const inventory =

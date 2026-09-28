@@ -145,7 +145,7 @@ export const useNetwork = create<State>((set, get) => {
         base: structuredClone(remote),
         repo,
         demo,
-        dirty: pending.length > 0,
+        dirty: pending.length > 0 || Boolean(repo?.requiresMigration),
         saving: false,
         localSaved: false,
         error: null,
@@ -154,7 +154,7 @@ export const useNetwork = create<State>((set, get) => {
         future: [],
         conflict,
       });
-      if (pending.length && (await checkpoint())) {
+      if ((pending.length || repo?.requiresMigration) && (await checkpoint())) {
         for (const entry of pending) await outbox.remove(entry);
         if (generation === epoch && !conflict) schedule();
       }
@@ -209,6 +209,7 @@ export const useNetwork = create<State>((set, get) => {
           if (!s.data || !s.base || !s.repo) break;
           try {
             const saved = await s.repo.save(s.data, s.base.revision);
+            s.repo.requiresMigration = false;
             if (generation !== epoch) break;
             const latest = get().data!;
             const data =

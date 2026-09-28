@@ -1,3 +1,4 @@
+import { parseStoredSnapshot } from "../storage-core";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { encodeBackup, decodeBackup } from "../security/backup";
@@ -88,6 +89,7 @@ export class FileAdapter implements StorageAdapter {
   }
 }
 export class ServerRepository implements Repository {
+  requiresMigration = false;
   readonly adapter: FileAdapter;
   constructor(root: string, userId: string) {
     this.adapter = new FileAdapter(
@@ -107,8 +109,9 @@ export class ServerRepository implements Repository {
         throw new Error("missingSnapshot");
       return emptySnapshot();
     }
-    return snapshotSchema.parse(
+    return parseStoredSnapshot(
       JSON.parse(await this.adapter.read("sync/snapshot.json")),
+      this,
     );
   }
   private async lock<T>(fn: () => Promise<T>): Promise<T> {

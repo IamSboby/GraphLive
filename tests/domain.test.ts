@@ -238,3 +238,59 @@ describe("Relationship additions and search terms", () => {
     expect(matchesSearch(p, "")).toBe(true);
   });
 });
+
+describe("connection perspective migration", () => {
+  it.each([
+    null,
+    undefined,
+    "",
+    "no definido",
+    "Sin especificar",
+    "undefined",
+    "not_defined",
+  ])(
+    "fills legacy missing perspective %s without changing explicit values",
+    (value) => {
+      const s = emptySnapshot();
+      const a = createPerson(s, { nickname: "A" }),
+        b = createPerson(s, { nickname: "B" });
+      const edge = upsertConnection(s, {
+        sourceId: a.id,
+        targetId: b.id,
+        relationshipType: "partner",
+      });
+      const raw = {
+        ...s,
+        connections: [
+          { ...edge, sourcePerspective: value, targetPerspective: "crush" },
+        ],
+      };
+      const migrated = snapshotSchema.parse(raw);
+      expect(migrated.connections[0].sourcePerspective).toBe("partner");
+      expect(migrated.connections[0].targetPerspective).toBe("crush");
+      expect(migrated.connections[0].id).toBe(edge.id);
+      expect(migrated.connections[0].sourceId).toBe(a.id);
+      expect(snapshotSchema.parse(migrated)).toEqual(migrated);
+    },
+  );
+  it("fills both sides for new connections and rejects unknown relationship values", () => {
+    const s = emptySnapshot();
+    const a = createPerson(s, { nickname: "A" }),
+      b = createPerson(s, { nickname: "B" });
+    const e = upsertConnection(s, {
+      sourceId: a.id,
+      targetId: b.id,
+      relationshipType: "closeFriends",
+    });
+    expect(e.sourcePerspective).toBe("closeFriends");
+    expect(e.targetPerspective).toBe("closeFriends");
+    expect(() =>
+      upsertConnection(s, {
+        sourceId: a.id,
+        targetId: b.id,
+        relationshipType: "closeFriends",
+        sourcePerspective: "invalid",
+      }),
+    ).toThrow();
+  });
+});

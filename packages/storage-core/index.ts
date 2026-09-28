@@ -1,5 +1,9 @@
 import { relationshipPalette, themePalette } from "../appearance/config";
-import type { Snapshot } from "../domain/model";
+import {
+  snapshotSchema,
+  needsPerspectiveMigration,
+  type Snapshot,
+} from "../domain/model";
 export interface StorageMetadata {
   size: number;
   modifiedAt: string;
@@ -16,6 +20,7 @@ export interface StorageAdapter {
 }
 export interface Repository {
   readonly journalScope?: string;
+  requiresMigration?: boolean;
   load(): Promise<Snapshot>;
   save(value: Snapshot, expectedRevision: number): Promise<Snapshot>;
   backup(): Promise<string>;
@@ -87,4 +92,12 @@ export function fileTree(s: Snapshot): Record<string, string> {
     }),
     "sync/snapshot.json": json(s),
   };
+}
+
+export function parseStoredSnapshot(
+  value: unknown,
+  repo: { requiresMigration: boolean },
+) {
+  repo.requiresMigration ||= needsPerspectiveMigration(value);
+  return snapshotSchema.parse(value);
 }

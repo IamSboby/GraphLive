@@ -1,8 +1,10 @@
+import { parseStoredSnapshot } from "../storage-core";
 import { snapshotSchema, emptySnapshot, type Snapshot } from "../domain/model";
 import { fileTree, type Repository } from "../storage-core";
 import { folderIdentity } from "../storage-core/folder-identity";
 import { ConflictError } from "../sync-engine/merge";
 export class HttpRepository implements Repository {
+  requiresMigration = false;
   readonly journalScope = "server";
   private async request(path = "", options?: RequestInit) {
     const r = await fetch("/api/network" + path, {
@@ -10,6 +12,8 @@ export class HttpRepository implements Repository {
       headers: { "Content-Type": "application/json", ...options?.headers },
       cache: "no-store",
     });
+    if (r.headers.get("X-GraphLive-Migration") === "1")
+      this.requiresMigration = true;
     const v = await r.json();
     if (r.status === 409)
       throw new ConflictError(snapshotSchema.parse(v.remote));
@@ -62,6 +66,7 @@ export async function pickDirectory() {
   return picker.call(window, { mode: "readwrite", id: "graphlive" });
 }
 export class LocalRepository implements Repository {
+  requiresMigration = false;
   private folderId: string | undefined;
   get journalScope() {
     return this.folderId ? "folder:" + this.folderId : undefined;
@@ -102,8 +107,9 @@ export class LocalRepository implements Repository {
     if (!this.folderId && typeof indexedDB !== "undefined")
       this.folderId = await folderIdentity(await this.root);
     try {
-      return snapshotSchema.parse(
+      return parseStoredSnapshot(
         JSON.parse(await this.read("sync/snapshot.json")),
+        this,
       );
     } catch (e) {
       if ((e as DOMException).name === "NotFoundError") {
@@ -133,7 +139,7 @@ export class LocalRepository implements Repository {
       if (current.revision && value.preferences.autoBackup) await this.backup();
       const previous = fileTree(current);
       for (const [p, data] of Object.entries(fileTree(value)))
-        if (!current.revision || previous[p] !== data)
+        if (!current.revision || this.requiresMigration || previous[p] !== data)
           await this.write(p, data);
       return value;
     });

@@ -44,8 +44,8 @@ export function ConnectionForm({
           sourceId,
           targetId: "",
           relationshipType: "friend",
-          sourcePerspective: null,
-          targetPerspective: null,
+          sourcePerspective: "friend",
+          targetPerspective: "friend",
           intensity: 3,
           frequency: 3,
           importance: 3,
@@ -55,6 +55,10 @@ export function ConnectionForm({
           notes: "",
         },
   );
+  const [explicit, setExplicit] = useState({
+    sourcePerspective: Boolean(edge),
+    targetPerspective: Boolean(edge),
+  });
   const [query, setQuery] = useState(""),
     [error, setError] = useState(false);
   const available = data.people.filter(
@@ -117,6 +121,18 @@ export function ConnectionForm({
                 ...v,
                 relationshipType: e.target
                   .value as Connection["relationshipType"],
+                ...(!explicit.sourcePerspective
+                  ? {
+                      sourcePerspective: e.target
+                        .value as Connection["relationshipType"],
+                    }
+                  : {}),
+                ...(!explicit.targetPerspective
+                  ? {
+                      targetPerspective: e.target
+                        .value as Connection["relationshipType"],
+                    }
+                  : {}),
               })
             }
           >
@@ -157,10 +173,15 @@ export function ConnectionForm({
           {(["sourcePerspective", "targetPerspective"] as const).map((k) => (
             <Field key={k} label={t(k)}>
               <select
-                value={v[k] ?? ""}
-                onChange={(e) => setV({ ...v, [k]: e.target.value || null })}
+                value={v[k]}
+                onChange={(e) => {
+                  setExplicit({ ...explicit, [k]: true });
+                  setV({
+                    ...v,
+                    [k]: e.target.value as Connection["relationshipType"],
+                  });
+                }}
               >
-                <option value="">{t("none")}</option>
                 {relationshipTypes.map((r) => (
                   <option key={r} value={r}>
                     {t(r)}

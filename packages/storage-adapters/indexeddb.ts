@@ -1,9 +1,11 @@
+import { parseStoredSnapshot } from "../storage-core";
 import { emptySnapshot, snapshotSchema, type Snapshot } from "../domain/model";
 import type { Repository } from "../storage-core";
 import { ConflictError } from "../sync-engine/merge";
 
 /** One transaction protects revision checks and writes across browser tabs. */
 export class BrowserRepository implements Repository {
+  requiresMigration = false;
   readonly journalScope = "browser";
   private pruneBackups(store: IDBObjectStore) {
     const request = store.getAllKeys();
@@ -67,7 +69,9 @@ export class BrowserRepository implements Repository {
       const r = store.get("snapshot");
       r.onsuccess = () => {
         try {
-          done(r.result ? snapshotSchema.parse(r.result) : emptySnapshot());
+          done(
+            r.result ? parseStoredSnapshot(r.result, this) : emptySnapshot(),
+          );
         } catch (e) {
           fail(e);
         }
