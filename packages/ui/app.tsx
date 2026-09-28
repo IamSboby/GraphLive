@@ -539,10 +539,12 @@ export function App({
               dark={Boolean(dark)}
               me={t("me")}
               onSelect={setSelected}
-              onPosition={(id, x, y) =>
+              onPositions={(positions) =>
                 s.mutate((d) => {
-                  const p = d.people.find((p) => p.id === id)!;
-                  p.display.manualPosition = { x, y };
+                  for (const { id, x, y } of positions) {
+                    const p = d.people.find((p) => p.id === id);
+                    if (p) p.display.manualPosition = { x, y };
+                  }
                 })
               }
             />

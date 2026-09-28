@@ -91,6 +91,13 @@ test("Drive opens, saves and reopens a network through the browser adapter", asy
     [...files.values()].find((f) => f.title === "graphlive-network.json")?.data
       .people,
   ).toHaveLength(1);
+  await expect(page.locator(".graph-canvas")).toHaveAttribute(
+    "data-layout",
+    "ready",
+  );
+  await expect(page.locator(".sync-state")).toContainText(
+    "Todos los cambios guardados",
+  );
   await page.reload();
   await expect(page).toHaveURL(/\/login\/$/);
   await page.getByRole("radio", { name: "Google Drive", exact: true }).check();
@@ -103,6 +110,7 @@ test("Drive opens, saves and reopens a network through the browser adapter", asy
     "test-token",
   );
   await page.getByRole("button", { name: "Omitir por ahora" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   const saved = [...files.values()].find(
     (f) => f.title === "graphlive-network.json",
   )!;

@@ -9,6 +9,7 @@ import {
   edgeInputSchema,
   upsertConnection,
 } from "../domain/model";
+import { matchesSearch } from "../graph-engine/metrics";
 import { useNetwork } from "./store";
 import { Modal, Field } from "./primitives";
 export function ConnectionForm({
@@ -65,10 +66,7 @@ export function ConnectionForm({
             [e.sourceId, e.targetId].includes(sourceId) &&
             [e.sourceId, e.targetId].includes(p.id),
         )) &&
-      [p.profile.nickname, p.profile.firstName, p.profile.lastName]
-        .join(" ")
-        .toLocaleLowerCase()
-        .includes(query.toLocaleLowerCase()),
+      matchesSearch(p, query),
   );
   return (
     <Modal

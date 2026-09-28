@@ -1,6 +1,7 @@
 "use client";
 import {
   useEffect,
+  useCallback,
   useMemo,
   useRef,
   useImperativeHandle,
@@ -34,12 +35,12 @@ type Props = {
   selected: string | null;
   path: string[];
   onSelect: (id: string) => void;
-  onPosition: (id: string, x: number, y: number) => void;
+  onPositions: (positions: { id: string; x: number; y: number }[]) => void;
   dark: boolean;
   me: string;
 };
 export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
-  { data, visible, selected, path, onSelect, onPosition, dark, me },
+  { data, visible, selected, path, onSelect, onPositions, dark, me },
   ref,
 ) {
   const { t } = useTranslation();
@@ -59,44 +60,68 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
   const container = useRef<HTMLDivElement>(null),
     cy = useRef<Core | null>(null),
     worker = useRef<Worker | null>(null),
-    latest = useRef({ data, onSelect, onPosition });
-  latest.current = { data, onSelect, onPosition };
-  const runLayout = () => {
+    latest = useRef({ data, onSelect, onPositions });
+  latest.current = { data, onSelect, onPositions };
+  const savePositions = useCallback(() => {
     const c = cy.current;
     if (!c) return;
-    worker.current?.terminate();
-    const w = new Worker(
-      new URL("../graph-engine/layout.worker.ts", import.meta.url),
-    );
-    worker.current = w;
-    if (container.current) container.current.dataset.layout = "running";
-    const nodes = c.nodes().map((n) => ({
-      id: n.id(),
-      x: n.position("x"),
-      y: n.position("y"),
-      fixed: n.locked(),
-    }));
-    w.onmessage = (
-      event: MessageEvent<{ id: string; x: number; y: number }[]>,
-    ) => {
-      if (c.destroyed()) return;
-      c.batch(() =>
-        event.data.forEach((n) => {
-          const node = c.getElementById(n.id);
-          if (!node.locked()) node.position({ x: n.x, y: n.y });
-        }),
+    const changed = c
+      .nodes()
+      .map((n) => ({ id: n.id(), ...n.position() }))
+      .filter((n) => {
+        const saved = latest.current.data.people.find((p) => p.id === n.id)
+          ?.display.manualPosition;
+        return !saved || saved.x !== n.x || saved.y !== n.y;
+      });
+    if (changed.length) latest.current.onPositions(changed);
+  }, []);
+  const runLayout = useCallback(
+    (preserveSaved = false) => {
+      const c = cy.current;
+      if (!c) return;
+      worker.current?.terminate();
+      const w = new Worker(
+        new URL("../graph-engine/layout.worker.ts", import.meta.url),
       );
-      c.fit(undefined, 80);
-      if (container.current) container.current.dataset.layout = "ready";
-      w.terminate();
-    };
-    w.postMessage({
-      nodes,
-      edges: c
-        .edges()
-        .map((e) => ({ source: e.source().id(), target: e.target().id() })),
-    });
-  };
+      worker.current = w;
+      if (container.current) container.current.dataset.layout = "running";
+      const nodes = c.nodes().map((n) => ({
+        id: n.id(),
+        x: n.position("x"),
+        y: n.position("y"),
+        fixed:
+          n.locked() ||
+          (preserveSaved &&
+            Boolean(
+              latest.current.data.people.find((p) => p.id === n.id())?.display
+                .manualPosition,
+            )),
+      }));
+      w.onmessage = (
+        event: MessageEvent<{ id: string; x: number; y: number }[]>,
+      ) => {
+        if (c.destroyed() || worker.current !== w) return;
+        c.batch(() =>
+          event.data.forEach((n) => {
+            const node = c.getElementById(n.id);
+            if (!node.locked()) node.position({ x: n.x, y: n.y });
+          }),
+        );
+        c.fit(undefined, 80);
+        if (container.current) container.current.dataset.layout = "ready";
+        w.terminate();
+        worker.current = null;
+        savePositions();
+      };
+      w.postMessage({
+        nodes,
+        edges: c
+          .edges()
+          .map((e) => ({ source: e.source().id(), target: e.target().id() })),
+      });
+    },
+    [savePositions],
+  );
   useImperativeHandle(ref, () => ({
     position: (id) => cy.current?.getElementById(id).position(),
     fit: () => cy.current?.fit(undefined, 70),
@@ -108,8 +133,13 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
           renderedPosition: { x: c.width() / 2, y: c.height() / 2 },
         });
     },
-    layout: runLayout,
-    pause: () => worker.current?.terminate(),
+    layout: () => runLayout(),
+    pause: () => {
+      worker.current?.terminate();
+      worker.current = null;
+      if (container.current) container.current.dataset.layout = "ready";
+      savePositions();
+    },
     center: (id) => {
       const c = cy.current;
       if (c) {
@@ -164,18 +194,21 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
       });
     });
     c.on("mouseout drag pan zoom", () => setHover(null));
-    c.on("dragfree", "node", (e) => {
-      const p = e.target.position();
-      latest.current.onPosition(e.target.id(), p.x, p.y);
+    c.on("grab", "node", () => {
+      worker.current?.terminate();
+      worker.current = null;
+      if (container.current) container.current.dataset.layout = "ready";
     });
+    c.on("dragfree", "node", savePositions);
     return () => {
       worker.current?.terminate();
       c.off("pan zoom", syncGrid);
       c.destroy();
       cy.current = null;
+      initialized.current = false;
     };
-  }, []);
-  const previousIds = useRef("");
+  }, [savePositions]);
+  const initialized = useRef(false);
   useEffect(() => {
     const c = cy.current;
     if (!c) return;
@@ -184,7 +217,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     const savedPositions = new Map(
       c.nodes().map((n) => [n.id(), n.position()]),
     );
-    const ids = data.people.map((p) => p.id).join(",");
+
     c.batch(() => {
       c.elements().remove();
       c.add(
@@ -218,11 +251,13 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
               owner: p.id === data.ownerId,
               bestFriend: ownerRelationship(data, p.id) === "bestFriend",
             },
-            position: p.display.manualPosition ??
-              savedPositions.get(p.id) ?? {
-                x: Math.cos(angle) * radius,
-                y: Math.sin(angle) * radius,
-              },
+            position: {
+              ...(p.display.manualPosition ??
+                savedPositions.get(p.id) ?? {
+                  x: Math.cos(angle) * radius,
+                  y: Math.sin(angle) * radius,
+                }),
+            },
             locked: p.display.positionLocked,
           };
         }),
@@ -242,11 +277,24 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
         })),
       );
     });
-    if (previousIds.current !== ids) {
-      previousIds.current = ids;
-      runLayout();
+    if (!initialized.current) {
+      initialized.current = true;
+      if (
+        data.people.length > 1 &&
+        data.people.some((p) => !p.display.manualPosition)
+      ) {
+        runLayout(true);
+      } else {
+        savePositions();
+        if (container.current) container.current.dataset.layout = "ready";
+        queueMicrotask(() => {
+          if (!c.destroyed()) c.fit(undefined, 80);
+        });
+      }
+    } else if (!worker.current) {
+      savePositions();
     }
-  }, [data, me, colors, palette.ownerStart]);
+  }, [data, me, colors, palette.ownerStart, runLayout, savePositions]);
   useEffect(() => {
     const c = cy.current;
     if (!c) return;
