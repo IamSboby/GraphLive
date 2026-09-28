@@ -286,5 +286,7 @@
   "browserStorage": "In questo browser",
   "browserWarning": "I dati restano in questo browser e dispositivo. Esporta una copia JSON per conservarli: cancellare i dati del browser elimina anche la rete.",
   "relationOwner": "Relazione con te",
-  "knowsDirectly": "Conosco direttamente questa persona"
+  "knowsDirectly": "Conosco direttamente questa persona",
+  "savedLocally": "Salvato su questo dispositivo · sincronizzazione in sospeso",
+  "localSaveFailed": "Impossibile salvare la copia locale. Non chiudere la pagina; riprova o esporta la rete."
 }

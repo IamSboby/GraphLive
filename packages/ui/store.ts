@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import { snapshotSchema, type Snapshot } from "../domain/model";
 import type { Repository } from "../storage-core";
+import { outbox, type PendingWrite } from "../storage-core/outbox";
 import {
   ConflictError,
   mergeSnapshots,
@@ -14,11 +15,18 @@ type State = {
   demo: boolean;
   dirty: boolean;
   saving: boolean;
+  localSaved: boolean;
   error: string | null;
+  localError: string | null;
   history: Snapshot[];
   future: Snapshot[];
   conflict: { remote: Snapshot; fields: Conflict[] } | null;
-  open: (data: Snapshot, repo: Repository | null, demo?: boolean) => void;
+  open: (
+    data: Snapshot,
+    repo: Repository | null,
+    demo?: boolean,
+  ) => Promise<void>;
+  close: () => void;
   mutate: (fn: (s: Snapshot) => void, recordHistory?: boolean) => void;
   persist: () => Promise<void>;
   undo: () => void;
@@ -26,148 +34,316 @@ type State = {
   resolve: (choice: "local" | "remote") => Promise<void>;
   refresh: () => Promise<void>;
 };
-export const useNetwork = create<State>((set, get) => ({
-  data: null,
-  base: null,
-  repo: null,
-  demo: false,
-  dirty: false,
-  saving: false,
-  error: null,
-  history: [],
-  future: [],
-  conflict: null,
-  open: (data, repo, demo = false) =>
-    set({
-      data,
-      base: structuredClone(data),
-      repo,
-      demo,
-      dirty: false,
-      saving: false,
-      error: null,
-      history: [],
-      future: [],
-      conflict: null,
-    }),
-  mutate: (fn, recordHistory = true) => {
-    const s = get();
-    if (!s.data || s.conflict) return;
-    const next = structuredClone(s.data);
-    try {
-      fn(next);
-      const valid = snapshotSchema.parse(next);
-      set({
-        data: valid,
-        history: recordHistory ? [...s.history.slice(-29), s.data] : s.history,
-        future: recordHistory ? [] : s.future,
-        dirty: true,
-        error: null,
+export const useNetwork = create<State>((set, get) => {
+  let epoch = 0,
+    timer: ReturnType<typeof setTimeout> | undefined;
+  let firstEdit = 0,
+    failures = 0;
+  let flight: Promise<void> | null = null;
+  let journal: { id: string; scope: string } | null = null;
+  let record: PendingWrite | null = null;
+  let localQueue: Promise<unknown> = Promise.resolve();
+  const checkpoint = () => {
+    const s = get(),
+      generation = epoch,
+      target = journal;
+    if (!s.data || !s.base || s.demo || !target) return Promise.resolve(true);
+    const entry: PendingWrite = {
+      ...target,
+      version: crypto.randomUUID(),
+      base: s.base,
+      data: s.data,
+    };
+    set({ localSaved: false });
+    const task = localQueue
+      .catch(() => {})
+      .then(async () => {
+        try {
+          await outbox.put(entry);
+          if (generation === epoch) {
+            record = entry;
+            if (get().data === s.data)
+              set({ localSaved: true, localError: null });
+          }
+          return true;
+        } catch {
+          if (generation === epoch)
+            set({ localSaved: false, localError: "localSaveFailed" });
+          return false;
+        }
       });
-      void get().persist();
-    } catch {
-      set({ error: "invalidData" });
-    }
-  },
-  persist: async () => {
-    const s = get();
-    if (!s.data || s.saving || s.conflict) return;
-    if (s.demo) {
+    localQueue = task;
+    return task;
+  };
+  const schedule = () => {
+    if (get().demo) {
       set({ dirty: false });
       return;
     }
-    if (!s.repo || !s.base) return;
-    set({ saving: true, error: null });
-    try {
-      const saved = await s.repo.save(s.data, s.base.revision);
-      if (get().data === s.data)
-        set({ data: saved, base: structuredClone(saved), dirty: false });
-      else set({ base: structuredClone(saved) });
-    } catch (e) {
-      if (e instanceof ConflictError) {
-        const local = get().data ?? s.data;
-        const merged = mergeSnapshots(s.base, local, e.remote);
-        if (merged.conflicts.length === 0) {
-          try {
-            const saved = await s.repo.save(merged.value, e.remote.revision);
-            if (get().data === local)
-              set({ data: saved, base: structuredClone(saved), dirty: false });
-            else set({ base: structuredClone(saved) });
-          } catch {
-            set({ conflict: { remote: e.remote, fields: [] } });
-          }
-        } else
-          set({ conflict: { remote: e.remote, fields: merged.conflicts } });
-      } else set({ error: e instanceof Error ? e.message : "storageError" });
-    } finally {
-      set({ saving: false });
-      const now = get();
-      if (now.dirty && !now.error && !now.conflict) void now.persist();
-    }
-  },
-  undo: () => {
-    const s = get();
-    if (!s.data || !s.history.length || s.saving || s.conflict) return;
-    const restored = structuredClone(s.history.at(-1)!);
-    restored.counters = { ...s.data.counters };
-    set({
-      data: restored,
-      history: s.history.slice(0, -1),
-      future: [s.data, ...s.future],
-      dirty: true,
-    });
-    void get().persist();
-  },
-  redo: () => {
-    const s = get();
-    if (!s.data || !s.future.length || s.saving || s.conflict) return;
-    const restored = structuredClone(s.future[0]);
-    restored.counters = { ...s.data.counters };
-    set({
-      data: restored,
-      history: [...s.history, s.data],
-      future: s.future.slice(1),
-      dirty: true,
-    });
-    void get().persist();
-  },
-  resolve: async (choice) => {
-    const s = get();
-    if (!s.conflict || !s.repo) return;
-    await s.repo.backup();
-    if (choice === "remote") {
+    void checkpoint();
+    if (!firstEdit) firstEdit = Date.now();
+    clearTimeout(timer);
+    timer = setTimeout(
+      () => {
+        firstEdit = 0;
+        void get().persist();
+      },
+      Math.min(800, Math.max(0, 4000 - (Date.now() - firstEdit))),
+    );
+  };
+  const reset = () => {
+    ++epoch;
+    clearTimeout(timer);
+    firstEdit = 0;
+    failures = 0;
+    flight = null;
+    journal = null;
+    record = null;
+    localQueue = Promise.resolve();
+  };
+  return {
+    data: null,
+    base: null,
+    repo: null,
+    demo: false,
+    dirty: false,
+    saving: false,
+    localSaved: false,
+    error: null,
+    localError: null,
+    history: [],
+    future: [],
+    conflict: null,
+    open: async (remote, repo, demo = false) => {
+      reset();
+      const generation = epoch;
+      const scope =
+        !demo && repo?.journalScope && remote.ownerId
+          ? repo.journalScope + ":" + remote.ownerId
+          : null;
+      let data = remote,
+        conflict: State["conflict"] = null;
+      let pending: PendingWrite[] = [];
+      const recoveredConflicts: Conflict[] = [];
+      if (scope) {
+        pending = await outbox.list(scope);
+        if (generation !== epoch) return;
+        for (const entry of pending) {
+          const merged = mergeSnapshots(entry.base, entry.data, data);
+          data = merged.value;
+          recoveredConflicts.push(...merged.conflicts);
+          if (merged.conflicts.length)
+            conflict = {
+              remote,
+              fields: recoveredConflicts,
+            };
+        }
+        journal = { scope, id: crypto.randomUUID() };
+      }
       set({
-        data: s.conflict.remote,
-        base: structuredClone(s.conflict.remote),
-        conflict: null,
-        dirty: false,
+        data,
+        base: structuredClone(remote),
+        repo,
+        demo,
+        dirty: pending.length > 0,
+        saving: false,
+        localSaved: false,
+        error: null,
+        localError: null,
         history: [],
         future: [],
+        conflict,
       });
-    } else {
+      if (pending.length && (await checkpoint())) {
+        for (const entry of pending) await outbox.remove(entry);
+        if (generation === epoch && !conflict) schedule();
+      }
+    },
+    close: () => {
+      reset();
       set({
+        data: null,
+        base: null,
+        repo: null,
+        dirty: false,
+        saving: false,
+        conflict: null,
+        localSaved: false,
+        error: null,
+        localError: null,
+      });
+    },
+    mutate: (fn, recordHistory = true) => {
+      const s = get();
+      if (!s.data || s.conflict) return;
+      try {
+        const next = structuredClone(s.data);
+        fn(next);
+        set({
+          data: snapshotSchema.parse(next),
+          history: recordHistory
+            ? [...s.history.slice(-29), s.data]
+            : s.history,
+          future: recordHistory ? [] : s.future,
+          dirty: true,
+        });
+        schedule();
+      } catch {
+        set({ error: "invalidData" });
+      }
+    },
+    persist: () => {
+      clearTimeout(timer);
+      firstEdit = 0;
+      if (flight) return flight;
+      const generation = epoch;
+      if (!get().dirty || get().conflict || !get().repo || get().demo)
+        return Promise.resolve();
+      set({ saving: true, error: null });
+      flight = (async () => {
+        let conflicts = 0;
+        while (generation === epoch && get().dirty && !get().conflict) {
+          if (!(await checkpoint())) break;
+          if (generation !== epoch) break;
+          const s = get();
+          if (!s.data || !s.base || !s.repo) break;
+          try {
+            const saved = await s.repo.save(s.data, s.base.revision);
+            if (generation !== epoch) break;
+            const latest = get().data!;
+            const data =
+              latest === s.data
+                ? saved
+                : mergeSnapshots(s.data, latest, saved).value;
+            set({
+              data,
+              base: structuredClone(saved),
+              dirty: latest !== s.data,
+              error: null,
+            });
+            failures = 0;
+            conflicts = 0;
+            if (get().dirty) await checkpoint();
+            else {
+              const acknowledged = record;
+              const removal = localQueue
+                .catch(() => {})
+                .then(async () => {
+                  if (acknowledged) await outbox.remove(acknowledged);
+                });
+              localQueue = removal;
+              await removal;
+            }
+          } catch (e) {
+            if (generation !== epoch) break;
+            if (e instanceof ConflictError) {
+              const merged = mergeSnapshots(s.base, get().data!, e.remote);
+              if (!merged.conflicts.length && ++conflicts <= 3) {
+                set({
+                  data: merged.value,
+                  base: structuredClone(e.remote),
+                  dirty: true,
+                });
+                continue;
+              }
+              set({ conflict: { remote: e.remote, fields: merged.conflicts } });
+            } else {
+              const error = e instanceof Error ? e.message : "storageError";
+              set({ error });
+              if (
+                ![
+                  "driveExpired",
+                  "drivePermission",
+                  "driveAccountChanged",
+                  "folderPermission",
+                  "invalidData",
+                  "tooLarge",
+                ].includes(error)
+              ) {
+                timer = setTimeout(
+                  () => void get().persist(),
+                  Math.min(30000, 2000 * 2 ** failures++),
+                );
+              }
+            }
+            break;
+          }
+        }
+      })().finally(() => {
+        if (generation === epoch) {
+          flight = null;
+          set({ saving: false });
+        }
+      });
+      return flight;
+    },
+    undo: () => {
+      const s = get();
+      if (!s.data || !s.history.length || s.conflict) return;
+      const restored = structuredClone(s.history.at(-1)!);
+      restored.counters = { ...s.data.counters };
+      set({
+        data: restored,
+        history: s.history.slice(0, -1),
+        future: [s.data, ...s.future],
+        dirty: true,
+      });
+      schedule();
+    },
+    redo: () => {
+      const s = get();
+      if (!s.data || !s.future.length || s.conflict) return;
+      const restored = structuredClone(s.future[0]);
+      restored.counters = { ...s.data.counters };
+      set({
+        data: restored,
+        history: [...s.history, s.data],
+        future: s.future.slice(1),
+        dirty: true,
+      });
+      schedule();
+    },
+    resolve: async (choice) => {
+      const s = get();
+      if (!s.conflict || !s.repo) return;
+      const generation = epoch;
+      await s.repo.backup();
+      if (generation !== epoch) return;
+      set({
+        data: choice === "remote" ? s.conflict.remote : s.data,
         base: structuredClone(s.conflict.remote),
         conflict: null,
         dirty: true,
+        history: [],
+        future: [],
       });
+      await checkpoint();
       await get().persist();
-    }
-  },
-  refresh: async () => {
-    const s = get();
-    if (!s.repo || s.dirty || s.saving || s.conflict) return;
-    try {
-      const remote = await s.repo.load();
-      if (get().dirty || get().saving || get().base !== s.base) return;
-      if (remote.revision !== s.base?.revision)
-        set({
-          data: remote,
-          base: structuredClone(remote),
-          history: [],
-          future: [],
-        });
-    } catch (e) {
-      set({ error: e instanceof Error ? e.message : "storageError" });
-    }
-  },
-}));
+    },
+    refresh: async () => {
+      const s = get(),
+        generation = epoch;
+      if (!s.repo || s.dirty || s.saving || s.conflict) return;
+      try {
+        const remote = await s.repo.load();
+        if (
+          generation !== epoch ||
+          get().dirty ||
+          get().saving ||
+          get().base !== s.base
+        )
+          return;
+        if (remote.revision !== s.base?.revision)
+          set({
+            data: remote,
+            base: structuredClone(remote),
+            history: [],
+            future: [],
+          });
+      } catch (e) {
+        if (generation === epoch)
+          set({ error: e instanceof Error ? e.message : "storageError" });
+      }
+    },
+  };
+});

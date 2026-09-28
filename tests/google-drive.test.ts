@@ -98,6 +98,26 @@ describe("Google Drive repository", () => {
       headers: { "If-Match": '"v1"' },
     });
   });
+  it("reuses unchanged content while revalidating ETags on every save", async () => {
+    const { repo, request, current, json } = setup();
+    const data = current(2);
+    data.preferences.autoBackup = false;
+    await repo.load();
+    json(file);
+    json({ ...file, etag: '"v3"' });
+    const saved = await repo.save(data, 2);
+    json({ ...file, etag: '"v3"' });
+    json({ ...file, etag: '"v4"' });
+    await repo.save(saved, 3);
+    expect(
+      request.mock.calls.filter(([url]) => url.includes("alt=media")),
+    ).toHaveLength(1);
+    expect(
+      request.mock.calls
+        .filter(([, init]) => init?.method === "PUT")
+        .at(-1)?.[1]?.headers,
+    ).toMatchObject({ "If-Match": '"v3"' });
+  });
   it("returns remote changes after a concurrent write", async () => {
     const { repo, request, current } = setup();
     const data = current(2);

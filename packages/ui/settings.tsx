@@ -48,7 +48,7 @@ export function Settings({
       <div className="form-content settings">
         {!s.demo && (
           <button
-            disabled={s.saving || s.dirty || Boolean(s.conflict)}
+            disabled={Boolean(s.conflict)}
             onClick={() => {
               change("introduction", "profile");
               onClose();

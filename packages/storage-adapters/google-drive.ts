@@ -14,8 +14,16 @@ const upload = "https://www.googleapis.com/upload/drive/v2/files";
 type DriveFile = { id: string; title: string; etag: string };
 export class GoogleDriveRepository implements Repository {
   constructor(readonly session = new GoogleSession()) {}
+  get journalScope() {
+    return this.session.accountId
+      ? "drive:" + this.session.accountId
+      : undefined;
+  }
   backupWarning: string | null = null;
   private backupNames = new Map<string, string>();
+  private inventoryCache: { files: DriveFile[]; until: number } | null = null;
+  private snapshotCache: { id: string; etag: string; data: Snapshot } | null =
+    null;
   private async files() {
     const files: DriveFile[] = [];
     let pageToken = "";
@@ -43,7 +51,17 @@ export class GoogleDriveRepository implements Repository {
     return snapshotSchema.parse(JSON.parse(text));
   }
   private async current() {
-    const inventory = await this.files();
+    const inventory =
+      this.inventoryCache && Date.now() < this.inventoryCache.until
+        ? this.inventoryCache.files
+        : await this.files();
+    this.inventoryCache = {
+      files: inventory,
+      until:
+        this.inventoryCache?.files === inventory
+          ? this.inventoryCache.until
+          : Date.now() + 60000,
+    };
     const files = inventory.filter((f) => f.title === "graphlive-network.json");
     if (files.length > 1) throw new Error("driveDuplicate");
     const file = files[0];
@@ -55,7 +73,13 @@ export class GoogleDriveRepository implements Repository {
       )
     ).json();
     if (!metadata.etag) throw new Error("storageError");
-    return { data: await this.read(file.id), file: metadata, inventory };
+    const cached = this.snapshotCache;
+    const data =
+      cached?.id === file.id && cached.etag === metadata.etag
+        ? cached.data
+        : await this.read(file.id);
+    this.snapshotCache = { id: file.id, etag: metadata.etag, data };
+    return { data, file: metadata, inventory };
   }
   async load() {
     return (await this.current()).data;
@@ -98,7 +122,10 @@ export class GoogleDriveRepository implements Repository {
         inventory.push({ ...created, title });
       }
       const result = await this.session.request(
-        upload + "/" + encodeURIComponent(file.id) + "?uploadType=media",
+        upload +
+          "/" +
+          encodeURIComponent(file.id) +
+          "?uploadType=media&fields=id,title,etag",
         {
           method: "PUT",
           headers: {
@@ -108,9 +135,18 @@ export class GoogleDriveRepository implements Repository {
           body,
         },
       );
-      if (result.status === 412) throw new ConflictError(await this.load());
+      if (result.status === 412) {
+        this.snapshotCache = null;
+        this.inventoryCache = null;
+        throw new ConflictError(await this.load());
+      }
+      const updated: DriveFile = await result.json();
+      this.snapshotCache = updated.etag
+        ? { id: file.id, etag: updated.etag, data: next }
+        : null;
     } else {
       await this.create("graphlive-network.json", next);
+      this.inventoryCache = null;
       // Simultaneous first-time initialization never silently selects one network.
       await this.current();
     }
@@ -184,6 +220,10 @@ export class GoogleDriveRepository implements Repository {
         { method: "DELETE", headers: { "If-Match": file.etag } },
       );
       if (!result.ok) throw Error("backupCleanupFailed");
+      if (this.inventoryCache)
+        this.inventoryCache.files = this.inventoryCache.files.filter(
+          (f) => f.id !== file.id,
+        );
     }
   }
   async restorePreview(id: string) {

@@ -89,8 +89,12 @@ for (const mobile of [false, true])
     const completion = page.getByRole("dialog", {
       name: "Tu red ya ha empezado",
     });
-    await expect(completion.getByRole("alert")).toBeVisible();
-    await completion.getByRole("button", { name: "Explorar mi red" }).click();
+    await expect(completion).toHaveCount(0);
+    await expect(page.locator(".toast")).toBeVisible();
+    await page.getByRole("button", { name: "Reintentar", exact: true }).click();
+    await expect(page.locator(".sync-state")).toContainText(
+      "Todos los cambios guardados",
+    );
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page.reload();
     await page.getByRole("button", { name: "Continuar", exact: true }).click();
@@ -123,7 +127,7 @@ for (const mobile of [false, true])
     expect(errors).toEqual([]);
   });
 
-test("profile save failure stays in the questionnaire and retries; English and reduced motion", async ({
+test("profile edits remain usable during a save failure and retry; English and reduced motion", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce", colorScheme: "dark" });
@@ -154,9 +158,10 @@ test("profile save failure stays in the questionnaire and retries; English and r
   await expect(dialog).toBeVisible();
   await dialog.getByRole("button", { name: "Continue", exact: true }).click();
   await dialog.getByRole("button", { name: "Save my profile" }).click();
-  await expect(dialog.getByRole("alert")).toBeVisible();
-  await expect(page.locator(".guide-callout")).toHaveCount(0);
-  await dialog.getByRole("button", { name: "Save my profile" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.locator(".toast")).toBeVisible();
+  await page.getByRole("button", { name: "Retry", exact: true }).click();
+  await expect(page.locator(".sync-state")).toContainText("All changes saved");
   await expect(page.locator(".guide-glow")).toBeVisible();
   await expect(page.locator(".guide-glow")).toHaveCSS("animation-name", "none");
   await page.screenshot({ path: "../../work/intro-english-dark.png" });

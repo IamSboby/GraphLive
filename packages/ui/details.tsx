@@ -39,7 +39,7 @@ export function Details({
       (e) => e.sourceId === person.id || e.targetId === person.id,
     );
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const busy = s.saving || s.dirty || Boolean(s.conflict);
+  const busy = Boolean(s.conflict);
   return (
     <aside className="details-panel">
       <header>

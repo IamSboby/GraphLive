@@ -25,7 +25,7 @@ export function AppearanceSettings() {
   const [error, setError] = useState("");
   const colors = relationshipPalette(draft),
     palette = themePalette(draft, mode === "dark");
-  const busy = s.saving || s.dirty || Boolean(s.conflict);
+  const busy = Boolean(s.conflict);
   async function importConfig(file: File, kind: "colors" | "theme") {
     try {
       if (file.size > 65536) throw Error("tooLarge");

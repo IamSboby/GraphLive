@@ -17,7 +17,7 @@ export function Introduction({ onAdd }: { onAdd: () => void }) {
   const s = useNetwork(),
     { t } = useTranslation();
   const data = s.data!,
-    saved = s.base ?? data;
+    saved = data;
   const owner = data.people.find((p) => p.id === data.ownerId)!;
   const [profile, setProfile] = useState(() =>
     structuredClone(
@@ -27,7 +27,7 @@ export function Introduction({ onAdd }: { onAdd: () => void }) {
   const [step, setStep] = useState(1),
     [error, setError] = useState("");
   const stage = introductionStage(saved),
-    busy = s.saving || Boolean(s.conflict);
+    busy = Boolean(s.conflict);
   const setStage = (value: "invite" | "done" | "skipped") => {
     if (busy) return;
     s.mutate((d) => {

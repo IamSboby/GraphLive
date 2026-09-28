@@ -41,6 +41,9 @@ export class GoogleSession {
   private token = "";
   private expires = 0;
   private account = "";
+  get accountId() {
+    return this.account;
+  }
   connect(): Promise<void> {
     const google = identity();
     if (!google) return Promise.reject(new Error("driveUnavailable"));
@@ -111,6 +114,7 @@ export class GoogleSession {
       ...options,
       headers,
       cache: "no-store",
+      signal: options.signal ?? AbortSignal.timeout(30000),
     });
     if (response.status === 401) {
       this.token = "";

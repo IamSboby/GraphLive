@@ -67,9 +67,20 @@ export function Onboarding({
         .catch(() => setError("driveUnavailable"));
   }, [provider]);
   const openNetwork = useNetwork((s) => s.open);
-  const open = (data: Snapshot, repo: Repository | null, demo = false) => {
-    openNetwork(data, repo, demo);
-    router.push("/graph");
+  const open = async (
+    data: Snapshot,
+    repo: Repository | null,
+    demo = false,
+  ) => {
+    setBusy(true);
+    try {
+      await openNetwork(data, repo, demo);
+      router.push("/graph");
+    } catch {
+      setError("localSaveFailed");
+    } finally {
+      setBusy(false);
+    }
   };
   async function start() {
     setBusy(true);
@@ -97,7 +108,7 @@ export function Onboarding({
       data.preferences.introduction = "profile";
       data.preferences.theme = theme;
       data.preferences.language = resolveLanguage(i18n.language);
-      open(await repo.save(data, data.revision), repo);
+      await open(await repo.save(data, data.revision), repo);
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") return;
       setError(

@@ -165,12 +165,18 @@ export function App({
       15000,
     );
     const before = (e: BeforeUnloadEvent) => {
-      if (useNetwork.getState().dirty) e.preventDefault();
+      const state = useNetwork.getState();
+      if (state.dirty && !state.localSaved) e.preventDefault();
     };
+    const online = () => {
+      void useNetwork.getState().persist();
+    };
+    window.addEventListener("online", online);
     window.addEventListener("beforeunload", before);
     return () => {
       clearInterval(timer);
       window.removeEventListener("beforeunload", before);
+      window.removeEventListener("online", online);
     };
   }, []);
   const stats = useMemo(() => (data ? metrics(data) : new Map()), [data]);
@@ -265,23 +271,17 @@ export function App({
     graph.current?.center(id);
   };
   const disconnect = () => {
-    if (s.dirty && !window.confirm(t("exportFirst"))) return;
+    if (s.dirty && !s.localSaved && !window.confirm(t("exportFirst"))) return;
     leavingGraph.current = true;
-    useNetwork.setState({
-      data: null,
-      base: null,
-      repo: null,
-      dirty: false,
-      conflict: null,
-    });
+    useNetwork.getState().close();
     setSelected(null);
     setSettings(false);
     setFilters(emptyFilters);
     setQuery("");
     router.push("/");
   };
-  const busy = s.saving || Boolean(s.conflict);
-  const guideStage = s.demo ? "done" : introductionStage(s.base ?? data);
+  const busy = Boolean(s.conflict);
+  const guideStage = s.demo ? "done" : introductionStage(data);
   const guideInvite =
     guideStage === "invite" && data.people.length === 1 && !form && !settings;
   return (
@@ -303,11 +303,15 @@ export function App({
             {t(
               s.demo
                 ? "demoMode"
-                : s.saving
-                  ? "saving"
-                  : s.dirty
-                    ? "unsaved"
-                    : "saved",
+                : s.localError
+                  ? "localSaveFailed"
+                  : s.dirty && s.localSaved
+                    ? "savedLocally"
+                    : s.saving
+                      ? "saving"
+                      : s.dirty
+                        ? "unsaved"
+                        : "saved",
             )}
           </span>
         </div>
@@ -689,10 +693,12 @@ export function App({
           />
         )}
       </div>
-      {(s.error || actionError) && (
+      {(s.error || s.localError || actionError) && (
         <div className="toast" role="alert">
           <span>
-            {t(actionError || s.error || "error", { defaultValue: t("error") })}
+            {t(actionError || s.localError || s.error || "error", {
+              defaultValue: t("error"),
+            })}
           </span>
           {s.repo instanceof GoogleDriveRepository &&
           s.error === "driveExpired" ? (
@@ -776,7 +782,7 @@ export function App({
               <button onClick={() => setPreview(null)}>{t("cancel")}</button>
               <button
                 className="primary"
-                disabled={busy}
+                disabled={busy || s.saving || s.dirty}
                 onClick={() => {
                   void (async () => {
                     try {

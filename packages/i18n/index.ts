@@ -138,6 +138,9 @@ export const es = {
   save: "Guardar",
   close: "Cerrar",
   loading: "Cargando…",
+  savedLocally: "Guardado en este dispositivo · sincronización pendiente",
+  localSaveFailed:
+    "No se pudo guardar la copia local. No cierres la página; reintenta o exporta tu red.",
   saved: "Todos los cambios guardados",
   saving: "Guardando…",
   unsaved: "Cambios sin guardar",
@@ -470,6 +473,9 @@ export const en: Record<keyof typeof es, string> = {
   save: "Save",
   close: "Close",
   loading: "Loading…",
+  savedLocally: "Saved on this device · sync pending",
+  localSaveFailed:
+    "Could not save the local copy. Keep this page open; retry or export your network.",
   saved: "All changes saved",
   saving: "Saving…",
   unsaved: "Unsaved changes",

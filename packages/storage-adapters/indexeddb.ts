@@ -4,6 +4,7 @@ import { ConflictError } from "../sync-engine/merge";
 
 /** One transaction protects revision checks and writes across browser tabs. */
 export class BrowserRepository implements Repository {
+  readonly journalScope = "browser";
   private pruneBackups(store: IDBObjectStore) {
     const request = store.getAllKeys();
     request.onsuccess = () => {

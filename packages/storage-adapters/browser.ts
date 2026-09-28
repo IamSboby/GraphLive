@@ -1,7 +1,9 @@
 import { snapshotSchema, emptySnapshot, type Snapshot } from "../domain/model";
 import { fileTree, type Repository } from "../storage-core";
+import { folderIdentity } from "../storage-core/folder-identity";
 import { ConflictError } from "../sync-engine/merge";
 export class HttpRepository implements Repository {
+  readonly journalScope = "server";
   private async request(path = "", options?: RequestInit) {
     const r = await fetch("/api/network" + path, {
       ...options,
@@ -60,6 +62,10 @@ export async function pickDirectory() {
   return picker.call(window, { mode: "readwrite", id: "graphlive" });
 }
 export class LocalRepository implements Repository {
+  private folderId: string | undefined;
+  get journalScope() {
+    return this.folderId ? "folder:" + this.folderId : undefined;
+  }
   private root: Promise<FileSystemDirectoryHandle>;
   constructor(private selected: Directory) {
     this.root =
@@ -93,6 +99,8 @@ export class LocalRepository implements Repository {
   }
   async load() {
     await this.permission();
+    if (!this.folderId && typeof indexedDB !== "undefined")
+      this.folderId = await folderIdentity(await this.root);
     try {
       return snapshotSchema.parse(
         JSON.parse(await this.read("sync/snapshot.json")),
@@ -123,8 +131,10 @@ export class LocalRepository implements Repository {
       for (const k of ["M", "F", "L", "U"] as const)
         value.counters[k] = Math.max(current.counters[k], value.counters[k]);
       if (current.revision && value.preferences.autoBackup) await this.backup();
+      const previous = fileTree(current);
       for (const [p, data] of Object.entries(fileTree(value)))
-        await this.write(p, data);
+        if (!current.revision || previous[p] !== data)
+          await this.write(p, data);
       return value;
     });
   }
