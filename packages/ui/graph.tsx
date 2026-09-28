@@ -35,7 +35,10 @@ type Props = {
   selected: string | null;
   path: string[];
   onSelect: (id: string) => void;
-  onPositions: (positions: { id: string; x: number; y: number }[]) => void;
+  onPositions: (
+    positions: { id: string; x: number; y: number }[],
+    recordHistory: boolean,
+  ) => void;
   dark: boolean;
   me: string;
 };
@@ -62,7 +65,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     worker = useRef<Worker | null>(null),
     latest = useRef({ data, onSelect, onPositions });
   latest.current = { data, onSelect, onPositions };
-  const savePositions = useCallback(() => {
+  const savePositions = useCallback((recordHistory = false) => {
     const c = cy.current;
     if (!c) return;
     const changed = c
@@ -73,7 +76,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
           ?.display.manualPosition;
         return !saved || saved.x !== n.x || saved.y !== n.y;
       });
-    if (changed.length) latest.current.onPositions(changed);
+    if (changed.length) latest.current.onPositions(changed, recordHistory);
   }, []);
   const runLayout = useCallback(
     (preserveSaved = false) => {
@@ -111,7 +114,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
         if (container.current) container.current.dataset.layout = "ready";
         w.terminate();
         worker.current = null;
-        savePositions();
+        savePositions(!preserveSaved);
       };
       w.postMessage({
         nodes,
@@ -199,7 +202,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
       worker.current = null;
       if (container.current) container.current.dataset.layout = "ready";
     });
-    c.on("dragfree", "node", savePositions);
+    c.on("dragfree", "node", () => savePositions(true));
     return () => {
       worker.current?.terminate();
       c.off("pan zoom", syncGrid);

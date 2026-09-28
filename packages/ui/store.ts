@@ -19,7 +19,7 @@ type State = {
   future: Snapshot[];
   conflict: { remote: Snapshot; fields: Conflict[] } | null;
   open: (data: Snapshot, repo: Repository | null, demo?: boolean) => void;
-  mutate: (fn: (s: Snapshot) => void) => void;
+  mutate: (fn: (s: Snapshot) => void, recordHistory?: boolean) => void;
   persist: () => Promise<void>;
   undo: () => void;
   redo: () => void;
@@ -50,7 +50,7 @@ export const useNetwork = create<State>((set, get) => ({
       future: [],
       conflict: null,
     }),
-  mutate: (fn) => {
+  mutate: (fn, recordHistory = true) => {
     const s = get();
     if (!s.data || s.conflict) return;
     const next = structuredClone(s.data);
@@ -59,8 +59,8 @@ export const useNetwork = create<State>((set, get) => ({
       const valid = snapshotSchema.parse(next);
       set({
         data: valid,
-        history: [...s.history.slice(-29), s.data],
-        future: [],
+        history: recordHistory ? [...s.history.slice(-29), s.data] : s.history,
+        future: recordHistory ? [] : s.future,
         dirty: true,
         error: null,
       });

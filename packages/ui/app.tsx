@@ -539,13 +539,13 @@ export function App({
               dark={Boolean(dark)}
               me={t("me")}
               onSelect={setSelected}
-              onPositions={(positions) =>
+              onPositions={(positions, recordHistory) =>
                 s.mutate((d) => {
                   for (const { id, x, y } of positions) {
                     const p = d.people.find((p) => p.id === id);
                     if (p) p.display.manualPosition = { x, y };
                   }
-                })
+                }, recordHistory)
               }
             />
           )}
