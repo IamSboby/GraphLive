@@ -5,6 +5,7 @@ import {
   resolveLanguage,
 } from "../i18n/languages";
 import { IconSelect } from "./icon-select";
+import { GoogleDriveIcon } from "./google-drive-icon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -338,7 +339,7 @@ export function Onboarding({
                         checked={provider === "drive"}
                         onChange={() => setProvider("drive")}
                       />
-                      <FolderOpen size={21} />
+                      <GoogleDriveIcon />
                       Google Drive
                     </label>
                   </fieldset>
