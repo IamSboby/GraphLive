@@ -150,3 +150,32 @@ describe("Google Drive repository", () => {
     );
   });
 });
+it("Drive catalogs networks and scopes backup reads and cleanup to their own identity", async () => {
+  const session = new GoogleSession();
+  const id = crypto.randomUUID();
+  const request = vi.spyOn(session, "request").mockImplementation(async () =>
+    Response.json({
+      items: [
+        file,
+        {
+          id: "game",
+          title: `network-${id}-graphlive-network.json`,
+          etag: '"v1"',
+        },
+        { id: "old-copy", title: "manual-backup-1000-x", etag: '"v1"' },
+        {
+          id: "game-copy",
+          title: `network-${id}-manual-backup-1000-x`,
+          etag: '"v1"',
+        },
+      ],
+    }),
+  );
+  const root = new GoogleDriveRepository(session);
+  expect(await root.networkIds()).toEqual(["default", id]);
+  expect(await root.backups()).toEqual(["old-copy"]);
+  const game = new GoogleDriveRepository(session, id);
+  expect(await game.backups()).toEqual(["game-copy"]);
+  await expect(game.restorePreview("old-copy")).rejects.toThrow("invalidPath");
+  expect(request.mock.calls.every(([, init]) => !init?.method)).toBe(true);
+});

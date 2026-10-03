@@ -8,6 +8,8 @@ test("new relationships, saving tags without Enter, normalized filtering and del
     .getByRole("textbox", { name: "Tu nombre o sobrenombre" })
     .fill("Owner");
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await page.getByTestId("new-network").click();
+  await page.getByTestId("create-network").click();
   await page.getByRole("button", { name: "Omitir por ahora" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   for (const [name, type, color] of [

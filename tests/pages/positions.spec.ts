@@ -9,6 +9,8 @@ test("positions survive adding people, explicit layout, dragging and reopening; 
     .getByRole("textbox", { name: "Tu nombre o sobrenombre" })
     .fill("Owner");
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await page.getByTestId("new-network").click();
+  await page.getByTestId("create-network").click();
   await page.getByRole("button", { name: "Omitir por ahora" }).click();
   const canvas = page.locator(".graph-canvas");
   await expect(canvas).toHaveAttribute("data-layout", "ready");

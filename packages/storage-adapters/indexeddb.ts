@@ -6,7 +6,30 @@ import { ConflictError } from "../sync-engine/merge";
 /** One transaction protects revision checks and writes across browser tabs. */
 export class BrowserRepository implements Repository {
   requiresMigration = false;
-  readonly journalScope = "browser";
+  constructor(readonly networkId = "default") {
+    if (networkId !== "default" && !/^[a-f0-9-]{36}$/.test(networkId))
+      throw new Error("invalidPath");
+  }
+  get journalScope() {
+    return this.networkId === "default"
+      ? "browser"
+      : "browser:" + this.networkId;
+  }
+  async networkIds(): Promise<string[]> {
+    return this.transaction("readonly", (store, done) => {
+      const r = store.get("networks");
+      r.onsuccess = () => done(["default", ...(r.result ?? [])]);
+    });
+  }
+  private async register(id: string) {
+    return this.transaction("readwrite", (store, done) => {
+      const r = store.get("networks");
+      r.onsuccess = () => {
+        store.put([...new Set([...(r.result ?? []), id])], "networks");
+        done(undefined);
+      };
+    });
+  }
   private pruneBackups(store: IDBObjectStore) {
     const request = store.getAllKeys();
     request.onsuccess = () => {
@@ -20,7 +43,12 @@ export class BrowserRepository implements Repository {
   }
   private async database() {
     return new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("graphlive-local", 1);
+      const request = indexedDB.open(
+        this.networkId === "default"
+          ? "graphlive-local"
+          : "graphlive-network-" + this.networkId,
+        1,
+      );
       request.onupgradeneeded = () =>
         request.result.createObjectStore("network");
       request.onsuccess = () => resolve(request.result);
@@ -79,6 +107,8 @@ export class BrowserRepository implements Repository {
     });
   }
   async save(input: Snapshot, expectedRevision: number): Promise<Snapshot> {
+    if (this.networkId !== "default")
+      await new BrowserRepository().register(this.networkId);
     return this.transaction("readwrite", (store, done, fail) => {
       const r = store.get("snapshot");
       r.onsuccess = () => {

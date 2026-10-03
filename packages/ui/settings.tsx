@@ -46,6 +46,24 @@ export function Settings({
   return (
     <Modal title={t("settings")} onClose={onClose}>
       <div className="form-content settings">
+        <Field label={t("networkName")}>
+          <input
+            maxLength={80}
+            defaultValue={data.preferences.networkName ?? t("defaultNetwork")}
+            disabled={Boolean(s.conflict)}
+            onBlur={(e) => {
+              const name = e.target.value.trim();
+              if (
+                name &&
+                name !== (data.preferences.networkName ?? t("defaultNetwork"))
+              )
+                change("networkName", name);
+              else
+                e.target.value =
+                  data.preferences.networkName ?? t("defaultNetwork");
+            }}
+          />
+        </Field>
         {!s.demo && (
           <button
             disabled={Boolean(s.conflict)}

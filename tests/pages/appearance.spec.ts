@@ -12,6 +12,8 @@ test("appearance editor validates imports and persists portable colors and theme
     .getByRole("textbox", { name: "Tu nombre o sobrenombre" })
     .fill("Alex");
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await page.getByTestId("new-network").click();
+  await page.getByTestId("create-network").click();
   await page.getByRole("button", { name: "Omitir por ahora" }).click();
   await page
     .getByRole("button", { name: "Configuración", exact: true })

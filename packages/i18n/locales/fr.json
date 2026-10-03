@@ -288,5 +288,18 @@
   "relationOwner": "Relation avec vous",
   "knowsDirectly": "Je connais directement cette personne",
   "savedLocally": "Enregistré sur cet appareil · synchronisation en attente",
-  "localSaveFailed": "Impossible d’enregistrer la copie locale. Garde cette page ouverte ; réessaie ou exporte ton réseau."
+  "localSaveFailed": "Impossible d’enregistrer la copie locale. Garde cette page ouverte ; réessaie ou exporte ton réseau.",
+  "myNetworks": "Mes réseaux",
+  "networksIntro": "Un espace pour chaque partie de votre monde.",
+  "newNetwork": "Nouveau réseau",
+  "defaultNetwork": "Mon réseau",
+  "searchNetworks": "Rechercher des réseaux…",
+  "refreshNetworks": "Actualiser les réseaux",
+  "noNetworks": "Créez votre premier réseau",
+  "independentIdentity": "Chaque réseau possède son propre profil et sa propre identité. Utilisez votre vrai nom, un personnage de jeu ou une autre identité.",
+  "networkIdentity": "Votre identité : {{name}}",
+  "networkName": "Nom du réseau",
+  "createNetwork": "Créer un réseau",
+  "changeStorage": "Changer de stockage",
+  "resolveBeforeSwitch": "Résolvez les modifications en attente dans le réseau ouvert avant de changer de réseau."
 }

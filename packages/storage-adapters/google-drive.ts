@@ -15,10 +15,44 @@ const upload = "https://www.googleapis.com/upload/drive/v2/files";
 type DriveFile = { id: string; title: string; etag: string };
 export class GoogleDriveRepository implements Repository {
   requiresMigration = false;
-  constructor(readonly session = new GoogleSession()) {}
+  constructor(
+    readonly session = new GoogleSession(),
+    readonly networkId = "default",
+  ) {
+    if (networkId !== "default" && !/^[a-f0-9-]{36}$/.test(networkId))
+      throw new Error("invalidPath");
+  }
+  private get prefix() {
+    return this.networkId === "default"
+      ? ""
+      : "network-" + this.networkId + "-";
+  }
+  async networkIds() {
+    const ids = new Set<string>();
+    for (const f of await this.allFiles()) {
+      if (f.title === "graphlive-network.json") ids.add("default");
+      const match = /^network-([a-f0-9-]{36})-graphlive-network\.json$/.exec(
+        f.title,
+      );
+      if (match) ids.add(match[1]);
+    }
+    return [...ids];
+  }
+  private async files() {
+    const files = await this.allFiles();
+    return files
+      .filter((f) =>
+        this.prefix
+          ? f.title.startsWith(this.prefix)
+          : !f.title.startsWith("network-"),
+      )
+      .map((f) => ({ ...f, title: f.title.slice(this.prefix.length) }));
+  }
   get journalScope() {
     return this.session.accountId
-      ? "drive:" + this.session.accountId
+      ? "drive:" +
+          this.session.accountId +
+          (this.networkId === "default" ? "" : ":" + this.networkId)
       : undefined;
   }
   backupWarning: string | null = null;
@@ -26,7 +60,7 @@ export class GoogleDriveRepository implements Repository {
   private inventoryCache: { files: DriveFile[]; until: number } | null = null;
   private snapshotCache: { id: string; etag: string; data: Snapshot } | null =
     null;
-  private async files() {
+  private async allFiles() {
     const files: DriveFile[] = [];
     let pageToken = "";
     do {
@@ -88,7 +122,7 @@ export class GoogleDriveRepository implements Repository {
   }
   private async create(title: string, data: Snapshot) {
     const boundary = "graphlive_" + crypto.randomUUID();
-    const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ title, mimeType: "application/json", parents: [{ id: "appDataFolder" }] })}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(data)}\r\n--${boundary}--`;
+    const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({ title: this.prefix + title, mimeType: "application/json", parents: [{ id: "appDataFolder" }] })}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(data)}\r\n--${boundary}--`;
     return (await (
       await this.session.request(
         upload + "?uploadType=multipart&fields=id,title,etag",

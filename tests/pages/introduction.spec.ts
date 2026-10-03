@@ -30,6 +30,8 @@ for (const mobile of [false, true])
       .getByRole("textbox", { name: "Tu nombre o sobrenombre" })
       .fill("Alex");
     await page.getByRole("button", { name: "Continuar", exact: true }).click();
+    await page.getByTestId("new-network").click();
+    await page.getByTestId("create-network").click();
     const dialog = page.getByRole("dialog", { name: "Tu red empieza contigo" });
     await expect(dialog).toBeVisible();
     await expect(
@@ -158,6 +160,8 @@ test("profile edits remain usable during a save failure and retry; English and r
     .getByRole("textbox", { name: "Your name or nickname" })
     .fill("Jamie");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByTestId("new-network").click();
+  await page.getByTestId("create-network").click();
   const dialog = page.getByRole("dialog", {
     name: "Your network starts with you",
   });

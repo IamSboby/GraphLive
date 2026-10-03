@@ -40,7 +40,12 @@ const edit = (name, fn) =>
     join(stage, name),
     fn(readFileSync(join(stage, name), "utf8").replaceAll("\r\n", "\n")),
   );
-for (const name of ["app/page.tsx", "app/login/page.tsx", "app/graph/page.tsx"])
+for (const name of [
+  "app/page.tsx",
+  "app/login/page.tsx",
+  "app/graph/page.tsx",
+  "app/dashboard/page.tsx",
+])
   edit(name, (s) =>
     s.replace(
       'export const dynamic = "force-dynamic";',
@@ -59,7 +64,7 @@ writeFileSync(
   join(stage, "packages/ui/application-page.tsx"),
   `import { App } from "./app";
 import { configuration } from "../config";
-export function ApplicationPage({screen}: {screen: "home" | "login" | "graph"}) {
+export function ApplicationPage({screen}: {screen: "home" | "login" | "graph" | "dashboard"}) {
   return <App screen={screen} config={{...configuration(), auth:false, server:false, local:true, googleLogin:false, microsoftLogin:false}} authenticated={false} authError={false} />;
 }
 `,

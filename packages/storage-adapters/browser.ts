@@ -72,11 +72,35 @@ export class LocalRepository implements Repository {
     return this.folderId ? "folder:" + this.folderId : undefined;
   }
   private root: Promise<FileSystemDirectoryHandle>;
-  constructor(private selected: Directory) {
+  constructor(
+    private selected: Directory,
+    readonly networkId = "default",
+  ) {
+    if (networkId !== "default" && !/^[a-f0-9-]{36}$/.test(networkId))
+      throw new Error("invalidPath");
     this.root =
       selected.name === "GraphLiveFiles"
         ? Promise.resolve(selected)
         : selected.getDirectoryHandle("GraphLiveFiles", { create: true });
+    if (networkId !== "default")
+      this.root = this.root.then(async (root) =>
+        (
+          await root.getDirectoryHandle("networks", { create: true })
+        ).getDirectoryHandle(networkId, { create: true }),
+      );
+  }
+  async networkIds() {
+    const ids = ["default"];
+    try {
+      const dir = await (await this.root).getDirectoryHandle("networks");
+      for await (const id of (
+        dir as unknown as { keys(): AsyncIterableIterator<string> }
+      ).keys())
+        if (/^[a-f0-9-]{36}$/.test(id)) ids.push(id);
+    } catch (e) {
+      if ((e as DOMException).name !== "NotFoundError") throw e;
+    }
+    return ids;
   }
   private async permission() {
     if (

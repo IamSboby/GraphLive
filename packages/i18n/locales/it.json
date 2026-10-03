@@ -288,5 +288,18 @@
   "relationOwner": "Relazione con te",
   "knowsDirectly": "Conosco direttamente questa persona",
   "savedLocally": "Salvato su questo dispositivo · sincronizzazione in sospeso",
-  "localSaveFailed": "Impossibile salvare la copia locale. Non chiudere la pagina; riprova o esporta la rete."
+  "localSaveFailed": "Impossibile salvare la copia locale. Non chiudere la pagina; riprova o esporta la rete.",
+  "myNetworks": "Le mie reti",
+  "networksIntro": "Uno spazio per ogni parte del tuo mondo.",
+  "newNetwork": "Nuova rete",
+  "defaultNetwork": "La mia rete",
+  "searchNetworks": "Cerca reti…",
+  "refreshNetworks": "Aggiorna reti",
+  "noNetworks": "Crea la tua prima rete",
+  "independentIdentity": "Ogni rete ha un profilo e un’identità indipendenti. Usa il tuo vero nome, un personaggio di un videogioco o un’altra identità.",
+  "networkIdentity": "La tua identità: {{name}}",
+  "networkName": "Nome della rete",
+  "createNetwork": "Crea rete",
+  "changeStorage": "Cambia archiviazione",
+  "resolveBeforeSwitch": "Risolvi le modifiche in sospeso nella rete aperta prima di cambiare rete."
 }

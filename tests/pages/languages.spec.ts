@@ -34,6 +34,8 @@ for (const code of ["it", "de", "fr", "pt"] as Language[]) {
     await page
       .getByRole("button", { name: text.continue, exact: true })
       .click();
+    await page.getByTestId("new-network").click();
+    await page.getByTestId("create-network").click();
     await expect(
       page.getByRole("dialog", { name: text.guideTitle, exact: true }),
     ).toBeVisible();

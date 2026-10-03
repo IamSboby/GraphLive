@@ -5,6 +5,8 @@ import {
   resolveLanguage,
   isLanguage,
 } from "../i18n/languages";
+import { Dashboard } from "./dashboard";
+import { useLibrary } from "./library";
 import { IconSelect } from "./icon-select";
 import { relationshipPalette, themePalette } from "../appearance/config";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
@@ -15,6 +17,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Network,
+  LayoutDashboard,
   Search,
   Settings2,
   Plus,
@@ -68,7 +71,7 @@ export function App({
   authenticated,
   authError,
 }: {
-  screen: "home" | "login" | "graph";
+  screen: "home" | "login" | "graph" | "dashboard";
   config: Configuration;
   authenticated: boolean;
   authError: boolean;
@@ -259,6 +262,8 @@ export function App({
       data && selected && pathTo ? shortestPath(data, selected, pathTo) : [],
     [data, selected, pathTo],
   );
+  if (screen === "dashboard")
+    return <Dashboard theme={welcomeTheme} onThemeChange={setWelcomeTheme} />;
   if (screen !== "graph")
     return (
       <Onboarding
@@ -402,7 +407,9 @@ export function App({
           <strong>
             GraphLive<span> / </span>
           </strong>
-          <span className="private-label">{t("network")}</span>
+          <span className="private-label">
+            {data.preferences.networkName ?? t("network")}
+          </span>
         </Link>
         <div className="topbar-center">
           <span
@@ -426,6 +433,16 @@ export function App({
           </span>
         </div>
         <div className="topbar-actions">
+          {!s.demo && useLibrary.getState().library && (
+            <button
+              className="icon-button"
+              aria-label={t("myNetworks")}
+              title={t("myNetworks")}
+              onClick={() => router.push("/dashboard")}
+            >
+              <LayoutDashboard size={19} />
+            </button>
+          )}
           <button
             className="icon-button mobile-search"
             aria-label={t("search")}
@@ -515,7 +532,7 @@ export function App({
         <section className="canvas-area">
           <div className="canvas-top">
             <div className="network-summary">
-              <strong>{t("network")}</strong>
+              <strong>{data.preferences.networkName ?? t("network")}</strong>
               <span>
                 {data.people.length} {t("people").toLowerCase()}
                 <i /> {data.connections.length} {t("connections").toLowerCase()}

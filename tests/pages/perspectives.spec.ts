@@ -10,6 +10,8 @@ test("perceptions inherit the main relation, paint ordered gradients and migrate
     .getByRole("textbox", { name: "Tu nombre o sobrenombre" })
     .fill("Owner");
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await page.getByTestId("new-network").click();
+  await page.getByTestId("create-network").click();
   await page.getByRole("button", { name: "Omitir por ahora" }).click();
   await page.locator(".add-fab").click();
   await page

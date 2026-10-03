@@ -19,6 +19,8 @@ test("Pages persists a local network, reopens it and serves graph assets without
     .getByRole("textbox", { name: "Tu nombre o sobrenombre" })
     .fill("Local Owner");
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await page.getByTestId("new-network").click();
+  await page.getByTestId("create-network").click();
   await expect(page).toHaveURL(/\/GraphLive\/graph\/$/);
   await expect(
     page.getByRole("dialog", { name: "Tu red empieza contigo" }),

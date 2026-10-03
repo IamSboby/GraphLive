@@ -7,6 +7,21 @@ import fr from "./locales/fr.json";
 import pt from "./locales/pt.json";
 import { languageCodes, type Language } from "./languages";
 export const es = {
+  myNetworks: "Mis redes",
+  networksIntro: "Un espacio para cada parte de tu mundo.",
+  newNetwork: "Nueva red",
+  defaultNetwork: "Mi red",
+  searchNetworks: "Buscar redes…",
+  refreshNetworks: "Actualizar redes",
+  noNetworks: "Crea tu primera red",
+  independentIdentity:
+    "Cada red tiene su propio perfil e identidad. Puedes usar tu nombre real, un personaje de videojuego o cualquier otra identidad.",
+  networkIdentity: "Tu identidad: {{name}}",
+  networkName: "Nombre de la red",
+  createNetwork: "Crear red",
+  changeStorage: "Cambiar almacenamiento",
+  resolveBeforeSwitch:
+    "Resuelve los cambios pendientes en la red abierta antes de cambiar de red.",
   appearanceEditor: "Personalizar colores y temas",
   appearanceHelp:
     "Edita una vista previa y pulsa Aplicar. Estos ajustes se guardan con tu red y puedes compartirlos como archivos JSON.",
@@ -341,6 +356,21 @@ export const es = {
   knowsDirectly: "Conozco directamente a esta persona",
 };
 export const en: Record<keyof typeof es, string> = {
+  myNetworks: "My networks",
+  networksIntro: "A space for every part of your world.",
+  newNetwork: "New network",
+  defaultNetwork: "My network",
+  searchNetworks: "Search networks…",
+  refreshNetworks: "Refresh networks",
+  noNetworks: "Create your first network",
+  independentIdentity:
+    "Each network has its own profile and identity. Use your real name, a game character or any other identity.",
+  networkIdentity: "Your identity: {{name}}",
+  networkName: "Network name",
+  createNetwork: "Create network",
+  changeStorage: "Change storage",
+  resolveBeforeSwitch:
+    "Resolve pending changes in the open network before switching networks.",
   appearanceEditor: "Customize colors and themes",
   appearanceHelp:
     "Edit a preview, then press Apply. Settings are saved with your network and can be shared as JSON files.",

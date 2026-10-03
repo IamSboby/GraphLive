@@ -86,6 +86,8 @@ test("Drive opens, saves and reopens a network through the browser adapter", asy
     .getByRole("textbox", { name: "Tu nombre o sobrenombre" })
     .fill("Drive Owner");
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
+  await page.getByTestId("new-network").click();
+  await page.getByTestId("create-network").click();
   await expect(page).toHaveURL(/\/graph\/$/);
   expect(
     [...files.values()].find((f) => f.title === "graphlive-network.json")?.data
@@ -155,4 +157,33 @@ test("Drive opens, saves and reopens a network through the browser adapter", asy
   expect(
     [...files.values()].some((f) => f.title === "graphlive-network.json"),
   ).toBe(true);
+
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Cerrar", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Mis redes", exact: true }).click();
+  await page.getByTestId("new-network").click();
+  await page
+    .getByRole("textbox", { name: "Nombre de la red", exact: true })
+    .fill("Game universe");
+  await page
+    .getByRole("textbox", { name: "Tu nombre o sobrenombre", exact: true })
+    .fill("Mage");
+  await page.getByTestId("create-network").click();
+  await page
+    .getByRole("button", { name: "Omitir por ahora", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Mis redes", exact: true }).click();
+  await expect(page.locator(".network-card")).toHaveCount(2);
+  const networks = [...files.values()].filter((f) =>
+    f.title.endsWith("graphlive-network.json"),
+  );
+  expect(networks).toHaveLength(2);
+  expect(new Set(networks.map((f) => f.data.ownerId)).size).toBe(2);
+  expect(
+    networks.find((f) => f.title !== "graphlive-network.json")?.data.people[0]
+      .profile.nickname,
+  ).toBe("Mage");
+  expect(saved.data.people[0].profile.nickname).toBe("Drive Owner");
 });

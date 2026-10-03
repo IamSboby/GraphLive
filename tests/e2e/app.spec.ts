@@ -84,12 +84,12 @@ test("server onboarding persists and reopens existing data", async ({
     name: "Abrir red existente",
     exact: true,
   });
-  await expect(
-    existing
-      .or(page.getByRole("dialog", { name: "Tu red empieza contigo" }))
-      .or(page.getByRole("img", { name: "GraphLive", exact: true })),
-  ).toBeVisible();
+  await expect(page.locator(".network-cards")).toBeVisible();
   if (await existing.isVisible()) await existing.click();
+  else {
+    await page.getByTestId("new-network").click();
+    await page.getByTestId("create-network").click();
+  }
   await expect(page).toHaveURL(/\/graph$/);
   const introduction = page.getByRole("dialog", {
     name: "Tu red empieza contigo",
@@ -110,7 +110,7 @@ test("server onboarding persists and reopens existing data", async ({
   ).toBeVisible();
   await page.reload();
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
-  await expect(page.getByText(/Red encontrada:/)).toBeVisible();
+  await expect(page.locator(".network-card")).toHaveCount(1);
   await page
     .getByRole("button", { name: "Abrir red existente", exact: true })
     .click();

@@ -4,7 +4,7 @@ import { identity } from "@/packages/auth/server";
 export async function ApplicationPage({
   screen,
 }: {
-  screen: "home" | "login" | "graph";
+  screen: "home" | "login" | "graph" | "dashboard";
 }) {
   const config = configuration();
   let authenticated = false,

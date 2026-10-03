@@ -27,6 +27,7 @@ type State = {
     demo?: boolean,
   ) => Promise<void>;
   close: () => void;
+  prepareSwitch: () => Promise<boolean>;
   mutate: (fn: (s: Snapshot) => void, recordHistory?: boolean) => void;
   persist: () => Promise<void>;
   undo: () => void;
@@ -42,6 +43,7 @@ export const useNetwork = create<State>((set, get) => {
   let flight: Promise<void> | null = null;
   let journal: { id: string; scope: string } | null = null;
   let record: PendingWrite | null = null;
+  let activeScope: string | null = null;
   let localQueue: Promise<unknown> = Promise.resolve();
   const checkpoint = () => {
     const s = get(),
@@ -91,13 +93,50 @@ export const useNetwork = create<State>((set, get) => {
       Math.min(800, Math.max(0, 4000 - (Date.now() - firstEdit))),
     );
   };
+  const finishDetached = async (
+    repo: Repository,
+    entry: PendingWrite,
+    previousFlight: Promise<void> | null,
+  ) => {
+    // A network switch must not cancel a durable write to the previous network.
+    try {
+      await previousFlight;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const isActive = () => activeScope === entry.scope;
+        if (isActive()) return;
+        const remote = await repo.load();
+        if (isActive()) return;
+        const merged = mergeSnapshots(entry.base, entry.data, remote);
+        if (merged.conflicts.length) return;
+        try {
+          await repo.save(merged.value, remote.revision);
+          await outbox.remove(entry);
+          return;
+        } catch (error) {
+          if (!(error instanceof ConflictError)) return;
+        }
+      }
+    } catch {
+      // The durable journal remains available for recovery on the next open.
+    }
+  };
   const reset = () => {
+    const previous = get();
+    if (
+      previous.dirty &&
+      previous.localSaved &&
+      previous.repo &&
+      record &&
+      !previous.conflict
+    )
+      void finishDetached(previous.repo, record, flight);
     ++epoch;
     clearTimeout(timer);
     firstEdit = 0;
     failures = 0;
     flight = null;
     journal = null;
+    activeScope = null;
     record = null;
     localQueue = Promise.resolve();
   };
@@ -121,6 +160,7 @@ export const useNetwork = create<State>((set, get) => {
         !demo && repo?.journalScope && remote.ownerId
           ? repo.journalScope + ":" + remote.ownerId
           : null;
+      activeScope = scope;
       let data = remote,
         conflict: State["conflict"] = null;
       let pending: PendingWrite[] = [];
@@ -158,6 +198,10 @@ export const useNetwork = create<State>((set, get) => {
         for (const entry of pending) await outbox.remove(entry);
         if (generation === epoch && !conflict) schedule();
       }
+    },
+    prepareSwitch: async () => {
+      if (get().conflict) return false;
+      return get().dirty ? checkpoint() : true;
     },
     close: () => {
       reset();

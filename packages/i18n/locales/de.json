@@ -288,5 +288,18 @@
   "relationOwner": "Beziehung zu dir",
   "knowsDirectly": "Ich kenne diese Person persönlich",
   "savedLocally": "Auf diesem Gerät gespeichert · Synchronisierung ausstehend",
-  "localSaveFailed": "Die lokale Kopie konnte nicht gespeichert werden. Lass die Seite geöffnet; versuche es erneut oder exportiere dein Netzwerk."
+  "localSaveFailed": "Die lokale Kopie konnte nicht gespeichert werden. Lass die Seite geöffnet; versuche es erneut oder exportiere dein Netzwerk.",
+  "myNetworks": "Meine Netzwerke",
+  "networksIntro": "Ein Raum für jeden Teil deiner Welt.",
+  "newNetwork": "Neues Netzwerk",
+  "defaultNetwork": "Mein Netzwerk",
+  "searchNetworks": "Netzwerke suchen…",
+  "refreshNetworks": "Netzwerke aktualisieren",
+  "noNetworks": "Erstelle dein erstes Netzwerk",
+  "independentIdentity": "Jedes Netzwerk hat ein eigenes Profil und eine eigene Identität. Nutze deinen echten Namen, eine Spielfigur oder eine andere Identität.",
+  "networkIdentity": "Deine Identität: {{name}}",
+  "networkName": "Netzwerkname",
+  "createNetwork": "Netzwerk erstellen",
+  "changeStorage": "Speicher wechseln",
+  "resolveBeforeSwitch": "Löse ausstehende Änderungen im geöffneten Netzwerk, bevor du wechselst."
 }

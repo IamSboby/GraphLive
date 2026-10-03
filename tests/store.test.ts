@@ -254,3 +254,89 @@ it("does not claim local durability when the outbox is full", async () => {
   expect(save).not.toHaveBeenCalled();
   expect(useNetwork.getState().data!.preferences.theme).toBe("dark");
 });
+it("switching checkpoints the latest identity without waiting for a remote save", async () => {
+  const data = emptySnapshot();
+  createPerson(data, { nickname: "Real identity" });
+  const put = vi.spyOn(outbox, "put").mockResolvedValue();
+  vi.spyOn(outbox, "list").mockResolvedValue([]);
+  vi.spyOn(outbox, "remove").mockResolvedValue();
+  let stored = data,
+    first = true;
+  let release!: (data: Snapshot) => void;
+  const repo: Repository = {
+    journalScope: "drive:account:personal",
+    load: async () => stored,
+    save: async (value, revision) => {
+      if (first) {
+        first = false;
+        return new Promise((resolve) => {
+          release = (saved) => {
+            stored = saved;
+            resolve(saved);
+          };
+        });
+      }
+      stored = { ...value, revision: revision + 1 };
+      return stored;
+    },
+    backup: async () => "",
+    backups: async () => [],
+    restorePreview: async () => data,
+  };
+  await useNetwork.getState().open(data, repo);
+  useNetwork.getState().mutate((s) => {
+    s.people[0].profile.nickname = "Updated identity";
+  });
+  const flight = useNetwork.getState().persist();
+  await expect.poll(() => Boolean(release)).toBe(true);
+  useNetwork.getState().mutate((s) => {
+    s.people[0].profile.lastName = "Pending";
+  });
+  expect(await useNetwork.getState().prepareSwitch()).toBe(true);
+  expect(put.mock.calls.at(-1)![0].data.people[0].profile.lastName).toBe(
+    "Pending",
+  );
+  expect(put.mock.calls.at(-1)![0].scope).toBe(
+    "drive:account:personal:" + data.ownerId,
+  );
+  const game = emptySnapshot();
+  createPerson(game, { nickname: "Mage" });
+  await useNetwork
+    .getState()
+    .open(game, { ...repo, journalScope: "drive:account:game" });
+  release({ ...data, revision: 1 });
+  await flight;
+  await expect.poll(() => stored.people[0].profile.lastName).toBe("Pending");
+  expect(useNetwork.getState().data!.people[0].profile.nickname).toBe("Mage");
+});
+it("finishes a switched network whose remote debounce has not started", async () => {
+  const data = emptySnapshot();
+  createPerson(data, { nickname: "Owner" });
+  vi.spyOn(outbox, "put").mockResolvedValue();
+  vi.spyOn(outbox, "list").mockResolvedValue([]);
+  vi.spyOn(outbox, "remove").mockResolvedValue();
+  const save = vi.fn(async (value: Snapshot) => ({ ...value, revision: 1 }));
+  const repo: Repository = {
+    journalScope: "network-one",
+    load: async () => data,
+    save,
+    backup: async () => "",
+    backups: async () => [],
+    restorePreview: async () => data,
+  };
+  await useNetwork.getState().open(data, repo);
+  useNetwork.getState().mutate((s) => {
+    s.people[0].profile.nickname = "Before switching";
+  });
+  expect(await useNetwork.getState().prepareSwitch()).toBe(true);
+  const other = emptySnapshot();
+  createPerson(other, { nickname: "Game" });
+  await useNetwork
+    .getState()
+    .open(other, { ...repo, journalScope: "network-two" });
+  await expect.poll(() => save.mock.calls.length).toBe(1);
+  expect(save.mock.calls[0][0].people[0].profile.nickname).toBe(
+    "Before switching",
+  );
+  expect(useNetwork.getState().data!.people[0].profile.nickname).toBe("Game");
+});

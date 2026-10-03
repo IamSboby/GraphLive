@@ -21,14 +21,16 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { type Configuration } from "../config";
-import { type Snapshot, createPerson } from "../domain/model";
+import { type Snapshot } from "../domain/model";
 import { demoNetwork } from "../domain/demo";
+import { pickDirectory } from "../storage-adapters/browser";
 import {
-  HttpRepository,
-  LocalRepository,
-  pickDirectory,
-} from "../storage-adapters/browser";
-import { BrowserRepository } from "../storage-adapters/indexeddb";
+  useLibrary,
+  browserLibrary,
+  driveLibrary,
+  folderLibrary,
+  serverLibrary,
+} from "./library";
 import type { Repository } from "../storage-core";
 import { useNetwork } from "./store";
 import { Field } from "./primitives";
@@ -55,11 +57,7 @@ export function Onboarding({
     ),
     [name, setName] = useState(""),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState(""),
-    [existing, setExisting] = useState<{
-      data: Snapshot;
-      repo: Repository;
-    } | null>(null);
+    [error, setError] = useState("");
   const [driveReady, setDriveReady] = useState(false);
   useEffect(() => {
     if (provider === "drive")
@@ -89,27 +87,18 @@ export function Onboarding({
     try {
       const drive = provider === "drive" ? new GoogleDriveRepository() : null;
       if (drive) await drive.session.connect();
-      const repo =
-        drive ??
-        (provider === "browser"
-          ? new BrowserRepository()
+      const library = drive
+        ? driveLibrary(drive)
+        : provider === "browser"
+          ? browserLibrary()
           : provider === "local"
-            ? new LocalRepository(await pickDirectory())
-            : new HttpRepository());
-      const data = await repo.load();
-      if (data.people.length) {
-        setExisting({ data, repo });
-        return;
-      }
-      if (!name.trim()) {
-        setError("nameRequired");
-        return;
-      }
-      createPerson(data, { nickname: name });
-      data.preferences.introduction = "profile";
-      data.preferences.theme = theme;
-      data.preferences.language = resolveLanguage(i18n.language);
-      await open(await repo.save(data, data.revision), repo);
+            ? folderLibrary(await pickDirectory())
+            : serverLibrary();
+      if (!(await useNetwork.getState().prepareSwitch()))
+        throw new Error("resolveBeforeSwitch");
+      useNetwork.getState().close();
+      useLibrary.getState().connect(library, name.trim());
+      router.push("/dashboard");
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") return;
       setError(
@@ -265,107 +254,85 @@ export function Onboarding({
             </>
           ) : (
             <>
-              <h2>{t(existing ? "openExisting" : "start")}</h2>
-              {existing ? (
-                <>
-                  <p>
-                    {t("existing", {
-                      people: existing.data.people.length,
-                      edges: existing.data.connections.length,
-                      version: existing.data.schemaVersion,
-                    })}
-                  </p>
-                  <button
-                    className="primary full"
-                    onClick={() => open(existing.data, existing.repo)}
-                  >
-                    {t("openExisting")}
-                    <ArrowUpRight size={18} />
-                  </button>
-                  <button className="full" onClick={() => setExisting(null)}>
-                    {t("cancel")}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Field label={t("ownerName")}>
+              <h2>{t("myNetworks")}</h2>
+              <>
+                <Field label={t("ownerName")}>
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    autoComplete="nickname"
+                    maxLength={200}
+                  />
+                </Field>
+                <fieldset className="storage-choices">
+                  <legend>{t("storage")}</legend>
+                  <label className={provider === "browser" ? "active" : ""}>
                     <input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      autoComplete="nickname"
-                      maxLength={200}
+                      type="radio"
+                      name="storage"
+                      checked={provider === "browser"}
+                      onChange={() => setProvider("browser")}
                     />
-                  </Field>
-                  <fieldset className="storage-choices">
-                    <legend>{t("storage")}</legend>
-                    <label className={provider === "browser" ? "active" : ""}>
+                    <HardDrive size={21} />
+                    {t("browserStorage")}
+                  </label>
+                  {config.server && (
+                    <label className={provider === "server" ? "active" : ""}>
                       <input
                         type="radio"
                         name="storage"
-                        checked={provider === "browser"}
-                        onChange={() => setProvider("browser")}
+                        checked={provider === "server"}
+                        onChange={() => setProvider("server")}
                       />
                       <HardDrive size={21} />
-                      {t("browserStorage")}
+                      {t("server")}
                     </label>
-                    {config.server && (
-                      <label className={provider === "server" ? "active" : ""}>
-                        <input
-                          type="radio"
-                          name="storage"
-                          checked={provider === "server"}
-                          onChange={() => setProvider("server")}
-                        />
-                        <HardDrive size={21} />
-                        {t("server")}
-                      </label>
-                    )}
-                    {config.local && (
-                      <label className={provider === "local" ? "active" : ""}>
-                        <input
-                          type="radio"
-                          name="storage"
-                          checked={provider === "local"}
-                          onChange={() => setProvider("local")}
-                        />
-                        <FolderOpen size={21} />
-                        {t("local")}
-                      </label>
-                    )}
-                    <label className={provider === "drive" ? "active" : ""}>
+                  )}
+                  {config.local && (
+                    <label className={provider === "local" ? "active" : ""}>
                       <input
                         type="radio"
                         name="storage"
-                        checked={provider === "drive"}
-                        onChange={() => setProvider("drive")}
+                        checked={provider === "local"}
+                        onChange={() => setProvider("local")}
                       />
-                      <GoogleDriveIcon />
-                      Google Drive
+                      <FolderOpen size={21} />
+                      {t("local")}
                     </label>
-                  </fieldset>
-                  {(provider !== "server" || !config.auth) && (
-                    <p className="notice">
-                      {t(
-                        provider === "drive"
-                          ? "driveNotice"
-                          : provider === "browser"
-                            ? "browserWarning"
-                            : provider === "local"
-                              ? "localWarning"
-                              : "authWarning",
-                      )}
-                    </p>
                   )}
-                  <button
-                    disabled={busy || (provider === "drive" && !driveReady)}
-                    className="primary full"
-                    onClick={() => void start()}
-                  >
-                    {t(busy ? "loading" : "continue")}
-                    <ArrowUpRight size={18} />
-                  </button>
-                </>
-              )}
+                  <label className={provider === "drive" ? "active" : ""}>
+                    <input
+                      type="radio"
+                      name="storage"
+                      checked={provider === "drive"}
+                      onChange={() => setProvider("drive")}
+                    />
+                    <GoogleDriveIcon />
+                    Google Drive
+                  </label>
+                </fieldset>
+                {(provider !== "server" || !config.auth) && (
+                  <p className="notice">
+                    {t(
+                      provider === "drive"
+                        ? "driveNotice"
+                        : provider === "browser"
+                          ? "browserWarning"
+                          : provider === "local"
+                            ? "localWarning"
+                            : "authWarning",
+                    )}
+                  </p>
+                )}
+                <button
+                  disabled={busy || (provider === "drive" && !driveReady)}
+                  className="primary full"
+                  onClick={() => void start()}
+                >
+                  {t(busy ? "loading" : "continue")}
+                  <ArrowUpRight size={18} />
+                </button>
+              </>
               {authenticated && (
                 <button onClick={() => void signOut({ callbackUrl: "/" })}>
                   {t("logout")}
