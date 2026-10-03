@@ -101,7 +101,13 @@ for (const mobile of [false, true])
     await page
       .getByRole("button", { name: "Abrir red existente", exact: true })
       .click();
+    if (mobile) await page.locator(".mobile-search").click();
     await expect(page.locator(".people-list .person-row")).toHaveCount(2);
+    if (mobile)
+      await page
+        .getByRole("dialog", { name: "Personas", exact: true })
+        .getByRole("button", { name: "Cerrar", exact: true })
+        .click();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await page
       .getByRole("button", { name: "Configuración", exact: true })

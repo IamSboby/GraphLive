@@ -108,6 +108,19 @@ export function App({
       router.replace("/login");
   }, [screen, data, config.auth, authenticated, s.demo, router]);
   const [mobileSidebar, setMobileSidebar] = useState(false);
+  const [phoneLayout, setPhoneLayout] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia(
+      "(max-width: 760px), (max-width: 1000px) and (pointer: coarse)",
+    );
+    const update = () => {
+      setPhoneLayout(media.matches);
+      if (!media.matches) setMobileSidebar(false);
+    };
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
   const theme =
     screen === "graph"
       ? (data?.preferences.theme ?? welcomeTheme)
@@ -284,6 +297,103 @@ export function App({
   const guideStage = s.demo ? "done" : introductionStage(data);
   const guideInvite =
     guideStage === "invite" && data.people.length === 1 && !form && !settings;
+  const peoplePanel = (
+    <aside className="sidebar">
+      <div className="sidebar-title">
+        <div>
+          <span className="eyebrow">{t("network")}</span>
+          <h1>
+            {t("people")}
+            <span>{data.people.length}</span>
+          </h1>
+        </div>
+        <button
+          className="icon-button"
+          aria-label={t("addPerson")}
+          disabled={busy}
+          onClick={() => {
+            setMobileSidebar(false);
+            setForm("new");
+          }}
+        >
+          <Plus size={20} />
+        </button>
+      </div>
+      <label className="search-box">
+        <Search size={17} />
+        <input
+          aria-label={t("search")}
+          placeholder={t("search")}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </label>
+      <div className="sidebar-tools">
+        <button
+          className={filterOpen ? "active" : ""}
+          onClick={() => setFilterOpen(!filterOpen)}
+        >
+          <SlidersHorizontal size={15} />
+          {t("filters")}
+          <ChevronDown size={14} />
+        </button>
+        <span>{t("visible", { count: shown.length })}</span>
+      </div>
+      {filterOpen ? (
+        <FilterFields
+          data={data}
+          value={filters}
+          onChange={setFilters}
+          communities={communities}
+        />
+      ) : (
+        <div className="people-list">
+          {shown.map((p) => (
+            <button
+              className={"person-row " + (selected === p.id ? "selected" : "")}
+              key={p.id}
+              onClick={() => select(p.id)}
+              title={[
+                displayName(p),
+                t("connections") + ": " + stats.get(p.id)?.degree,
+                t("affinity") + ": " + (stats.get(p.id)?.affinity ?? "—"),
+              ].join(" · ")}
+            >
+              <span
+                className="avatar-small"
+                style={{
+                  background:
+                    p.id === data.ownerId
+                      ? `linear-gradient(135deg, ${palette.ownerStart}, ${palette.ownerEnd})`
+                      : colors[ownerRelationship(data, p.id)],
+                }}
+              >
+                {displayName(p)[0]}
+              </span>
+              <span>
+                <strong>
+                  {p.id === data.ownerId ? t("me") : displayName(p)}
+                </strong>
+                <small>
+                  {p.id === data.ownerId
+                    ? t("profile")
+                    : t(ownerRelationship(data, p.id))}
+                </small>
+              </span>
+              <span className="connection-count">
+                {stats.get(p.id)?.degree}
+              </span>
+            </button>
+          ))}
+          {!shown.length && <p className="muted-copy">{t("noResults")}</p>}
+        </div>
+      )}
+      <footer className="sidebar-footer">
+        <LockIcon />
+        {s.demo ? t("demoNotice") : t("footer")}
+      </footer>
+    </aside>
+  );
   return (
     <main className="workspace">
       <header className="topbar">
@@ -319,6 +429,8 @@ export function App({
           <button
             className="icon-button mobile-search"
             aria-label={t("search")}
+            aria-expanded={mobileSidebar}
+            aria-haspopup="dialog"
             onClick={() => setMobileSidebar(!mobileSidebar)}
           >
             <Search size={18} />
@@ -366,7 +478,15 @@ export function App({
             <Settings2 size={19} />
           </button>
           {s.demo ? (
-            <button onClick={disconnect}>{t("exitDemo")}</button>
+            <button
+              className="demo-exit"
+              onClick={disconnect}
+              aria-label={t("exitDemo")}
+              title={t("exitDemo")}
+            >
+              <LogOut size={18} />
+              <span>{t("exitDemo")}</span>
+            </button>
           ) : (
             config.auth && (
               <button
@@ -381,100 +501,17 @@ export function App({
         </div>
       </header>
       <div className="workspace-body">
-        <aside className={"sidebar " + (mobileSidebar ? "mobile-open" : "")}>
-          <div className="sidebar-title">
-            <div>
-              <span className="eyebrow">{t("network")}</span>
-              <h1>
-                {t("people")}
-                <span>{data.people.length}</span>
-              </h1>
-            </div>
-            <button
-              className="icon-button"
-              aria-label={t("addPerson")}
-              disabled={busy}
-              onClick={() => setForm("new")}
-            >
-              <Plus size={20} />
-            </button>
-          </div>
-          <label className="search-box">
-            <Search size={17} />
-            <input
-              aria-label={t("search")}
-              placeholder={t("search")}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </label>
-          <div className="sidebar-tools">
-            <button
-              className={filterOpen ? "active" : ""}
-              onClick={() => setFilterOpen(!filterOpen)}
-            >
-              <SlidersHorizontal size={15} />
-              {t("filters")}
-              <ChevronDown size={14} />
-            </button>
-            <span>{t("visible", { count: shown.length })}</span>
-          </div>
-          {filterOpen ? (
-            <FilterFields
-              data={data}
-              value={filters}
-              onChange={setFilters}
-              communities={communities}
-            />
-          ) : (
-            <div className="people-list">
-              {shown.map((p) => (
-                <button
-                  className={
-                    "person-row " + (selected === p.id ? "selected" : "")
-                  }
-                  key={p.id}
-                  onClick={() => select(p.id)}
-                  title={[
-                    displayName(p),
-                    t("connections") + ": " + stats.get(p.id)?.degree,
-                    t("affinity") + ": " + (stats.get(p.id)?.affinity ?? "—"),
-                  ].join(" · ")}
-                >
-                  <span
-                    className="avatar-small"
-                    style={{
-                      background:
-                        p.id === data.ownerId
-                          ? `linear-gradient(135deg, ${palette.ownerStart}, ${palette.ownerEnd})`
-                          : colors[ownerRelationship(data, p.id)],
-                    }}
-                  >
-                    {displayName(p)[0]}
-                  </span>
-                  <span>
-                    <strong>
-                      {p.id === data.ownerId ? t("me") : displayName(p)}
-                    </strong>
-                    <small>
-                      {p.id === data.ownerId
-                        ? t("profile")
-                        : t(ownerRelationship(data, p.id))}
-                    </small>
-                  </span>
-                  <span className="connection-count">
-                    {stats.get(p.id)?.degree}
-                  </span>
-                </button>
-              ))}
-              {!shown.length && <p className="muted-copy">{t("noResults")}</p>}
-            </div>
-          )}
-          <footer className="sidebar-footer">
-            <LockIcon />
-            {s.demo ? t("demoNotice") : t("footer")}
-          </footer>
-        </aside>
+        {phoneLayout
+          ? mobileSidebar && (
+              <Modal
+                title={t("people")}
+                onClose={() => setMobileSidebar(false)}
+                className="mobile-people-modal"
+              >
+                {peoplePanel}
+              </Modal>
+            )
+          : peoplePanel}
         <section className="canvas-area">
           <div className="canvas-top">
             <div className="network-summary">

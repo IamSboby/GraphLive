@@ -1,7 +1,12 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 import { defaultThemeCss } from "../packages/appearance/config";
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 export const metadata: Metadata = {
   title: "GraphLive",
   description: "Tu red privada de personas y conexiones.",
