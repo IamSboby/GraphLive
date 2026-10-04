@@ -29,10 +29,12 @@ test.describe("phone layout", () => {
         .locator(".graph-controls button, .topbar-actions button, .add-fab")
         .all()) {
         const box = await control.boundingBox();
-        expect(box!.width).toBeGreaterThanOrEqual(44);
-        expect(box!.height).toBeGreaterThanOrEqual(44);
-        expect(box!.x).toBeGreaterThanOrEqual(0);
-        expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+        // Browser transforms can introduce subpixel floating-point rounding.
+        const tolerance = 0.01;
+        expect(box!.width).toBeGreaterThanOrEqual(44 - tolerance);
+        expect(box!.height).toBeGreaterThanOrEqual(44 - tolerance);
+        expect(box!.x).toBeGreaterThanOrEqual(-tolerance);
+        expect(box!.x + box!.width).toBeLessThanOrEqual(width + tolerance);
       }
     }
     await search.tap();
