@@ -50,16 +50,17 @@ export class GoogleDriveRepository implements Repository {
   }
   async networkIds() {
     const ids = new Set<string>();
+    const redirected = new Set<string>();
     for (const f of await this.allFiles()) {
       const target = property(f, "graphliveSharedFileId");
       if (target && !this.session.hasFileAccess)
         throw new Error("driveSharingPermission");
-      if (f.title === "graphlive-network.json")
-        ids.add(target ? "shared:" + target : "default");
+      if (f.title === "graphlive-network.json") ids.add("default");
       const match = /^network-([a-f0-9-]{36})-graphlive-network\.json$/.exec(
         f.title,
       );
-      if (match) ids.add(target ? "shared:" + target : match[1]);
+      if (match) ids.add(match[1]);
+      if (target) redirected.add(target);
     }
     if (this.session.hasFileAccess) {
       let pageToken = "";
@@ -74,7 +75,8 @@ export class GoogleDriveRepository implements Repository {
         const page = await (
           await this.session.request(api + "?" + query)
         ).json();
-        for (const f of page.items ?? []) ids.add("shared:" + f.id);
+        for (const f of page.items ?? [])
+          if (!redirected.has(f.id)) ids.add("shared:" + f.id);
         pageToken = page.nextPageToken ?? "";
       } while (pageToken);
     }
@@ -159,7 +161,13 @@ export class GoogleDriveRepository implements Repository {
         this.inventoryCache && Date.now() < this.inventoryCache.until
           ? this.inventoryCache.files
           : await this.files();
-      this.inventoryCache = { files: inventory, until: Date.now() + 60000 };
+      this.inventoryCache = {
+        files: inventory,
+        until:
+          this.inventoryCache?.files === inventory
+            ? this.inventoryCache.until
+            : Date.now() + 60000,
+      };
       return { file, data, inventory };
     }
     const inventory =

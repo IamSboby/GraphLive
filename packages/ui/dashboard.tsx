@@ -67,7 +67,12 @@ export function Dashboard({
         const repo = library.repository(id);
         const data = await repo.load();
         if (data.people.length)
-          loaded.push({ id, data, readOnly: repo.readOnly });
+          loaded.push({
+            id,
+            data,
+            readOnly: repo.readOnly,
+            shared: repo instanceof GoogleDriveRepository && repo.shared,
+          });
       }
       if (!cancelled) setEntries(loaded);
     })()
@@ -148,8 +153,8 @@ export function Dashboard({
       const repo = useNetwork.getState().repo;
       if (!(repo instanceof GoogleDriveRepository))
         throw new Error("storageError");
-      const file = await repo.publishShared();
-      const id = "shared:" + file;
+      await repo.publishShared();
+      const id = sharing.id;
       const shared = library.repository(id);
       await useNetwork.getState().open(await shared.load(), shared);
       useLibrary.getState().select(id);
@@ -355,7 +360,7 @@ export function Dashboard({
                   <Network size={52} />
                 </div>
                 <h2>{title(entry)}</h2>
-                {entry.id.startsWith("shared:") && (
+                {entry.shared && (
                   <p className="muted-copy">
                     {t(entry.readOnly ? "sharedReadOnly" : "sharedEditable")}
                   </p>

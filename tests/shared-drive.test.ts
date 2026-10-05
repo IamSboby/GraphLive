@@ -7,6 +7,7 @@ import { ConflictError } from "../packages/sync-engine/merge";
 function setup(editable = true) {
   const session = new GoogleSession();
   session.hasFileAccess = true;
+  vi.spyOn(session, "accountId", "get").mockReturnValue("owner");
   let data = emptySnapshot();
   createPerson(data, { nickname: "Alex" });
   data.preferences.autoBackup = false;
@@ -83,6 +84,7 @@ describe("shared networks", () => {
   it("redirects the original network to one canonical file before inviting and deduplicates the catalog", async () => {
     const { session, request } = setup();
     const original = new GoogleDriveRepository(session);
+    const scope = original.journalScope;
     expect(await original.publishShared()).toBe("shared-file");
     expect(await original.publishShared()).toBe("shared-file");
     expect(
@@ -102,9 +104,10 @@ describe("shared networks", () => {
       }),
     );
     expect(await new GoogleDriveRepository(session).networkIds()).toEqual([
-      "shared:shared-file",
+      "default",
     ]);
     const oldDevice = new GoogleDriveRepository(session);
+    expect(oldDevice.journalScope).toBe(scope);
     const data = await oldDevice.load();
     data.preferences.networkName = "Shared name";
     await oldDevice.save(data, data.revision);

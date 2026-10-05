@@ -10,7 +10,12 @@ import {
   type Directory,
 } from "../storage-adapters/browser";
 
-export type NetworkEntry = { id: string; data: Snapshot; readOnly?: boolean };
+export type NetworkEntry = {
+  id: string;
+  data: Snapshot;
+  shared?: boolean;
+  readOnly?: boolean;
+};
 export type NetworkLibrary = {
   provider: "browser" | "drive" | "local" | "server";
   multiple: boolean;
