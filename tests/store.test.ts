@@ -12,6 +12,31 @@ import {
   type Snapshot,
 } from "../packages/domain/model";
 import type { Repository } from "../packages/storage-core";
+it("does not replay pending edits, migrate or mutate a read-only shared network", async () => {
+  const data = emptySnapshot();
+  createPerson(data, { nickname: "Shared Alex" });
+  const list = vi.spyOn(outbox, "list");
+  const save = vi.fn();
+  const repo: Repository = {
+    readOnly: true,
+    requiresMigration: true,
+    journalScope: "shared:test",
+    load: async () => data,
+    save,
+    backup: async () => "",
+    backups: async () => [],
+    restorePreview: async () => data,
+  };
+  await useNetwork.getState().open(data, repo);
+  useNetwork.getState().mutate((d) => {
+    d.preferences.networkName = "Not allowed";
+  });
+  await useNetwork.getState().persist();
+  expect(useNetwork.getState().data?.preferences.networkName).toBeUndefined();
+  expect(useNetwork.getState().dirty).toBe(false);
+  expect(list).not.toHaveBeenCalled();
+  expect(save).not.toHaveBeenCalled();
+});
 it("queues edits made while a save is in flight without dropping data", async () => {
   let persisted = emptySnapshot();
   createPerson(persisted, { nickname: "Owner" });

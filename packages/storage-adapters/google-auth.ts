@@ -1,6 +1,7 @@
 const clientId =
   "225177671658-gktplsqqjhb9dfma1oj3f05rih9fko40.apps.googleusercontent.com";
 const scope = "https://www.googleapis.com/auth/drive.appdata";
+const fileScope = "https://www.googleapis.com/auth/drive.file";
 type TokenResult = {
   access_token?: string;
   expires_in?: number;
@@ -41,10 +42,17 @@ export class GoogleSession {
   private token = "";
   private expires = 0;
   private account = "";
+  hasFileAccess = false;
+  get pickerToken() {
+    if (!this.token || Date.now() >= this.expires)
+      throw new Error("driveExpired");
+    if (!this.hasFileAccess) throw new Error("driveSharingPermission");
+    return this.token;
+  }
   get accountId() {
     return this.account;
   }
-  connect(): Promise<void> {
+  connect(shared = this.hasFileAccess): Promise<void> {
     const google = identity();
     if (!google) return Promise.reject(new Error("driveUnavailable"));
     let expired = false;
@@ -57,12 +65,13 @@ export class GoogleSession {
       google.accounts.oauth2
         .initTokenClient({
           client_id: clientId,
-          scope,
+          scope: shared ? scope + " " + fileScope : scope,
           callback: async (result) => {
             if (expired) return;
             if (
               !result.access_token ||
-              !result.scope?.split(" ").includes(scope)
+              !result.scope?.split(" ").includes(scope) ||
+              (shared && !result.scope?.split(" ").includes(fileScope))
             ) {
               reject(new Error("drivePermission"));
               return;
@@ -88,6 +97,9 @@ export class GoogleSession {
                 throw new Error("driveExpired");
               if (expired) return;
               this.account = account;
+              this.hasFileAccess = Boolean(
+                result.scope?.split(" ").includes(fileScope),
+              );
               this.token = result.access_token;
               this.expires = Date.now() + (lifetime - 60) * 1000;
               resolve();

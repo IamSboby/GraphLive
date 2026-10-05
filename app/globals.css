@@ -2201,6 +2201,7 @@ th {
   border-radius: 14px;
 }
 .dashboard-tools {
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2231,6 +2232,16 @@ th {
   margin: 18px 0 8px;
   font-size: 23px;
   overflow-wrap: anywhere;
+}
+.network-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.network-card-actions button {
+  flex: 1;
+  min-height: 44px;
+  margin-top: 8px;
 }
 .network-card-art {
   display: flex;

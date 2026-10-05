@@ -298,8 +298,9 @@ export function App({
     setQuery("");
     router.push("/");
   };
-  const busy = Boolean(s.conflict);
-  const guideStage = s.demo ? "done" : introductionStage(data);
+  const busy = Boolean(s.conflict || s.repo?.readOnly);
+  const guideStage =
+    s.demo || s.repo?.readOnly ? "done" : introductionStage(data);
   const guideInvite =
     guideStage === "invite" && data.people.length === 1 && !form && !settings;
   const peoplePanel = (
@@ -418,17 +419,19 @@ export function App({
           >
             {!s.saving && !s.dirty && <Check size={14} />}{" "}
             {t(
-              s.demo
-                ? "demoMode"
-                : s.localError
-                  ? "localSaveFailed"
-                  : s.dirty && s.localSaved
-                    ? "savedLocally"
-                    : s.saving
-                      ? "saving"
-                      : s.dirty
-                        ? "unsaved"
-                        : "saved",
+              s.repo?.readOnly
+                ? "sharedReadOnly"
+                : s.demo
+                  ? "demoMode"
+                  : s.localError
+                    ? "localSaveFailed"
+                    : s.dirty && s.localSaved
+                      ? "savedLocally"
+                      : s.saving
+                        ? "saving"
+                        : s.dirty
+                          ? "unsaved"
+                          : "saved",
             )}
           </span>
         </div>
@@ -803,6 +806,7 @@ export function App({
         />
       )}
       {!s.demo &&
+        !s.repo?.readOnly &&
         !form &&
         !edgeForm &&
         !settings &&

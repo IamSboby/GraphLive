@@ -52,6 +52,12 @@ test("legacy network and independent game identity survive switching and reopeni
   await expect(page).toHaveURL(/\/dashboard\/$/);
   await expect(page.locator(".network-card")).toHaveCount(1);
   await expect(page.locator(".network-card")).toContainText("Real Alex");
+  await page.getByRole("button", { name: "Renombrar", exact: true }).click();
+  await page
+    .getByRole("textbox", { name: "Nombre de la red", exact: true })
+    .fill("Personal network");
+  await page.getByRole("button", { name: "Guardar", exact: true }).click();
+  await expect(page.locator(".network-card h2")).toHaveText("Personal network");
   await page.getByTestId("new-network").click();
   await page
     .getByRole("textbox", { name: "Nombre de la red", exact: true })
@@ -75,14 +81,14 @@ test("legacy network and independent game identity survive switching and reopeni
   const original = page
     .locator(".network-card")
     .filter({ hasText: "Real Alex" });
-  await original.getByRole("button").click();
+  await original.getByTestId("open-network").click();
   await expect(page.locator(".network-summary")).toContainText("1 personas");
   await expect(page.locator(".people-list")).not.toContainText("Blaidd");
   await page.getByRole("button", { name: "Mis redes", exact: true }).click();
   await page
     .locator(".network-card")
     .filter({ hasText: "Elden Ring" })
-    .getByRole("button")
+    .getByTestId("open-network")
     .click();
   await expect(page.locator(".people-list")).toContainText("Blaidd");
   await expect(page.locator(".sync-state")).toContainText(
@@ -94,6 +100,9 @@ test("legacy network and independent game identity survive switching and reopeni
   await expect(
     page.locator(".network-card").filter({ hasText: "Elden Ring" }),
   ).toContainText("Ranni");
+  await expect(
+    page.locator(".network-card").filter({ hasText: "Real Alex" }),
+  ).toContainText("Personal network");
   await page.screenshot({
     path: "../../work/dashboard-desktop.png",
     animations: "disabled",
@@ -110,7 +119,7 @@ test("legacy network and independent game identity survive switching and reopeni
   );
   await page.getByRole("textbox", { name: "Buscar redes…" }).fill("Ranni");
   await expect(page.locator(".network-card")).toHaveCount(1);
-  await page.locator(".network-card").getByRole("button").click();
+  await page.locator(".network-card").getByTestId("open-network").click();
   await expect(page.locator(".network-summary")).toContainText("2 personas");
   await expect(
     page.getByRole("button", { name: "Mis redes", exact: true }),

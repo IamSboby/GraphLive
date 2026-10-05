@@ -3,16 +3,18 @@ import type { Snapshot } from "../domain/model";
 import type { Repository } from "../storage-core";
 import { BrowserRepository } from "../storage-adapters/indexeddb";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
+import type { GoogleSession } from "../storage-adapters/google-auth";
 import {
   LocalRepository,
   HttpRepository,
   type Directory,
 } from "../storage-adapters/browser";
 
-export type NetworkEntry = { id: string; data: Snapshot };
+export type NetworkEntry = { id: string; data: Snapshot; readOnly?: boolean };
 export type NetworkLibrary = {
   provider: "browser" | "drive" | "local" | "server";
   multiple: boolean;
+  session?: GoogleSession;
   ids(): Promise<string[]>;
   repository(id: string): Repository;
 };
@@ -27,6 +29,7 @@ export function browserLibrary(): NetworkLibrary {
 export function driveLibrary(root: GoogleDriveRepository): NetworkLibrary {
   return {
     provider: "drive",
+    session: root.session,
     multiple: true,
     ids: () => root.networkIds(),
     repository: (id) => new GoogleDriveRepository(root.session, id),

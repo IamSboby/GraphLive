@@ -12,17 +12,38 @@ import { ConflictError } from "../sync-engine/merge";
 import { GoogleSession } from "./google-auth";
 const api = "https://www.googleapis.com/drive/v2/files";
 const upload = "https://www.googleapis.com/upload/drive/v2/files";
-type DriveFile = { id: string; title: string; etag: string };
+type DriveFile = {
+  id: string;
+  title: string;
+  etag: string;
+  properties?: { key: string; value: string; visibility: string }[];
+  capabilities?: { canEdit?: boolean; canShare?: boolean };
+  parents?: { id: string }[];
+};
+const sharedId = (id: string) => /^[-\w]+$/.test(id) && id.length <= 200;
+const property = (f: DriveFile, key: string) =>
+  f.properties?.find((p) => p.key === key)?.value;
+const fields =
+  "id,title,etag,properties,capabilities(canEdit,canShare),parents(id)";
 export class GoogleDriveRepository implements Repository {
   requiresMigration = false;
+  readOnly = false;
+  private sharedFileId = "";
+  get shared() {
+    return Boolean(this.sharedFileId);
+  }
   constructor(
     readonly session = new GoogleSession(),
     readonly networkId = "default",
   ) {
-    if (networkId !== "default" && !/^[a-f0-9-]{36}$/.test(networkId))
+    if (networkId.startsWith("shared:") && sharedId(networkId.slice(7))) {
+      this.sharedFileId = networkId.slice(7);
+      this.readOnly = true;
+    } else if (networkId !== "default" && !/^[a-f0-9-]{36}$/.test(networkId))
       throw new Error("invalidPath");
   }
   private get prefix() {
+    if (this.sharedFileId) return "shared-" + this.sharedFileId + "-";
     return this.networkId === "default"
       ? ""
       : "network-" + this.networkId + "-";
@@ -30,11 +51,32 @@ export class GoogleDriveRepository implements Repository {
   async networkIds() {
     const ids = new Set<string>();
     for (const f of await this.allFiles()) {
-      if (f.title === "graphlive-network.json") ids.add("default");
+      const target = property(f, "graphliveSharedFileId");
+      if (target && !this.session.hasFileAccess)
+        throw new Error("driveSharingPermission");
+      if (f.title === "graphlive-network.json")
+        ids.add(target ? "shared:" + target : "default");
       const match = /^network-([a-f0-9-]{36})-graphlive-network\.json$/.exec(
         f.title,
       );
-      if (match) ids.add(match[1]);
+      if (match) ids.add(target ? "shared:" + target : match[1]);
+    }
+    if (this.session.hasFileAccess) {
+      let pageToken = "";
+      do {
+        const query = new URLSearchParams({
+          spaces: "drive",
+          q: "trashed = false and properties has { key='graphlive' and value='network' and visibility='PUBLIC' } and properties has { key='graphlivePublished' and value='true' and visibility='PUBLIC' }",
+          fields: "items(id),nextPageToken",
+          maxResults: "1000",
+          pageToken,
+        });
+        const page = await (
+          await this.session.request(api + "?" + query)
+        ).json();
+        for (const f of page.items ?? []) ids.add("shared:" + f.id);
+        pageToken = page.nextPageToken ?? "";
+      } while (pageToken);
     }
     return [...ids];
   }
@@ -44,7 +86,7 @@ export class GoogleDriveRepository implements Repository {
       .filter((f) =>
         this.prefix
           ? f.title.startsWith(this.prefix)
-          : !f.title.startsWith("network-"),
+          : !f.title.startsWith("network-") && !f.title.startsWith("shared-"),
       )
       .map((f) => ({ ...f, title: f.title.slice(this.prefix.length) }));
   }
@@ -68,7 +110,7 @@ export class GoogleDriveRepository implements Repository {
         spaces: "appDataFolder",
         q: "trashed = false",
         maxResults: "1000",
-        fields: "items(id,title,etag),nextPageToken",
+        fields: "items(id,title,etag,properties),nextPageToken",
         pageToken,
       });
       const page = await (await this.session.request(api + "?" + query)).json();
@@ -86,7 +128,40 @@ export class GoogleDriveRepository implements Repository {
       throw new Error("tooLarge");
     return parseStoredSnapshot(JSON.parse(text), this);
   }
-  private async current() {
+  private async current(): Promise<{
+    data: Snapshot;
+    file: DriveFile | undefined;
+    inventory: DriveFile[];
+  }> {
+    if (this.sharedFileId) {
+      if (!this.session.hasFileAccess)
+        throw new Error("driveSharingPermission");
+      const file: DriveFile = await (
+        await this.session.request(
+          api +
+            "/" +
+            encodeURIComponent(this.sharedFileId) +
+            "?fields=" +
+            fields,
+        )
+      ).json();
+      if (!file.etag || property(file, "graphlive") !== "network")
+        throw new Error("invalidData");
+      this.readOnly = file.capabilities?.canEdit !== true;
+      const cached = this.snapshotCache;
+      const data =
+        cached?.id === file.id && cached.etag === file.etag
+          ? cached.data
+          : await this.read(file.id);
+      this.snapshotCache = { id: file.id, etag: file.etag, data };
+      // Backups are private to each participant, never part of the shared folder.
+      const inventory =
+        this.inventoryCache && Date.now() < this.inventoryCache.until
+          ? this.inventoryCache.files
+          : await this.files();
+      this.inventoryCache = { files: inventory, until: Date.now() + 60000 };
+      return { file, data, inventory };
+    }
     const inventory =
       this.inventoryCache && Date.now() < this.inventoryCache.until
         ? this.inventoryCache.files
@@ -105,9 +180,17 @@ export class GoogleDriveRepository implements Repository {
     // Read metadata first: an intervening write makes the conditional update fail.
     const metadata: DriveFile = await (
       await this.session.request(
-        api + "/" + encodeURIComponent(file.id) + "?fields=id,title,etag",
+        api + "/" + encodeURIComponent(file.id) + "?fields=" + fields,
       )
     ).json();
+    const target = property(metadata, "graphliveSharedFileId");
+    if (target) {
+      if (!sharedId(target)) throw new Error("invalidData");
+      this.sharedFileId = target;
+      this.inventoryCache = null;
+      this.snapshotCache = null;
+      return this.current();
+    }
     if (!metadata.etag) throw new Error("storageError");
     const cached = this.snapshotCache;
     const data =
@@ -138,6 +221,7 @@ export class GoogleDriveRepository implements Repository {
   }
   async save(input: Snapshot, expectedRevision: number) {
     const { data, file, inventory } = await this.current();
+    if (this.readOnly) throw new Error("sharedReadOnly");
     if (data.revision !== expectedRevision) throw new ConflictError(data);
     const next = snapshotSchema.parse({
       ...input,
@@ -265,5 +349,116 @@ export class GoogleDriveRepository implements Repository {
   async restorePreview(id: string) {
     if (!(await this.backups()).includes(id)) throw new Error("invalidPath");
     return this.read(id);
+  }
+  async publishShared() {
+    if (!this.session.hasFileAccess) throw new Error("driveSharingPermission");
+    const { data, file } = await this.current();
+    if (this.sharedFileId) {
+      if (file && property(file, "graphlivePublished") !== "true")
+        await this.finishPublication(this.sharedFileId);
+      return this.sharedFileId;
+    }
+    if (!file) throw new Error("missingSnapshot");
+    const folder = await (
+      await this.session.request(api, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: data.preferences.networkName || "GraphLive",
+          mimeType: "application/vnd.google-apps.folder",
+        }),
+      })
+    ).json();
+    const boundary = "graphlive_" + crypto.randomUUID();
+    const metadata = {
+      title: (data.preferences.networkName || "GraphLive") + ".graphlive.json",
+      mimeType: "application/json",
+      parents: [{ id: folder.id }],
+      properties: [
+        { key: "graphlive", value: "network", visibility: "PUBLIC" },
+      ],
+    };
+    const body = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(data)}\r\n--${boundary}--`;
+    const created: DriveFile = await (
+      await this.session.request(
+        upload + "?uploadType=multipart&fields=id,title,etag",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": `multipart/related; boundary=${boundary}`,
+          },
+          body,
+        },
+      )
+    ).json();
+    // Commit the redirect conditionally before inviting anyone. A concurrent edit
+    // invalidates this conversion rather than leaving an outdated shared network.
+    const linked = await this.session.request(
+      api + "/" + encodeURIComponent(file.id),
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "If-Match": file.etag },
+        body: JSON.stringify({
+          properties: [
+            {
+              key: "graphliveSharedFileId",
+              value: created.id,
+              visibility: "PRIVATE",
+            },
+          ],
+        }),
+      },
+    );
+    if (linked.status === 412) {
+      await this.session.request(
+        api + "/" + encodeURIComponent(folder.id) + "/trash",
+        { method: "POST" },
+      );
+      this.snapshotCache = null;
+      this.inventoryCache = null;
+      throw new ConflictError(await this.load());
+    }
+    this.sharedFileId = created.id;
+    this.inventoryCache = null;
+    this.snapshotCache = null;
+    await this.finishPublication(created.id);
+    return created.id;
+  }
+  private async finishPublication(id: string) {
+    // Only completed conversions appear in the shared catalog. Retrying after
+    // a network interruption reuses the committed redirect.
+    await this.session.request(api + "/" + encodeURIComponent(id), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        properties: [
+          { key: "graphlive", value: "network", visibility: "PUBLIC" },
+          { key: "graphlivePublished", value: "true", visibility: "PUBLIC" },
+        ],
+      }),
+    });
+  }
+  async invite(email: string, role: "reader" | "writer") {
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+      !["reader", "writer"].includes(role)
+    )
+      throw new Error("invalidData");
+    const { file } = await this.current();
+    if (!this.sharedFileId || !file?.capabilities?.canShare)
+      throw new Error("drivePermission");
+    // The invitation covers only this network file. Other files and private
+    // backups in either account are outside this permission.
+    await this.session.request(
+      api +
+        "/" +
+        encodeURIComponent(file.id) +
+        "/permissions?sendNotificationEmails=true",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "user", role, value: email.trim() }),
+      },
+    );
   }
 }

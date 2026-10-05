@@ -46,6 +46,19 @@ function mockGoogle(scope = "https://www.googleapis.com/auth/drive.appdata") {
   vi.stubGlobal("fetch", fetch);
   return fetch;
 }
+it("requires explicit file consent for sharing and exposes only a live Picker token", async () => {
+  mockGoogle();
+  const session = new GoogleSession();
+  await expect(session.connect(true)).rejects.toThrow("drivePermission");
+  mockGoogle(
+    "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file",
+  );
+  await session.connect(true);
+  expect(session.hasFileAccess).toBe(true);
+  expect(session.pickerToken).toBe("temporary-token");
+  vi.spyOn(Date, "now").mockReturnValue(Date.now() + 3600000);
+  expect(() => session.pickerToken).toThrow("driveExpired");
+});
 it("does not send a token when consent omitted the requested permission", async () => {
   const fetch = mockGoogle("openid");
   await expect(new GoogleSession().connect()).rejects.toThrow(

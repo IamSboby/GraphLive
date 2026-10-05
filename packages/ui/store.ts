@@ -157,7 +157,7 @@ export const useNetwork = create<State>((set, get) => {
       reset();
       const generation = epoch;
       const scope =
-        !demo && repo?.journalScope && remote.ownerId
+        !demo && !repo?.readOnly && repo?.journalScope && remote.ownerId
           ? repo.journalScope + ":" + remote.ownerId
           : null;
       activeScope = scope;
@@ -185,7 +185,9 @@ export const useNetwork = create<State>((set, get) => {
         base: structuredClone(remote),
         repo,
         demo,
-        dirty: pending.length > 0 || Boolean(repo?.requiresMigration),
+        dirty:
+          !repo?.readOnly &&
+          (pending.length > 0 || Boolean(repo?.requiresMigration)),
         saving: false,
         localSaved: false,
         error: null,
@@ -194,7 +196,11 @@ export const useNetwork = create<State>((set, get) => {
         future: [],
         conflict,
       });
-      if ((pending.length || repo?.requiresMigration) && (await checkpoint())) {
+      if (
+        !repo?.readOnly &&
+        (pending.length || repo?.requiresMigration) &&
+        (await checkpoint())
+      ) {
         for (const entry of pending) await outbox.remove(entry);
         if (generation === epoch && !conflict) schedule();
       }
@@ -219,7 +225,7 @@ export const useNetwork = create<State>((set, get) => {
     },
     mutate: (fn, recordHistory = true) => {
       const s = get();
-      if (!s.data || s.conflict) return;
+      if (!s.data || s.conflict || s.repo?.readOnly) return;
       try {
         const next = structuredClone(s.data);
         fn(next);
@@ -241,7 +247,13 @@ export const useNetwork = create<State>((set, get) => {
       firstEdit = 0;
       if (flight) return flight;
       const generation = epoch;
-      if (!get().dirty || get().conflict || !get().repo || get().demo)
+      if (
+        !get().dirty ||
+        get().conflict ||
+        !get().repo ||
+        get().demo ||
+        get().repo?.readOnly
+      )
         return Promise.resolve();
       set({ saving: true, error: null });
       flight = (async () => {
@@ -299,6 +311,8 @@ export const useNetwork = create<State>((set, get) => {
                 ![
                   "driveExpired",
                   "drivePermission",
+                  "sharedReadOnly",
+                  "driveSharingPermission",
                   "driveAccountChanged",
                   "folderPermission",
                   "invalidData",
@@ -324,7 +338,8 @@ export const useNetwork = create<State>((set, get) => {
     },
     undo: () => {
       const s = get();
-      if (!s.data || !s.history.length || s.conflict) return;
+      if (!s.data || !s.history.length || s.conflict || s.repo?.readOnly)
+        return;
       const restored = structuredClone(s.history.at(-1)!);
       restored.counters = { ...s.data.counters };
       set({
@@ -337,7 +352,7 @@ export const useNetwork = create<State>((set, get) => {
     },
     redo: () => {
       const s = get();
-      if (!s.data || !s.future.length || s.conflict) return;
+      if (!s.data || !s.future.length || s.conflict || s.repo?.readOnly) return;
       const restored = structuredClone(s.future[0]);
       restored.counters = { ...s.data.counters };
       set({
@@ -350,7 +365,7 @@ export const useNetwork = create<State>((set, get) => {
     },
     resolve: async (choice) => {
       const s = get();
-      if (!s.conflict || !s.repo) return;
+      if (!s.conflict || !s.repo || s.repo.readOnly) return;
       const generation = epoch;
       await s.repo.backup();
       if (generation !== epoch) return;
@@ -370,6 +385,7 @@ export const useNetwork = create<State>((set, get) => {
         generation = epoch;
       if (!s.repo || s.dirty || s.saving || s.conflict) return;
       try {
+        const wasReadOnly = s.repo.readOnly;
         const remote = await s.repo.load();
         if (
           generation !== epoch ||
@@ -378,7 +394,10 @@ export const useNetwork = create<State>((set, get) => {
           get().base !== s.base
         )
           return;
-        if (remote.revision !== s.base?.revision)
+        if (
+          remote.revision !== s.base?.revision ||
+          wasReadOnly !== s.repo.readOnly
+        )
           set({
             data: remote,
             base: structuredClone(remote),

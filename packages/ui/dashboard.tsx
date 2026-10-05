@@ -11,7 +11,11 @@ import {
   Users,
   Link2,
   RefreshCw,
+  Pencil,
+  Share2,
 } from "lucide-react";
+import { GoogleDriveRepository } from "../storage-adapters/google-drive";
+import { pickSharedNetwork } from "../storage-adapters/google-picker";
 import { emptySnapshot, createPerson, displayName } from "../domain/model";
 import { useLibrary, type NetworkEntry } from "./library";
 import { useNetwork } from "./store";
@@ -44,6 +48,11 @@ export function Dashboard({
   const [name, setName] = useState("");
   const [identity, setIdentity] = useState(ownerName);
   const [reload, setReload] = useState(0);
+  const [editing, setEditing] = useState<NetworkEntry | null>(null);
+  const [sharing, setSharing] = useState<NetworkEntry | null>(null);
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"reader" | "writer">("reader");
+  const [notice, setNotice] = useState("");
   useEffect(() => {
     if (!library) {
       router.replace("/login");
@@ -55,8 +64,10 @@ export function Dashboard({
     void (async () => {
       const loaded: NetworkEntry[] = [];
       for (const id of await library.ids()) {
-        const data = await library.repository(id).load();
-        if (data.people.length) loaded.push({ id, data });
+        const repo = library.repository(id);
+        const data = await repo.load();
+        if (data.people.length)
+          loaded.push({ id, data, readOnly: repo.readOnly });
       }
       if (!cancelled) setEntries(loaded);
     })()
@@ -71,6 +82,90 @@ export function Dashboard({
       cancelled = true;
     };
   }, [library, router, reload]);
+  async function selectForChange(id: string) {
+    if (!library) throw new Error("storageError");
+    const state = useNetwork.getState();
+    if (id !== useLibrary.getState().activeId || !state.data || state.demo) {
+      if (!(await state.prepareSwitch()))
+        throw new Error("resolveBeforeSwitch");
+      const repo = library.repository(id);
+      await useNetwork.getState().open(await repo.load(), repo);
+      useLibrary.getState().select(id);
+    }
+    if (useNetwork.getState().repo?.readOnly) throw new Error("sharedReadOnly");
+    return useNetwork.getState();
+  }
+  async function rename() {
+    if (!editing || !name.trim()) return;
+    setBusy(true);
+    setError("");
+    try {
+      const state = await selectForChange(editing.id);
+      state.mutate((d) => {
+        d.preferences.networkName = name.trim();
+      });
+      if (!(await useNetwork.getState().prepareSwitch()))
+        throw new Error("localSaveFailed");
+      setEditing(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "storageError");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function receive() {
+    if (!library?.session) return;
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      await library.session.connect(true);
+      const file = await pickSharedNetwork(library.session);
+      if (file) {
+        const repo = library.repository("shared:" + file);
+        const data = await repo.load();
+        if (!data.ownerId || !data.people.length)
+          throw new Error("invalidData");
+      }
+      setReload((v) => v + 1);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "storageError");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function share() {
+    if (!sharing || !library?.session) return;
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      await library.session.connect(true);
+      const state = await selectForChange(sharing.id);
+      await state.persist();
+      if (useNetwork.getState().dirty || useNetwork.getState().conflict)
+        throw new Error("resolveBeforeSwitch");
+      const repo = useNetwork.getState().repo;
+      if (!(repo instanceof GoogleDriveRepository))
+        throw new Error("storageError");
+      const file = await repo.publishShared();
+      const id = "shared:" + file;
+      const shared = library.repository(id);
+      await useNetwork.getState().open(await shared.load(), shared);
+      useLibrary.getState().select(id);
+      // Keep the canonical id even when the invitation fails, so retrying never
+      // creates another copy of the network.
+      setSharing({ ...sharing, id });
+      setReload((v) => v + 1);
+      await repo.invite(email, role);
+      setSharing(null);
+      setNotice("sharedInvitationSent");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "storageError");
+    } finally {
+      setBusy(false);
+    }
+  }
   async function open(id: string) {
     if (!library) return;
     setBusy(true);
@@ -103,10 +198,9 @@ export function Dashboard({
       if (!(await useNetwork.getState().prepareSwitch()))
         throw new Error("resolveBeforeSwitch");
       // The original slot remains compatible with existing saved networks.
-      const ids = await library.ids();
       let id = crypto.randomUUID() as string;
       const legacy = library.repository("default");
-      const original = ids.includes("default") ? await legacy.load() : null;
+      const original = await legacy.load();
       if (!original || (!original.people.length && original.revision === 0))
         id = "default";
       if (!library.multiple && id !== "default")
@@ -213,6 +307,12 @@ export function Dashboard({
         </button>
       </section>
       <div className="dashboard-tools">
+        {library?.session && (
+          <button disabled={loading || busy} onClick={() => void receive()}>
+            <Share2 size={18} />
+            {t("openSharedNetwork")}
+          </button>
+        )}
         <label className="search-box">
           <Search size={18} />
           <input
@@ -236,6 +336,11 @@ export function Dashboard({
           {t(error)}
         </p>
       )}
+      {notice && (
+        <p className="notice" role="status">
+          {t(notice)}
+        </p>
+      )}
       {loading ? (
         <p role="status">{t("loading")}</p>
       ) : (
@@ -250,6 +355,11 @@ export function Dashboard({
                   <Network size={52} />
                 </div>
                 <h2>{title(entry)}</h2>
+                {entry.id.startsWith("shared:") && (
+                  <p className="muted-copy">
+                    {t(entry.readOnly ? "sharedReadOnly" : "sharedEditable")}
+                  </p>
+                )}
                 <p className="network-identity">
                   {t("networkIdentity", {
                     name: owner ? displayName(owner) : t("me"),
@@ -267,6 +377,7 @@ export function Dashboard({
                   </span>
                 </div>
                 <button
+                  data-testid="open-network"
                   className="full"
                   disabled={busy}
                   onClick={() => void open(entry.id)}
@@ -274,6 +385,33 @@ export function Dashboard({
                   {t("openExisting")}
                   <ArrowUpRight size={18} />
                 </button>
+                <div className="network-card-actions">
+                  <button
+                    disabled={busy || entry.readOnly}
+                    onClick={() => {
+                      setError("");
+                      setName(title(entry));
+                      setEditing(entry);
+                    }}
+                  >
+                    <Pencil size={16} />
+                    {t("renameNetwork")}
+                  </button>
+                  {library?.session && (
+                    <button
+                      disabled={busy || entry.readOnly}
+                      onClick={() => {
+                        setError("");
+                        setEmail("");
+                        setRole("reader");
+                        setSharing(entry);
+                      }}
+                    >
+                      <Share2 size={16} />
+                      {t("shareNetwork")}
+                    </button>
+                  )}
+                </div>
               </article>
             );
           })}
@@ -343,6 +481,104 @@ export function Dashboard({
                 disabled={busy || !name.trim() || !identity.trim()}
               >
                 {t(busy ? "saving" : "createNetwork")}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+      {editing && (
+        <Modal
+          title={t("renameNetwork")}
+          onClose={() => {
+            if (!busy) setEditing(null);
+          }}
+        >
+          <form
+            className="form-content"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void rename();
+            }}
+          >
+            <Field label={t("networkName")}>
+              <input
+                autoFocus
+                required
+                maxLength={80}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </Field>
+            {error && (
+              <p role="alert" className="error">
+                {t(error)}
+              </p>
+            )}
+            <div className="modal-actions">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setEditing(null)}
+              >
+                {t("cancel")}
+              </button>
+              <button className="primary" disabled={busy || !name.trim()}>
+                {t("save")}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+      {sharing && (
+        <Modal
+          title={t("shareNetwork")}
+          onClose={() => {
+            if (!busy) setSharing(null);
+          }}
+        >
+          <form
+            className="form-content"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void share();
+            }}
+          >
+            <h3>{title(sharing)}</h3>
+            <p>{t("shareNetworkHelp")}</p>
+            <Field label={t("sharedEmail")}>
+              <input
+                autoFocus
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </Field>
+            <Field label={t("sharedPermission")}>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value as typeof role)}
+              >
+                <option value="reader">{t("sharedReader")}</option>
+                <option value="writer">{t("sharedWriter")}</option>
+              </select>
+            </Field>
+            <p className="muted-copy">{t("sharedReceiveHelp")}</p>
+            {error && (
+              <p role="alert" className="error">
+                {t(error)}
+              </p>
+            )}
+            <div className="modal-actions">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setSharing(null)}
+              >
+                {t("cancel")}
+              </button>
+              <button className="primary" disabled={busy || !email.trim()}>
+                {t(busy ? "saving" : "sendInvitation")}
               </button>
             </div>
           </form>

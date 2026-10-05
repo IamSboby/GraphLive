@@ -6,7 +6,9 @@ import de from "./locales/de.json";
 import fr from "./locales/fr.json";
 import pt from "./locales/pt.json";
 import { languageCodes, type Language } from "./languages";
+import { sharingTranslations } from "./sharing";
 export const es = {
+  ...sharingTranslations.es,
   myNetworks: "Mis redes",
   networksIntro: "Un espacio para cada parte de tu mundo.",
   newNetwork: "Nueva red",
@@ -356,6 +358,7 @@ export const es = {
   knowsDirectly: "Conozco directamente a esta persona",
 };
 export const en: Record<keyof typeof es, string> = {
+  ...sharingTranslations.en,
   myNetworks: "My networks",
   networksIntro: "A space for every part of your world.",
   newNetwork: "New network",
@@ -701,10 +704,14 @@ export const en: Record<keyof typeof es, string> = {
   relationOwner: "Relationship to you",
   knowsDirectly: "I know this person directly",
 };
-export const translations = { es, en, it, de, fr, pt } satisfies Record<
-  Language,
-  Record<keyof typeof es, string>
->;
+export const translations = {
+  es,
+  en,
+  it: { ...it, ...sharingTranslations.it },
+  de: { ...de, ...sharingTranslations.de },
+  fr: { ...fr, ...sharingTranslations.fr },
+  pt: { ...pt, ...sharingTranslations.pt },
+} satisfies Record<Language, Record<keyof typeof es, string>>;
 if (!i18next.isInitialized)
   void i18next.use(initReactI18next).init({
     resources: Object.fromEntries(

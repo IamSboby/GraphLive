@@ -19,6 +19,7 @@ export interface StorageAdapter {
   getMetadata(path: string): Promise<StorageMetadata>;
 }
 export interface Repository {
+  readonly readOnly?: boolean;
   readonly journalScope?: string;
   requiresMigration?: boolean;
   load(): Promise<Snapshot>;
