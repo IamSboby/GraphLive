@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
-import type { Snapshot } from "../../packages/domain/model";
+import type { snapshotSchema } from "../../packages/domain/model";
+import type { z } from "zod";
+type StoredSnapshot = z.input<typeof snapshotSchema>;
 
 test("Drive invitations and Picker open the canonical shared network with reader permissions", async ({
   page,
@@ -35,12 +37,12 @@ test("Drive invitations and Picker open the canonical shared network with reader
       introduction: "done",
       autoBackup: false,
     },
-  } as Snapshot;
+  } satisfies StoredSnapshot;
   type File = {
     id: string;
     title: string;
     etag: string;
-    data: Snapshot;
+    data: StoredSnapshot;
     properties?: { key: string; value: string; visibility: string }[];
     shared?: boolean;
   };
