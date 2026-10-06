@@ -185,7 +185,6 @@ export function App({
       running = true;
       try {
         if (document.visibilityState !== "hidden" && navigator.onLine) {
-          await useNetwork.getState().persist();
           await useNetwork.getState().refresh();
         }
       } finally {
@@ -200,12 +199,15 @@ export function App({
     const wake = () => {
       void sync();
     };
+    const online = () => {
+      void useNetwork.getState().persist().then(wake);
+    };
     timer = setTimeout(wake, 1000);
     const before = (e: BeforeUnloadEvent) => {
       const state = useNetwork.getState();
       if (state.dirty && !state.localSaved) e.preventDefault();
     };
-    window.addEventListener("online", wake);
+    window.addEventListener("online", online);
     window.addEventListener("focus", wake);
     document.addEventListener("visibilitychange", wake);
     window.addEventListener("beforeunload", before);
@@ -213,7 +215,7 @@ export function App({
       stopped = true;
       clearTimeout(timer);
       window.removeEventListener("beforeunload", before);
-      window.removeEventListener("online", wake);
+      window.removeEventListener("online", online);
       window.removeEventListener("focus", wake);
       document.removeEventListener("visibilitychange", wake);
     };
