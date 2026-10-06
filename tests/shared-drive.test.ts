@@ -241,3 +241,60 @@ it("locks editing after access is revoked without dropping the local snapshot", 
   ).toHaveLength(0);
   expect(data.people[0].profile.nickname).toBe("Alex");
 });
+
+it("discovers authorized shared network extensions across pages and rejects lookalikes", async () => {
+  const { session, request } = setup();
+  const original = request.getMockImplementation()!;
+  request.mockImplementation(async (url, init) => {
+    const query = new URL(url).searchParams;
+    if (query.get("spaces") === "drive") {
+      expect(query.get("q")).toContain("sharedWithMe = true");
+      return query.get("pageToken")
+        ? Response.json({
+            items: [{ id: "second", title: "Game.GRAPHLIVE.JSON" }],
+          })
+        : Response.json({
+            items: [
+              { id: "normal", title: "Other.json" },
+              { id: "fake", title: "Invalid.graphlive.json.txt" },
+              { id: "first", title: "Friends.graphlive.json" },
+            ],
+            nextPageToken: "more",
+          });
+    }
+    return original(url, init);
+  });
+  expect(await new GoogleDriveRepository(session).networkIds()).toEqual([
+    "default",
+    "shared:first",
+    "shared:second",
+  ]);
+});
+
+it("validates the snapshot of extension-based files before accepting them", async () => {
+  const { session, request, getData } = setup();
+  request.mockImplementation(async (url) => {
+    const query = new URL(url).searchParams;
+    if (query.get("alt") === "media") return Response.json(getData());
+    if (query.get("spaces") === "appDataFolder")
+      return Response.json({ items: [] });
+    return Response.json({
+      id: "external",
+      title: "Game.graphlive.json",
+      etag: "v1",
+      capabilities: { canEdit: false },
+    });
+  });
+  const repo = new GoogleDriveRepository(session, "shared:external");
+  expect((await repo.load()).people[0].profile.nickname).toBe("Alex");
+  request.mockImplementation(async (url) =>
+    new URL(url).searchParams.get("alt") === "media"
+      ? Response.json({ unrelated: true })
+      : Response.json({
+          id: "external",
+          title: "Game.graphlive.json",
+          etag: "v2",
+        }),
+  );
+  await expect(repo.load()).rejects.toThrow("invalidData");
+});

@@ -19,12 +19,13 @@ type DriveFile = {
   properties?: { key: string; value: string; visibility: string }[];
   capabilities?: { canEdit?: boolean; canShare?: boolean };
   parents?: { id: string }[];
+  owners?: { displayName?: string; emailAddress?: string }[];
 };
 const sharedId = (id: string) => /^[-\w]+$/.test(id) && id.length <= 200;
 const property = (f: DriveFile, key: string) =>
   f.properties?.find((p) => p.key === key)?.value;
 const fields =
-  "id,title,etag,properties,capabilities(canEdit,canShare),parents(id)";
+  "id,title,etag,properties,capabilities(canEdit,canShare),parents(id),owners(displayName,emailAddress)";
 export type DriveMember = {
   id: string;
   name?: string;
@@ -42,6 +43,7 @@ export type NetworkAccess = {
 export class GoogleDriveRepository implements Repository {
   requiresMigration = false;
   readOnly = false;
+  ownerLabel = "";
   private sharedFileId = "";
   get shared() {
     return Boolean(this.sharedFileId);
@@ -81,8 +83,8 @@ export class GoogleDriveRepository implements Repository {
       do {
         const query = new URLSearchParams({
           spaces: "drive",
-          q: "trashed = false and properties has { key='graphlive' and value='network' and visibility='PUBLIC' } and properties has { key='graphlivePublished' and value='true' and visibility='PUBLIC' }",
-          fields: "items(id),nextPageToken",
+          q: "trashed = false and ((properties has { key='graphlive' and value='network' and visibility='PUBLIC' } and properties has { key='graphlivePublished' and value='true' and visibility='PUBLIC' }) or (sharedWithMe = true and mimeType = 'application/json'))",
+          fields: "items(id,title,properties),nextPageToken",
           maxResults: "1000",
           pageToken,
         });
@@ -90,7 +92,13 @@ export class GoogleDriveRepository implements Repository {
           await this.session.request(api + "?" + query)
         ).json();
         for (const f of page.items ?? [])
-          if (!redirected.has(f.id)) ids.add("shared:" + f.id);
+          if (
+            !redirected.has(f.id) &&
+            ((property(f, "graphlive") === "network" &&
+              property(f, "graphlivePublished") === "true") ||
+              /\.graphlive\.json$/i.test(f.title ?? ""))
+          )
+            ids.add("shared:" + f.id);
         pageToken = page.nextPageToken ?? "";
       } while (pageToken);
     }
@@ -142,7 +150,11 @@ export class GoogleDriveRepository implements Repository {
     const text = await response.text();
     if (new TextEncoder().encode(text).length > 10485760)
       throw new Error("tooLarge");
-    return parseStoredSnapshot(JSON.parse(text), this);
+    try {
+      return parseStoredSnapshot(JSON.parse(text), this);
+    } catch {
+      throw new Error("invalidData");
+    }
   }
   private async current(): Promise<{
     data: Snapshot;
@@ -161,9 +173,22 @@ export class GoogleDriveRepository implements Repository {
             fields,
         )
       ).json();
-      if (!file.etag || property(file, "graphlive") !== "network")
+      if (
+        !file.etag ||
+        (property(file, "graphlive") !== "network" &&
+          !/\.graphlive\.json$/i.test(file.title ?? ""))
+      )
         throw new Error("invalidData");
       this.readOnly = file.capabilities?.canEdit !== true;
+      this.ownerLabel =
+        file.owners
+          ?.map((p) =>
+            p.displayName && p.emailAddress
+              ? p.displayName + " · " + p.emailAddress
+              : p.displayName || p.emailAddress,
+          )
+          .filter(Boolean)
+          .join(", ") || "";
       const cached = this.snapshotCache;
       const data =
         cached?.id === file.id && cached.etag === file.etag

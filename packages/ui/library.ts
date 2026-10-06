@@ -14,6 +14,7 @@ export type NetworkEntry = {
   id: string;
   data: Snapshot;
   shared?: boolean;
+  ownerLabel?: string;
   readOnly?: boolean;
 };
 export type NetworkLibrary = {

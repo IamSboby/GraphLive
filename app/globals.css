@@ -2441,3 +2441,42 @@ th {
   margin: 0;
   overflow-wrap: anywhere;
 }
+
+.network-card {
+  color: var(--text);
+}
+.network-card h2 {
+  color: var(--text);
+}
+.network-card button {
+  color: var(--accent);
+}
+.network-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.network-tabs button {
+  border-radius: 999px;
+  gap: 8px;
+  min-height: 44px;
+}
+.network-tabs button[aria-pressed="true"] {
+  background: var(--soft);
+  border-color: var(--accent);
+  color: var(--text);
+}
+.network-tabs button span {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--surface);
+}
+.shared-discovery-help {
+  max-width: 760px;
+  line-height: 1.6;
+  margin: 0 0 20px;
+}

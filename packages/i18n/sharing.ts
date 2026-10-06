@@ -1,5 +1,20 @@
 export const sharingTranslations = {
   es: {
+    networkView: "Vista de redes",
+    allNetworks: "Todas",
+    sharedNetworks: "Compartidas",
+    importSharedNetworks: "Buscar redes en Drive",
+    sharedAllJson: "Otros JSON compartidos",
+    sharedDiscoveryHelp:
+      "Las redes ya autorizadas aparecen automáticamente. Para añadir otras, búscalas en Drive y selecciona varias a la vez. Se buscan archivos .graphlive.json y se valida su contenido; no se crean copias.",
+    sharedImportResult:
+      "{{count}} redes seleccionadas válidas; {{skipped}} archivos omitidos.",
+    scanningNetworks: "Buscando actualizaciones de tus redes…",
+    sharedSkipped:
+      "{{count}} redes no disponibles o archivos no válidos se han omitido.",
+    noSharedNetworks: "Todavía no hay redes compartidas",
+    sharedOwnedBy: "Propietario: {{name}}",
+    sharedCentralProfile: "Perfil central: {{name}}",
     sharedMembers: "Personas con acceso",
     sharedNoMembers: "Esta red todavía es privada.",
     sharedOwner: "Propietario",
@@ -30,13 +45,28 @@ export const sharingTranslations = {
     sharedReadOnly: "Red compartida · Solo lectura",
     sharedEditable: "Red compartida · Puedes editar",
     driveSharingPermission:
-      "Autoriza el acceso a redes compartidas con el botón «Abrir red compartida».",
+      "Autoriza el acceso a redes compartidas con el botón «Buscar redes en Drive».",
     shareNetworkHelp:
       "Se guardará una única red compartida en tu Drive. El destinatario podrá ver todas sus personas, notas y conexiones. Los backups seguirán siendo privados. Puedes gestionar el acceso desde este panel.",
     sharedReceiveHelp:
-      "El destinatario debe iniciar sesión en GraphLive con Google Drive y pulsar «Abrir red compartida» para seleccionar el archivo. Los cambios se sincronizan periódicamente; si ambos editan el mismo dato, se pedirá resolver el conflicto.",
+      "El destinatario debe iniciar sesión en GraphLive con Google Drive y pulsar «Buscar redes en Drive» para seleccionar el archivo. Los cambios se sincronizan periódicamente; si ambos editan el mismo dato, se pedirá resolver el conflicto.",
   },
   en: {
+    networkView: "Network view",
+    allNetworks: "All",
+    sharedNetworks: "Shared",
+    importSharedNetworks: "Find networks in Drive",
+    sharedAllJson: "Other shared JSON files",
+    sharedDiscoveryHelp:
+      "Previously authorized networks appear automatically. To add others, find them in Drive and select several at once. We look for .graphlive.json files and validate their content; no copies are created.",
+    sharedImportResult:
+      "{{count}} valid selected networks; {{skipped}} files skipped.",
+    scanningNetworks: "Checking your networks for updates…",
+    sharedSkipped:
+      "{{count}} unavailable networks or invalid files were skipped.",
+    noSharedNetworks: "No shared networks yet",
+    sharedOwnedBy: "Owner: {{name}}",
+    sharedCentralProfile: "Central profile: {{name}}",
     sharedMembers: "People with access",
     sharedNoMembers: "This network is still private.",
     sharedOwner: "Owner",
@@ -67,13 +97,27 @@ export const sharingTranslations = {
     sharedReadOnly: "Shared network · View only",
     sharedEditable: "Shared network · You can edit",
     driveSharingPermission:
-      "Authorize shared network access using “Open shared network”.",
+      "Authorize shared network access using “Find networks in Drive”.",
     shareNetworkHelp:
       "One shared network will be stored in your Drive. The recipient can see all its people, notes and connections. Backups remain private. You can manage access from this panel.",
     sharedReceiveHelp:
-      "The recipient must sign in to GraphLive with Google Drive and use “Open shared network” to select the file. Changes sync periodically; conflicting edits to the same field require resolution.",
+      "The recipient must sign in to GraphLive with Google Drive and use “Find networks in Drive” to select the file. Changes sync periodically; conflicting edits to the same field require resolution.",
   },
   it: {
+    networkView: "Vista delle reti",
+    allNetworks: "Tutte",
+    sharedNetworks: "Condivise",
+    importSharedNetworks: "Cerca reti in Drive",
+    sharedAllJson: "Altri JSON condivisi",
+    sharedDiscoveryHelp:
+      "Le reti già autorizzate appaiono automaticamente. Per aggiungerne altre, cercale in Drive e selezionane diverse insieme. Cerchiamo file .graphlive.json e ne verifichiamo il contenuto, senza creare copie.",
+    sharedImportResult:
+      "{{count}} reti selezionate valide; {{skipped}} file ignorati.",
+    scanningNetworks: "Ricerca degli aggiornamenti delle reti…",
+    sharedSkipped: "{{count}} reti non disponibili o file non validi ignorati.",
+    noSharedNetworks: "Nessuna rete condivisa",
+    sharedOwnedBy: "Proprietario: {{name}}",
+    sharedCentralProfile: "Profilo centrale: {{name}}",
     sharedMembers: "Persone con accesso",
     sharedNoMembers: "Questa rete è ancora privata.",
     sharedOwner: "Proprietario",
@@ -103,13 +147,28 @@ export const sharingTranslations = {
     sharedInvitationSent: "Invito inviato da Google Drive.",
     sharedReadOnly: "Rete condivisa · Sola lettura",
     sharedEditable: "Rete condivisa · Puoi modificare",
-    driveSharingPermission: "Autorizza l’accesso con «Apri rete condivisa».",
+    driveSharingPermission: "Autorizza l’accesso con «Cerca reti in Drive».",
     shareNetworkHelp:
       "Una sola rete condivisa sarà salvata nel tuo Drive. Il destinatario vedrà tutte le persone, note e connessioni. I backup restano privati. Puoi gestire l’accesso da questo pannello.",
     sharedReceiveHelp:
-      "Il destinatario deve accedere a GraphLive con Google Drive e selezionare il file da «Apri rete condivisa». Le modifiche si sincronizzano periodicamente; i conflitti sullo stesso dato richiedono una scelta.",
+      "Il destinatario deve accedere a GraphLive con Google Drive e selezionare il file da «Cerca reti in Drive». Le modifiche si sincronizzano periodicamente; i conflitti sullo stesso dato richiedono una scelta.",
   },
   de: {
+    networkView: "Netzwerkansicht",
+    allNetworks: "Alle",
+    sharedNetworks: "Geteilt",
+    importSharedNetworks: "Netzwerke in Drive suchen",
+    sharedAllJson: "Andere geteilte JSON-Dateien",
+    sharedDiscoveryHelp:
+      "Bereits autorisierte Netzwerke erscheinen automatisch. Suche weitere in Drive und wähle mehrere gleichzeitig aus. Wir suchen .graphlive.json-Dateien und prüfen ihren Inhalt, ohne Kopien zu erstellen.",
+    sharedImportResult:
+      "{{count}} gültige ausgewählte Netzwerke; {{skipped}} Dateien übersprungen.",
+    scanningNetworks: "Netzwerke werden auf Änderungen geprüft…",
+    sharedSkipped:
+      "{{count}} nicht verfügbare Netzwerke oder ungültige Dateien übersprungen.",
+    noSharedNetworks: "Noch keine geteilten Netzwerke",
+    sharedOwnedBy: "Eigentümer: {{name}}",
+    sharedCentralProfile: "Zentrales Profil: {{name}}",
     sharedMembers: "Personen mit Zugriff",
     sharedNoMembers: "Dieses Netzwerk ist noch privat.",
     sharedOwner: "Eigentümer",
@@ -140,13 +199,28 @@ export const sharingTranslations = {
     sharedReadOnly: "Geteiltes Netzwerk · Nur lesen",
     sharedEditable: "Geteiltes Netzwerk · Bearbeitbar",
     driveSharingPermission:
-      "Autorisiere den Zugriff über „Geteiltes Netzwerk öffnen“.",
+      "Autorisiere den Zugriff über „Netzwerke in Drive suchen“.",
     shareNetworkHelp:
       "Ein gemeinsames Netzwerk wird in deinem Drive gespeichert. Der Empfänger sieht alle Personen, Notizen und Verbindungen. Backups bleiben privat. Du kannst den Zugriff in diesem Fenster verwalten.",
     sharedReceiveHelp:
-      "Der Empfänger meldet sich mit Google Drive bei GraphLive an und wählt die Datei über „Geteiltes Netzwerk öffnen“. Änderungen werden regelmäßig synchronisiert; widersprüchliche Änderungen am selben Feld müssen aufgelöst werden.",
+      "Der Empfänger meldet sich mit Google Drive bei GraphLive an und wählt die Datei über „Netzwerke in Drive suchen“. Änderungen werden regelmäßig synchronisiert; widersprüchliche Änderungen am selben Feld müssen aufgelöst werden.",
   },
   fr: {
+    networkView: "Vue des réseaux",
+    allNetworks: "Tous",
+    sharedNetworks: "Partagés",
+    importSharedNetworks: "Chercher des réseaux dans Drive",
+    sharedAllJson: "Autres JSON partagés",
+    sharedDiscoveryHelp:
+      "Les réseaux déjà autorisés apparaissent automatiquement. Pour en ajouter, cherchez-les dans Drive et sélectionnez-en plusieurs. Nous cherchons les fichiers .graphlive.json et validons leur contenu sans créer de copies.",
+    sharedImportResult:
+      "{{count}} réseaux sélectionnés valides ; {{skipped}} fichiers ignorés.",
+    scanningNetworks: "Recherche de mises à jour des réseaux…",
+    sharedSkipped:
+      "{{count}} réseaux indisponibles ou fichiers invalides ignorés.",
+    noSharedNetworks: "Aucun réseau partagé",
+    sharedOwnedBy: "Propriétaire : {{name}}",
+    sharedCentralProfile: "Profil central : {{name}}",
     sharedMembers: "Personnes ayant accès",
     sharedNoMembers: "Ce réseau est encore privé.",
     sharedOwner: "Propriétaire",
@@ -177,13 +251,28 @@ export const sharingTranslations = {
     sharedReadOnly: "Réseau partagé · Lecture seule",
     sharedEditable: "Réseau partagé · Modification autorisée",
     driveSharingPermission:
-      "Autorisez l’accès avec « Ouvrir un réseau partagé ».",
+      "Autorisez l’accès avec « Chercher des réseaux dans Drive ».",
     shareNetworkHelp:
       "Un seul réseau partagé sera enregistré dans votre Drive. Le destinataire verra toutes les personnes, notes et connexions. Les sauvegardes restent privées. Vous pouvez gérer l’accès depuis ce panneau.",
     sharedReceiveHelp:
-      "Le destinataire doit se connecter à GraphLive avec Google Drive et sélectionner le fichier via « Ouvrir un réseau partagé ». Les changements sont synchronisés périodiquement ; les modifications contradictoires doivent être résolues.",
+      "Le destinataire doit se connecter à GraphLive avec Google Drive et sélectionner le fichier via « Chercher des réseaux dans Drive ». Les changements sont synchronisés périodiquement ; les modifications contradictoires doivent être résolues.",
   },
   pt: {
+    networkView: "Vista de redes",
+    allNetworks: "Todas",
+    sharedNetworks: "Partilhadas",
+    importSharedNetworks: "Procurar redes no Drive",
+    sharedAllJson: "Outros JSON partilhados",
+    sharedDiscoveryHelp:
+      "As redes já autorizadas aparecem automaticamente. Para adicionar outras, procura-as no Drive e seleciona várias de uma vez. Procuramos ficheiros .graphlive.json e validamos o conteúdo, sem criar cópias.",
+    sharedImportResult:
+      "{{count}} redes selecionadas válidas; {{skipped}} ficheiros ignorados.",
+    scanningNetworks: "A procurar atualizações das redes…",
+    sharedSkipped:
+      "{{count}} redes indisponíveis ou ficheiros inválidos ignorados.",
+    noSharedNetworks: "Ainda não há redes partilhadas",
+    sharedOwnedBy: "Proprietário: {{name}}",
+    sharedCentralProfile: "Perfil central: {{name}}",
     sharedMembers: "Pessoas com acesso",
     sharedNoMembers: "Esta rede ainda é privada.",
     sharedOwner: "Proprietário",
@@ -214,10 +303,10 @@ export const sharingTranslations = {
     sharedReadOnly: "Rede partilhada · Só leitura",
     sharedEditable: "Rede partilhada · Pode editar",
     driveSharingPermission:
-      "Autorize o acesso através de «Abrir rede partilhada».",
+      "Autorize o acesso através de «Procurar redes no Drive».",
     shareNetworkHelp:
       "Uma única rede partilhada será guardada no seu Drive. O destinatário verá todas as pessoas, notas e ligações. As cópias de segurança continuam privadas. Pode retirar o acesso em Partilhar no Google Drive.",
     sharedReceiveHelp:
-      "O destinatário deve entrar no GraphLive com Google Drive e selecionar o ficheiro em «Abrir rede partilhada». As alterações são sincronizadas periodicamente; alterações contraditórias ao mesmo campo precisam de resolução.",
+      "O destinatário deve entrar no GraphLive com Google Drive e selecionar o ficheiro em «Procurar redes no Drive». As alterações são sincronizadas periodicamente; alterações contraditórias ao mesmo campo precisam de resolução.",
   },
 };

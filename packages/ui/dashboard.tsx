@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
@@ -14,8 +14,10 @@ import {
   Pencil,
   Share2,
 } from "lucide-react";
+import { themePalette } from "../appearance/config";
+import type { Repository } from "../storage-core";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
-import { pickSharedNetwork } from "../storage-adapters/google-picker";
+import { pickSharedNetworks } from "../storage-adapters/google-picker";
 import {
   emptySnapshot,
   createPerson,
@@ -35,9 +37,11 @@ import {
 
 export function Dashboard({
   theme,
+  systemDark,
   onThemeChange,
 }: {
   theme: "light" | "dark" | "system";
+  systemDark: boolean;
   onThemeChange: (theme: "light" | "dark" | "system") => void;
 }) {
   const { t, i18n } = useTranslation();
@@ -57,33 +61,73 @@ export function Dashboard({
   const [editing, setEditing] = useState<NetworkEntry | null>(null);
   const [sharing, setSharing] = useState<NetworkEntry | null>(null);
   const [notice, setNotice] = useState("");
+  const [tab, setTab] = useState<"all" | "shared">("all");
+  const [skipped, setSkipped] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const loadedOnce = useRef(false);
+  const repositoryCache = useRef<{
+    library: typeof library;
+    entries: Map<string, Repository>;
+  } | null>(null);
   useEffect(() => {
     if (!library) {
       router.replace("/login");
       return;
     }
+    if (repositoryCache.current?.library !== library) {
+      repositoryCache.current = { library, entries: new Map() };
+      loadedOnce.current = false;
+    }
+    const repositories = repositoryCache.current.entries;
     let cancelled = false;
-    setLoading(true);
+    setLoading(!loadedOnce.current);
+    setRefreshing(true);
     setError("");
     void (async () => {
       const loaded: NetworkEntry[] = [];
-      for (const id of await library.ids()) {
-        const repo = library.repository(id);
-        let data;
-        try {
-          data = await repo.load();
-        } catch (e) {
-          if (e instanceof Error && e.message === "sharedAccessLost") continue;
-          throw e;
-        }
-        if (data.people.length)
-          loaded.push({
-            id,
-            data,
-            readOnly: repo.readOnly,
-            shared: repo instanceof GoogleDriveRepository && repo.shared,
-          });
+      const ids = await library.ids();
+      let ignored = 0;
+      for (let offset = 0; offset < ids.length; offset += 4) {
+        const batch = await Promise.all(
+          ids.slice(offset, offset + 4).map(async (id) => {
+            const repo = repositories.get(id) ?? library.repository(id);
+            repositories.set(id, repo);
+            try {
+              const data = await repo.load();
+              return data.people.length
+                ? {
+                    id,
+                    data,
+                    readOnly: repo.readOnly,
+                    shared:
+                      repo instanceof GoogleDriveRepository && repo.shared,
+                    ownerLabel:
+                      repo instanceof GoogleDriveRepository
+                        ? repo.ownerLabel
+                        : undefined,
+                  }
+                : null;
+            } catch (e) {
+              if (
+                e instanceof Error &&
+                (e.message === "sharedAccessLost" ||
+                  (id.startsWith("shared:") &&
+                    ["invalidData", "tooLarge"].includes(e.message)))
+              ) {
+                ignored++;
+                return null;
+              }
+              throw e;
+            }
+          }),
+        );
+        loaded.push(
+          ...batch.filter((e): e is NonNullable<typeof e> => Boolean(e)),
+        );
       }
+      for (const id of repositories.keys())
+        if (!ids.includes(id)) repositories.delete(id);
+      if (!cancelled) setSkipped(ignored);
       if (!cancelled) setEntries(loaded);
     })()
       .catch((e) => {
@@ -91,12 +135,40 @@ export function Dashboard({
           setError(e instanceof Error ? e.message : "storageError");
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          loadedOnce.current = true;
+          setLoading(false);
+          setRefreshing(false);
+        }
       });
     return () => {
       cancelled = true;
     };
   }, [library, router, reload]);
+  useEffect(() => {
+    if (
+      library?.provider !== "drive" ||
+      loading ||
+      refreshing ||
+      busy ||
+      sharing ||
+      editing ||
+      creating
+    )
+      return;
+    const refresh = () => {
+      if (document.visibilityState !== "hidden" && navigator.onLine)
+        setReload((v) => v + 1);
+    };
+    const timer = setInterval(refresh, 30000);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("online", refresh);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("online", refresh);
+    };
+  }, [library, loading, refreshing, busy, sharing, editing, creating]);
   async function selectForChange(id: string) {
     if (!library) throw new Error("storageError");
     const state = useNetwork.getState();
@@ -141,13 +213,34 @@ export function Dashboard({
     setNotice("");
     try {
       await library.session.ensureFileAccess();
-      const file = await pickSharedNetwork(library.session);
-      if (file) {
-        const repo = library.repository("shared:" + file);
-        const data = await repo.load();
-        if (!data.ownerId || !data.people.length)
-          throw new Error("invalidData");
+      const files = await pickSharedNetworks(library.session, {
+        networks: t("sharedNetworks"),
+        allJson: t("sharedAllJson"),
+      });
+      if (!files.length) return;
+      let rejected = 0;
+      for (const file of files) {
+        try {
+          const repo = library.repository("shared:" + file);
+          const data = await repo.load();
+          if (!data.ownerId || !data.people.length)
+            throw new Error("invalidData");
+        } catch (e) {
+          if (
+            e instanceof Error &&
+            ["driveExpired", "driveSharingPermission"].includes(e.message)
+          )
+            throw e;
+          rejected++;
+        }
       }
+      setTab("shared");
+      setNotice(
+        t("sharedImportResult", {
+          count: files.length - rejected,
+          skipped: rejected,
+        }),
+      );
       setReload((v) => v + 1);
     } catch (e) {
       setError(e instanceof Error ? e.message : "storageError");
@@ -245,19 +338,22 @@ export function Dashboard({
   );
   const title = (entry: NetworkEntry) =>
     entry.data.preferences.networkName || t("defaultNetwork");
-  const shown = networks.filter((entry) =>
-    normalize(
-      [
-        title(entry),
-        ...entry.data.people
-          .filter((p) => p.id === entry.data.ownerId)
-          .flatMap((p) => [
-            p.profile.nickname,
-            p.profile.firstName,
-            p.profile.lastName,
-          ]),
-      ].join(" "),
-    ).includes(normalize(query)),
+  const shown = networks.filter(
+    (entry) =>
+      (tab === "all" || entry.shared) &&
+      normalize(
+        [
+          title(entry),
+          entry.ownerLabel ?? "",
+          ...entry.data.people
+            .filter((p) => p.id === entry.data.ownerId)
+            .flatMap((p) => [
+              p.profile.nickname,
+              p.profile.firstName,
+              p.profile.lastName,
+            ]),
+        ].join(" "),
+      ).includes(normalize(query)),
   );
   return (
     <main className="welcome dashboard page-enter">
@@ -331,11 +427,40 @@ export function Dashboard({
           {t("newNetwork")}
         </button>
       </section>
+      {library?.session && (
+        <div
+          className="network-tabs"
+          role="group"
+          aria-label={t("networkView")}
+        >
+          <button
+            type="button"
+            aria-pressed={tab === "all"}
+            onClick={() => setTab("all")}
+          >
+            {t("allNetworks")} <span>{networks.length}</span>
+          </button>
+          <button
+            type="button"
+            aria-pressed={tab === "shared"}
+            onClick={() => setTab("shared")}
+          >
+            <Share2 size={17} />
+            {t("sharedNetworks")}{" "}
+            <span>{networks.filter((e) => e.shared).length}</span>
+          </button>
+        </div>
+      )}
+      {library?.session && tab === "shared" && (
+        <p className="muted-copy shared-discovery-help">
+          {t("sharedDiscoveryHelp")}
+        </p>
+      )}
       <div className="dashboard-tools">
         {library?.session && (
           <button disabled={loading || busy} onClick={() => void receive()}>
             <Share2 size={18} />
-            {t("openSharedNetwork")}
+            {t("importSharedNetworks")}
           </button>
         )}
         <label className="search-box">
@@ -350,12 +475,20 @@ export function Dashboard({
         <button
           className="icon-button"
           aria-label={t("refreshNetworks")}
-          disabled={loading || busy}
+          disabled={loading || refreshing || busy}
           onClick={() => setReload((v) => v + 1)}
         >
           <RefreshCw size={19} />
         </button>
       </div>
+      {refreshing && !loading && (
+        <p className="muted-copy" role="status">
+          {t("scanningNetworks")}
+        </p>
+      )}
+      {skipped > 0 && (
+        <p className="muted-copy">{t("sharedSkipped", { count: skipped })}</p>
+      )}
       {error && (
         <p className="notice error" role="alert">
           {t(error)}
@@ -374,8 +507,25 @@ export function Dashboard({
             const owner = entry.data.people.find(
               (p) => p.id === entry.data.ownerId,
             );
+            const cardDark =
+              entry.data.preferences.theme === "dark" ||
+              (entry.data.preferences.theme === "system" && systemDark);
+            const cardPalette = themePalette(entry.data.preferences, cardDark);
+            const cardStyle = {
+              ...Object.fromEntries(
+                Object.entries(cardPalette).map(([key, value]) => [
+                  "--" + key,
+                  value,
+                ]),
+              ),
+              colorScheme: cardDark ? "dark" : "light",
+            } as CSSProperties;
             return (
-              <article className="network-card" key={entry.id}>
+              <article
+                className="network-card"
+                key={entry.id}
+                style={cardStyle}
+              >
                 <div className="network-card-art" aria-hidden="true">
                   <Network size={52} />
                 </div>
@@ -386,10 +536,18 @@ export function Dashboard({
                   </p>
                 )}
                 <p className="network-identity">
-                  {t("networkIdentity", {
-                    name: owner ? displayName(owner) : t("me"),
-                  })}
+                  {t(
+                    entry.shared ? "sharedCentralProfile" : "networkIdentity",
+                    {
+                      name: owner ? displayName(owner) : t("me"),
+                    },
+                  )}
                 </p>
+                {entry.ownerLabel && (
+                  <p className="network-identity">
+                    {t("sharedOwnedBy", { name: entry.ownerLabel })}
+                  </p>
+                )}
                 <div className="network-card-counts">
                   <span>
                     <Users size={16} />
@@ -438,8 +596,22 @@ export function Dashboard({
           {!shown.length && !error && (
             <div className="dashboard-empty">
               <Network size={44} />
-              <h2>{t(entries.length ? "noResults" : "noNetworks")}</h2>
-              <p>{t("independentIdentity")}</p>
+              <h2>
+                {t(
+                  tab === "shared" && !query
+                    ? "noSharedNetworks"
+                    : entries.length
+                      ? "noResults"
+                      : "noNetworks",
+                )}
+              </h2>
+              <p>
+                {t(
+                  tab === "shared"
+                    ? "sharedDiscoveryHelp"
+                    : "independentIdentity",
+                )}
+              </p>
             </div>
           )}
         </section>

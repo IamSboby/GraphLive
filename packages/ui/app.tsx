@@ -5,6 +5,7 @@ import {
   resolveLanguage,
   isLanguage,
 } from "../i18n/languages";
+import { dashboardPalette } from "../appearance/dashboard";
 import { Dashboard } from "./dashboard";
 import { useLibrary } from "./library";
 import { IconSelect } from "./icon-select";
@@ -134,8 +135,11 @@ export function App({
     [data?.preferences],
   );
   const palette = useMemo(
-    () => themePalette(data?.preferences, dark),
-    [data?.preferences, dark],
+    () =>
+      screen === "dashboard"
+        ? dashboardPalette(dark)
+        : themePalette(data?.preferences, dark),
+    [screen, data?.preferences, dark],
   );
   useEffect(() => {
     for (const [key, value] of Object.entries(palette))
@@ -288,7 +292,13 @@ export function App({
     [data, selected, pathTo],
   );
   if (screen === "dashboard")
-    return <Dashboard theme={welcomeTheme} onThemeChange={setWelcomeTheme} />;
+    return (
+      <Dashboard
+        theme={welcomeTheme}
+        systemDark={systemDark}
+        onThemeChange={setWelcomeTheme}
+      />
+    );
   if (screen !== "graph")
     return (
       <Onboarding
