@@ -40,3 +40,23 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+  prerelease:
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Publish tested release candidate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [[ "$version" != "0.2.0-rc.1" ]]; then exit 0; fi
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then exit 0; fi
+          gh release create "$tag" --target "$GITHUB_SHA" --prerelease --title "GraphLive $tag" --notes-file releases/0.2.0-rc.1.txt

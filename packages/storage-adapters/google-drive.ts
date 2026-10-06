@@ -25,6 +25,20 @@ const property = (f: DriveFile, key: string) =>
   f.properties?.find((p) => p.key === key)?.value;
 const fields =
   "id,title,etag,properties,capabilities(canEdit,canShare),parents(id)";
+export type DriveMember = {
+  id: string;
+  name?: string;
+  emailAddress?: string;
+  role: string;
+  type: string;
+  deleted?: boolean;
+  permissionDetails?: { inherited?: boolean }[];
+};
+export type NetworkAccess = {
+  members: DriveMember[];
+  canShare: boolean;
+  fileId: string;
+};
 export class GoogleDriveRepository implements Repository {
   requiresMigration = false;
   readOnly = false;
@@ -208,8 +222,23 @@ export class GoogleDriveRepository implements Repository {
     this.snapshotCache = { id: file.id, etag: metadata.etag, data };
     return { data, file: metadata, inventory };
   }
+  private async checkedCurrent() {
+    try {
+      return await this.current();
+    } catch (error) {
+      if (
+        this.shared &&
+        error instanceof Error &&
+        ["drivePermission", "driveNotFound"].includes(error.message)
+      ) {
+        this.readOnly = true;
+        throw new Error("sharedAccessLost");
+      }
+      throw error;
+    }
+  }
   async load() {
-    return (await this.current()).data;
+    return (await this.checkedCurrent()).data;
   }
   private async create(title: string, data: Snapshot) {
     const boundary = "graphlive_" + crypto.randomUUID();
@@ -228,7 +257,7 @@ export class GoogleDriveRepository implements Repository {
     ).json()) as DriveFile;
   }
   async save(input: Snapshot, expectedRevision: number) {
-    const { data, file, inventory } = await this.current();
+    const { data, file, inventory } = await this.checkedCurrent();
     if (this.readOnly) throw new Error("sharedReadOnly");
     if (data.revision !== expectedRevision) throw new ConflictError(data);
     const next = snapshotSchema.parse({
@@ -445,6 +474,67 @@ export class GoogleDriveRepository implements Repository {
         ],
       }),
     });
+  }
+  async syncSharedTitle() {
+    const { data, file } = await this.checkedCurrent();
+    const title =
+      (data.preferences.networkName || "GraphLive") + ".graphlive.json";
+    if (this.shared && file && !this.readOnly && file.title !== title) {
+      await this.session.request(api + "/" + encodeURIComponent(file.id), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      });
+    }
+  }
+  async access(): Promise<NetworkAccess> {
+    const { file } = await this.checkedCurrent();
+    if (!this.shared || !file)
+      return { members: [], canShare: true, fileId: "" };
+    const members: DriveMember[] = [];
+    let pageToken = "";
+    do {
+      const query = new URLSearchParams({
+        fields:
+          "items(id,name,emailAddress,role,type,deleted,permissionDetails(inherited)),nextPageToken",
+        maxResults: "100",
+        pageToken,
+      });
+      const page = await (
+        await this.session.request(
+          api + "/" + encodeURIComponent(file.id) + "/permissions?" + query,
+        )
+      ).json();
+      members.push(...(page.items ?? []));
+      pageToken = page.nextPageToken ?? "";
+    } while (pageToken);
+    return {
+      members: members.filter((p) => !p.deleted),
+      canShare: file.capabilities?.canShare === true,
+      fileId: file.id,
+    };
+  }
+  canRevoke(member: DriveMember) {
+    return (
+      member.type === "user" &&
+      member.role !== "owner" &&
+      member.id !== this.session.accountId &&
+      !member.permissionDetails?.some((detail) => detail.inherited)
+    );
+  }
+  async revoke(permissionId: string) {
+    const access = await this.access();
+    const member = access.members.find((p) => p.id === permissionId);
+    if (!access.canShare || !member || !this.canRevoke(member))
+      throw new Error("drivePermission");
+    await this.session.request(
+      api +
+        "/" +
+        encodeURIComponent(access.fileId) +
+        "/permissions/" +
+        encodeURIComponent(permissionId),
+      { method: "DELETE" },
+    );
   }
   async invite(email: string, role: "reader" | "writer") {
     if (

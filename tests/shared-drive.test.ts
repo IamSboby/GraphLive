@@ -156,3 +156,88 @@ describe("shared networks", () => {
     ).rejects.toThrow("invalidData");
   });
 });
+
+it("lists participant names across pages and revokes only a direct non-owner permission", async () => {
+  const { session, request } = setup();
+  const original = request.getMockImplementation()!;
+  const members = [
+    {
+      id: "owner",
+      name: "Alex Owner",
+      emailAddress: "owner@example.com",
+      role: "owner",
+      type: "user",
+    },
+    {
+      id: "friend",
+      name: "Morgan Friend",
+      emailAddress: "friend@example.com",
+      role: "reader",
+      type: "user",
+    },
+    {
+      id: "inherited",
+      role: "writer",
+      type: "user",
+      permissionDetails: [{ inherited: true }],
+    },
+  ];
+  request.mockImplementation(async (url, init) => {
+    if (init?.method === "DELETE") return new Response(null, { status: 204 });
+    if (url.includes("/permissions?")) {
+      return new URL(url).searchParams.get("pageToken")
+        ? Response.json({ items: members.slice(1) })
+        : Response.json({
+            items: members.slice(0, 1),
+            nextPageToken: "second",
+          });
+    }
+    return original(url, init);
+  });
+  const repo = new GoogleDriveRepository(session, "shared:shared-file");
+  expect((await repo.access()).members).toEqual(members);
+  for (const id of ["owner", "inherited", "unknown"])
+    await expect(repo.revoke(id)).rejects.toThrow("drivePermission");
+  expect(
+    request.mock.calls.filter(([, o]) => o?.method === "DELETE"),
+  ).toHaveLength(0);
+  await repo.revoke("friend");
+  expect(request.mock.calls.at(-1)).toEqual([
+    "https://www.googleapis.com/drive/v2/files/shared-file/permissions/friend",
+    { method: "DELETE" },
+  ]);
+});
+
+it("checks current sharing capability before revocation and protects the current account", async () => {
+  const { session, request } = setup(false);
+  const original = request.getMockImplementation()!;
+  request.mockImplementation(async (url, init) =>
+    url.includes("/permissions?")
+      ? Response.json({
+          items: [{ id: "friend", role: "reader", type: "user" }],
+        })
+      : original(url, init),
+  );
+  const repo = new GoogleDriveRepository(session, "shared:shared-file");
+  expect(repo.canRevoke({ id: "owner", role: "writer", type: "user" })).toBe(
+    false,
+  );
+  await expect(repo.revoke("friend")).rejects.toThrow("drivePermission");
+  expect(request.mock.calls.every(([, o]) => !o?.method)).toBe(true);
+});
+
+it("locks editing after access is revoked without dropping the local snapshot", async () => {
+  const { session, request } = setup();
+  const repo = new GoogleDriveRepository(session, "shared:shared-file");
+  const data = await repo.load();
+  request.mockRejectedValue(new Error("driveNotFound"));
+  await expect(repo.load()).rejects.toThrow("sharedAccessLost");
+  expect(repo.readOnly).toBe(true);
+  await expect(repo.save(data, data.revision)).rejects.toThrow(
+    "sharedAccessLost",
+  );
+  expect(
+    request.mock.calls.filter(([, o]) => o?.method === "PUT"),
+  ).toHaveLength(0);
+  expect(data.people[0].profile.nickname).toBe("Alex");
+});

@@ -59,6 +59,9 @@ test("Drive invitations and Picker open the canonical shared network with reader
   ]);
   let reader = false;
   const invitations: unknown[] = [];
+  const removals: string[] = [];
+  let invited = false;
+  let revoked = false;
   const writes: string[] = [];
   await page.addInitScript(() => {
     class View {
@@ -124,7 +127,39 @@ test("Drive invitations and Picker open the canonical shared network with reader
       return route.fulfill({
         json: { user: { permissionId: reader ? "reader" : "owner" } },
       });
+    if (req.method() === "DELETE" && url.pathname.includes("/permissions/")) {
+      removals.push(id);
+      invited = false;
+      return route.fulfill({ status: 204, body: "" });
+    }
+    if (req.method() === "GET" && id === "permissions") {
+      return route.fulfill({
+        json: {
+          items: [
+            {
+              id: "owner",
+              type: "user",
+              role: "owner",
+              name: "Alex Owner",
+              emailAddress: "owner@example.com",
+            },
+            ...(invited
+              ? [
+                  {
+                    id: "permission",
+                    type: "user",
+                    role: "reader",
+                    name: "Morgan Friend",
+                    emailAddress: "friend@example.com",
+                  },
+                ]
+              : []),
+          ],
+        },
+      });
+    }
     if (req.method() === "POST" && id === "permissions") {
+      invited = true;
       invitations.push(req.postDataJSON());
       return route.fulfill({ json: { id: "permission" } });
     }
@@ -168,6 +203,8 @@ test("Drive invitations and Picker open the canonical shared network with reader
             })),
         },
       });
+    if (reader && revoked && id === "shared-file")
+      return route.fulfill({ status: 404, json: {} });
     const file = files.get(id)!;
     if (req.method() === "PUT") {
       writes.push(id);
@@ -201,12 +238,58 @@ test("Drive invitations and Picker open the canonical shared network with reader
     .getByRole("button", { name: "Enviar invitación", exact: true })
     .click();
   await expect(
-    page.getByText("Invitación enviada por Google Drive.", { exact: true }),
+    page
+      .getByRole("dialog")
+      .getByText("Invitación enviada por Google Drive.", { exact: true }),
   ).toBeVisible();
   expect(invitations).toEqual([
     { type: "user", role: "reader", value: "friend@example.com" },
   ]);
   await expect(page.locator(".network-card")).toHaveCount(1);
+  const dialog = page.getByRole("dialog");
+  await expect(
+    dialog.getByText("Morgan Friend", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    dialog.getByText("friend@example.com", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    dialog.getByRole("button", {
+      name: "Revocar acceso de Alex Owner",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({
+    path: "../../work/sharing-access-mobile.png",
+    fullPage: true,
+  });
+  await dialog
+    .getByRole("button", {
+      name: "Revocar acceso de Morgan Friend",
+      exact: true,
+    })
+    .click();
+  await dialog.getByRole("button", { name: "Cancelar", exact: true }).click();
+  expect(removals).toEqual([]);
+  await dialog
+    .getByRole("button", {
+      name: "Revocar acceso de Morgan Friend",
+      exact: true,
+    })
+    .click();
+  await dialog
+    .getByRole("button", { name: "Revocar acceso", exact: true })
+    .click();
+  await expect(
+    dialog.getByText("Acceso individual revocado.", { exact: true }),
+  ).toBeVisible();
+  expect(removals).toEqual(["permission"]);
+  await expect(dialog.getByText("Morgan Friend", { exact: true })).toHaveCount(
+    0,
+  );
+  await dialog.getByRole("button", { name: "Cerrar", exact: true }).click();
+  await page.setViewportSize({ width: 1280, height: 900 });
   reader = true;
   await page.reload();
   await login();
@@ -224,5 +307,19 @@ test("Drive invitations and Picker open the canonical shared network with reader
   await page.getByTestId("open-network").click();
   await expect(page.locator(".sync-state")).toContainText("Solo lectura");
   await expect(page.locator(".add-fab")).toBeDisabled();
+  expect(writes).toEqual([]);
+  const shared = files.get("shared-file")!;
+  shared.data = structuredClone(shared.data);
+  shared.data.preferences.networkName = "Friends Updated";
+  shared.data.revision++;
+  shared.etag = "remote-update";
+  await expect(page.locator("body")).toContainText("Friends Updated", {
+    timeout: 10000,
+  });
+  revoked = true;
+  await expect(page.locator("body")).toContainText(
+    "Ya no puedes acceder a esta red",
+    { timeout: 10000 },
+  );
   expect(writes).toEqual([]);
 });

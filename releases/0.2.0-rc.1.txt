@@ -1,0 +1,12 @@
+GraphLive 0.2.0-rc.1 — primera versión candidata
+
+- Gestión de participantes con nombre, correo y permiso de Google Drive.
+- Revocación de accesos individuales desde GraphLive, con confirmación.
+- Cambios pendientes guardados antes de invitar y reutilización de la autorización vigente.
+- Consultas de sincronización cada tres segundos en redes compartidas visibles, al volver a la pestaña y al recuperar conexión.
+- Protección del propietario y conservación local de cambios pendientes cuando se pierde acceso.
+- Nombres de archivos compartidos actualizados al renombrar la red.
+
+La primera apertura de un archivo compartido requiere seleccionarlo en Google Picker. La sincronización depende de la conexión y de Google Drive; los conflictos sobre el mismo dato requieren una elección. Revocar un permiso individual no elimina copias ya descargadas ni acceso por grupos o carpetas.
+
+Validación automatizada: tipos, lint, pruebas unitarias e integración y pruebas del sitio estático en navegador. Las pruebas de invitación y revocación simulan Drive; no sustituyen una comprobación con dos cuentas reales.

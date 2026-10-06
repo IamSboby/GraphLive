@@ -16,9 +16,15 @@ import {
 } from "lucide-react";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
 import { pickSharedNetwork } from "../storage-adapters/google-picker";
-import { emptySnapshot, createPerson, displayName } from "../domain/model";
+import {
+  emptySnapshot,
+  createPerson,
+  displayName,
+  normalize,
+} from "../domain/model";
 import { useLibrary, type NetworkEntry } from "./library";
 import { useNetwork } from "./store";
+import { NetworkSharing } from "./network-sharing";
 import { Field, Modal } from "./primitives";
 import { IconSelect } from "./icon-select";
 import {
@@ -50,8 +56,6 @@ export function Dashboard({
   const [reload, setReload] = useState(0);
   const [editing, setEditing] = useState<NetworkEntry | null>(null);
   const [sharing, setSharing] = useState<NetworkEntry | null>(null);
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"reader" | "writer">("reader");
   const [notice, setNotice] = useState("");
   useEffect(() => {
     if (!library) {
@@ -65,7 +69,13 @@ export function Dashboard({
       const loaded: NetworkEntry[] = [];
       for (const id of await library.ids()) {
         const repo = library.repository(id);
-        const data = await repo.load();
+        let data;
+        try {
+          data = await repo.load();
+        } catch (e) {
+          if (e instanceof Error && e.message === "sharedAccessLost") continue;
+          throw e;
+        }
         if (data.people.length)
           loaded.push({
             id,
@@ -111,6 +121,12 @@ export function Dashboard({
       });
       if (!(await useNetwork.getState().prepareSwitch()))
         throw new Error("localSaveFailed");
+      await useNetwork.getState().persist();
+      if (useNetwork.getState().dirty) throw new Error("resolveBeforeSwitch");
+      const repo = useNetwork.getState().repo;
+      if (repo instanceof GoogleDriveRepository && repo.shared)
+        await repo.syncSharedTitle();
+      setReload((v) => v + 1);
       setEditing(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "storageError");
@@ -124,7 +140,7 @@ export function Dashboard({
     setError("");
     setNotice("");
     try {
-      await library.session.connect(true);
+      await library.session.ensureFileAccess();
       const file = await pickSharedNetwork(library.session);
       if (file) {
         const repo = library.repository("shared:" + file);
@@ -139,32 +155,27 @@ export function Dashboard({
       setBusy(false);
     }
   }
-  async function share() {
-    if (!sharing || !library?.session) return;
+  async function prepareSharing() {
+    if (!sharing || !library?.session) throw new Error("storageError");
+    const state = await selectForChange(sharing.id);
+    await state.persist();
+    if (useNetwork.getState().dirty || useNetwork.getState().conflict)
+      throw new Error("resolveBeforeSwitch");
+    const repo = useNetwork.getState().repo;
+    if (!(repo instanceof GoogleDriveRepository))
+      throw new Error("storageError");
+    await repo.publishShared();
+    await repo.syncSharedTitle();
+    setReload((v) => v + 1);
+    return repo;
+  }
+  async function openSharing(entry: NetworkEntry) {
+    if (!library?.session) return;
     setBusy(true);
     setError("");
-    setNotice("");
     try {
-      await library.session.connect(true);
-      const state = await selectForChange(sharing.id);
-      await state.persist();
-      if (useNetwork.getState().dirty || useNetwork.getState().conflict)
-        throw new Error("resolveBeforeSwitch");
-      const repo = useNetwork.getState().repo;
-      if (!(repo instanceof GoogleDriveRepository))
-        throw new Error("storageError");
-      await repo.publishShared();
-      const id = sharing.id;
-      const shared = library.repository(id);
-      await useNetwork.getState().open(await shared.load(), shared);
-      useLibrary.getState().select(id);
-      // Keep the canonical id even when the invitation fails, so retrying never
-      // creates another copy of the network.
-      setSharing({ ...sharing, id });
-      setReload((v) => v + 1);
-      await repo.invite(email, role);
-      setSharing(null);
-      setNotice("sharedInvitationSent");
+      await library.session.ensureFileAccess();
+      setSharing(entry);
     } catch (e) {
       setError(e instanceof Error ? e.message : "storageError");
     } finally {
@@ -235,9 +246,18 @@ export function Dashboard({
   const title = (entry: NetworkEntry) =>
     entry.data.preferences.networkName || t("defaultNetwork");
   const shown = networks.filter((entry) =>
-    `${title(entry)} ${entry.data.people.find((p) => p.id === entry.data.ownerId)?.profile.nickname ?? ""}`
-      .toLocaleLowerCase()
-      .includes(query.toLocaleLowerCase().trim()),
+    normalize(
+      [
+        title(entry),
+        ...entry.data.people
+          .filter((p) => p.id === entry.data.ownerId)
+          .flatMap((p) => [
+            p.profile.nickname,
+            p.profile.firstName,
+            p.profile.lastName,
+          ]),
+      ].join(" "),
+    ).includes(normalize(query)),
   );
   return (
     <main className="welcome dashboard page-enter">
@@ -405,12 +425,7 @@ export function Dashboard({
                   {library?.session && (
                     <button
                       disabled={busy || entry.readOnly}
-                      onClick={() => {
-                        setError("");
-                        setEmail("");
-                        setRole("reader");
-                        setSharing(entry);
-                      }}
+                      onClick={() => void openSharing(entry)}
                     >
                       <Share2 size={16} />
                       {t("shareNetwork")}
@@ -534,60 +549,17 @@ export function Dashboard({
           </form>
         </Modal>
       )}
-      {sharing && (
-        <Modal
-          title={t("shareNetwork")}
-          onClose={() => {
-            if (!busy) setSharing(null);
+      {sharing && library?.session && (
+        <NetworkSharing
+          entry={sharing}
+          library={library}
+          prepare={prepareSharing}
+          onClose={() => setSharing(null)}
+          onInvited={() => {
+            setNotice("sharedInvitationSent");
+            setReload((v) => v + 1);
           }}
-        >
-          <form
-            className="form-content"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void share();
-            }}
-          >
-            <h3>{title(sharing)}</h3>
-            <p>{t("shareNetworkHelp")}</p>
-            <Field label={t("sharedEmail")}>
-              <input
-                autoFocus
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </Field>
-            <Field label={t("sharedPermission")}>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as typeof role)}
-              >
-                <option value="reader">{t("sharedReader")}</option>
-                <option value="writer">{t("sharedWriter")}</option>
-              </select>
-            </Field>
-            <p className="muted-copy">{t("sharedReceiveHelp")}</p>
-            {error && (
-              <p role="alert" className="error">
-                {t(error)}
-              </p>
-            )}
-            <div className="modal-actions">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => setSharing(null)}
-              >
-                {t("cancel")}
-              </button>
-              <button className="primary" disabled={busy || !email.trim()}>
-                {t(busy ? "saving" : "sendInvitation")}
-              </button>
-            </div>
-          </form>
-        </Modal>
+        />
       )}
     </main>
   );

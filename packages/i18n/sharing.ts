@@ -1,5 +1,23 @@
 export const sharingTranslations = {
   es: {
+    sharedMembers: "Personas con acceso",
+    sharedNoMembers: "Esta red todavía es privada.",
+    sharedOwner: "Propietario",
+    sharedYou: "Tú",
+    sharedUnnamed: "Cuenta de Google",
+    sharedOtherAccess: "Otro permiso",
+    sharedRevoke: "Revocar acceso",
+    sharedRevokePerson: "Revocar acceso de {{name}}",
+    sharedRevokeConfirm: "¿Revocar el acceso de {{name}} ({{email}})?",
+    sharedRevokeHelp:
+      "Se retira su permiso individual. No elimina copias ya descargadas ni permisos obtenidos por un grupo o carpeta.",
+    sharedRevoked: "Acceso individual revocado.",
+    sharedAlreadyMember: "Esta cuenta ya tiene acceso a la red.",
+    sharedSyncHelp:
+      "Antes de invitar se guardan todos los cambios. Las redes abiertas buscan actualizaciones cada 3 segundos y al volver a la pestaña; la conexión puede añadir demora.",
+    sharedAccessLost:
+      "Ya no puedes acceder a esta red. Puede haberse revocado el permiso o eliminado el archivo. Tus cambios pendientes se conservan localmente.",
+    driveNotFound: "No se encontró el archivo en Drive.",
     renameNetwork: "Renombrar",
     shareNetwork: "Compartir red",
     openSharedNetwork: "Abrir red compartida",
@@ -14,11 +32,29 @@ export const sharingTranslations = {
     driveSharingPermission:
       "Autoriza el acceso a redes compartidas con el botón «Abrir red compartida».",
     shareNetworkHelp:
-      "Se guardará una única red compartida en tu Drive. El destinatario podrá ver todas sus personas, notas y conexiones. Los backups seguirán siendo privados. Puedes retirar el acceso desde Compartir en Google Drive.",
+      "Se guardará una única red compartida en tu Drive. El destinatario podrá ver todas sus personas, notas y conexiones. Los backups seguirán siendo privados. Puedes gestionar el acceso desde este panel.",
     sharedReceiveHelp:
       "El destinatario debe iniciar sesión en GraphLive con Google Drive y pulsar «Abrir red compartida» para seleccionar el archivo. Los cambios se sincronizan periódicamente; si ambos editan el mismo dato, se pedirá resolver el conflicto.",
   },
   en: {
+    sharedMembers: "People with access",
+    sharedNoMembers: "This network is still private.",
+    sharedOwner: "Owner",
+    sharedYou: "You",
+    sharedUnnamed: "Google account",
+    sharedOtherAccess: "Other permission",
+    sharedRevoke: "Revoke access",
+    sharedRevokePerson: "Revoke access for {{name}}",
+    sharedRevokeConfirm: "Revoke access for {{name}} ({{email}})?",
+    sharedRevokeHelp:
+      "Removes their individual permission. Previously downloaded copies and access through groups or folders are unaffected.",
+    sharedRevoked: "Individual access revoked.",
+    sharedAlreadyMember: "This account already has access to this network.",
+    sharedSyncHelp:
+      "All changes are saved before inviting. Open networks check for updates every 3 seconds and when you return to the tab; network delays may add time.",
+    sharedAccessLost:
+      "You can no longer access this network. Access may have been revoked or the file deleted. Pending changes remain saved locally.",
+    driveNotFound: "The Drive file was not found.",
     renameNetwork: "Rename",
     shareNetwork: "Share network",
     openSharedNetwork: "Open shared network",
@@ -33,11 +69,29 @@ export const sharingTranslations = {
     driveSharingPermission:
       "Authorize shared network access using “Open shared network”.",
     shareNetworkHelp:
-      "One shared network will be stored in your Drive. The recipient can see all its people, notes and connections. Backups remain private. You can revoke access using Share in Google Drive.",
+      "One shared network will be stored in your Drive. The recipient can see all its people, notes and connections. Backups remain private. You can manage access from this panel.",
     sharedReceiveHelp:
       "The recipient must sign in to GraphLive with Google Drive and use “Open shared network” to select the file. Changes sync periodically; conflicting edits to the same field require resolution.",
   },
   it: {
+    sharedMembers: "Persone con accesso",
+    sharedNoMembers: "Questa rete è ancora privata.",
+    sharedOwner: "Proprietario",
+    sharedYou: "Tu",
+    sharedUnnamed: "Account Google",
+    sharedOtherAccess: "Altro permesso",
+    sharedRevoke: "Revoca accesso",
+    sharedRevokePerson: "Revoca accesso a {{name}}",
+    sharedRevokeConfirm: "Revocare l’accesso a {{name}} ({{email}})?",
+    sharedRevokeHelp:
+      "Rimuove il permesso individuale. Non elimina le copie scaricate né gli accessi tramite gruppi o cartelle.",
+    sharedRevoked: "Accesso individuale revocato.",
+    sharedAlreadyMember: "Questo account ha già accesso alla rete.",
+    sharedSyncHelp:
+      "Prima dell’invito vengono salvate tutte le modifiche. Le reti aperte cercano aggiornamenti ogni 3 secondi e al ritorno nella scheda; la connessione può causare ritardi.",
+    sharedAccessLost:
+      "Non puoi più accedere alla rete. Il permesso potrebbe essere revocato o il file eliminato. Le modifiche in sospeso restano salvate localmente.",
+    driveNotFound: "File di Drive non trovato.",
     renameNetwork: "Rinomina",
     shareNetwork: "Condividi rete",
     openSharedNetwork: "Apri rete condivisa",
@@ -51,11 +105,29 @@ export const sharingTranslations = {
     sharedEditable: "Rete condivisa · Puoi modificare",
     driveSharingPermission: "Autorizza l’accesso con «Apri rete condivisa».",
     shareNetworkHelp:
-      "Una sola rete condivisa sarà salvata nel tuo Drive. Il destinatario vedrà tutte le persone, note e connessioni. I backup restano privati. Puoi revocare l’accesso da Condividi in Google Drive.",
+      "Una sola rete condivisa sarà salvata nel tuo Drive. Il destinatario vedrà tutte le persone, note e connessioni. I backup restano privati. Puoi gestire l’accesso da questo pannello.",
     sharedReceiveHelp:
       "Il destinatario deve accedere a GraphLive con Google Drive e selezionare il file da «Apri rete condivisa». Le modifiche si sincronizzano periodicamente; i conflitti sullo stesso dato richiedono una scelta.",
   },
   de: {
+    sharedMembers: "Personen mit Zugriff",
+    sharedNoMembers: "Dieses Netzwerk ist noch privat.",
+    sharedOwner: "Eigentümer",
+    sharedYou: "Du",
+    sharedUnnamed: "Google-Konto",
+    sharedOtherAccess: "Andere Berechtigung",
+    sharedRevoke: "Zugriff entziehen",
+    sharedRevokePerson: "{{name}} den Zugriff entziehen",
+    sharedRevokeConfirm: "{{name}} ({{email}}) den Zugriff entziehen?",
+    sharedRevokeHelp:
+      "Entfernt die individuelle Berechtigung. Heruntergeladene Kopien und Zugriff über Gruppen oder Ordner bleiben bestehen.",
+    sharedRevoked: "Individueller Zugriff entzogen.",
+    sharedAlreadyMember: "Dieses Konto hat bereits Zugriff auf das Netzwerk.",
+    sharedSyncHelp:
+      "Vor der Einladung werden alle Änderungen gespeichert. Offene Netzwerke prüfen alle 3 Sekunden und bei der Rückkehr zum Tab auf Änderungen; die Verbindung kann Verzögerungen verursachen.",
+    sharedAccessLost:
+      "Kein Zugriff mehr auf das Netzwerk. Die Berechtigung wurde möglicherweise entzogen oder die Datei gelöscht. Ausstehende Änderungen bleiben lokal gespeichert.",
+    driveNotFound: "Drive-Datei nicht gefunden.",
     renameNetwork: "Umbenennen",
     shareNetwork: "Netzwerk teilen",
     openSharedNetwork: "Geteiltes Netzwerk öffnen",
@@ -70,11 +142,29 @@ export const sharingTranslations = {
     driveSharingPermission:
       "Autorisiere den Zugriff über „Geteiltes Netzwerk öffnen“.",
     shareNetworkHelp:
-      "Ein gemeinsames Netzwerk wird in deinem Drive gespeichert. Der Empfänger sieht alle Personen, Notizen und Verbindungen. Backups bleiben privat. Du kannst den Zugriff über Teilen in Google Drive entziehen.",
+      "Ein gemeinsames Netzwerk wird in deinem Drive gespeichert. Der Empfänger sieht alle Personen, Notizen und Verbindungen. Backups bleiben privat. Du kannst den Zugriff in diesem Fenster verwalten.",
     sharedReceiveHelp:
       "Der Empfänger meldet sich mit Google Drive bei GraphLive an und wählt die Datei über „Geteiltes Netzwerk öffnen“. Änderungen werden regelmäßig synchronisiert; widersprüchliche Änderungen am selben Feld müssen aufgelöst werden.",
   },
   fr: {
+    sharedMembers: "Personnes ayant accès",
+    sharedNoMembers: "Ce réseau est encore privé.",
+    sharedOwner: "Propriétaire",
+    sharedYou: "Vous",
+    sharedUnnamed: "Compte Google",
+    sharedOtherAccess: "Autre autorisation",
+    sharedRevoke: "Retirer l’accès",
+    sharedRevokePerson: "Retirer l’accès de {{name}}",
+    sharedRevokeConfirm: "Retirer l’accès de {{name}} ({{email}}) ?",
+    sharedRevokeHelp:
+      "Retire l’autorisation individuelle. Les copies téléchargées et les accès via des groupes ou dossiers sont conservés.",
+    sharedRevoked: "Accès individuel retiré.",
+    sharedAlreadyMember: "Ce compte a déjà accès au réseau.",
+    sharedSyncHelp:
+      "Les modifications sont enregistrées avant l’invitation. Les réseaux ouverts cherchent des mises à jour toutes les 3 secondes et au retour dans l’onglet ; la connexion peut ajouter un délai.",
+    sharedAccessLost:
+      "Vous ne pouvez plus accéder au réseau. L’accès a pu être retiré ou le fichier supprimé. Les modifications en attente restent enregistrées localement.",
+    driveNotFound: "Fichier Drive introuvable.",
     renameNetwork: "Renommer",
     shareNetwork: "Partager le réseau",
     openSharedNetwork: "Ouvrir un réseau partagé",
@@ -89,11 +179,29 @@ export const sharingTranslations = {
     driveSharingPermission:
       "Autorisez l’accès avec « Ouvrir un réseau partagé ».",
     shareNetworkHelp:
-      "Un seul réseau partagé sera enregistré dans votre Drive. Le destinataire verra toutes les personnes, notes et connexions. Les sauvegardes restent privées. Vous pouvez retirer l’accès depuis Partager dans Google Drive.",
+      "Un seul réseau partagé sera enregistré dans votre Drive. Le destinataire verra toutes les personnes, notes et connexions. Les sauvegardes restent privées. Vous pouvez gérer l’accès depuis ce panneau.",
     sharedReceiveHelp:
       "Le destinataire doit se connecter à GraphLive avec Google Drive et sélectionner le fichier via « Ouvrir un réseau partagé ». Les changements sont synchronisés périodiquement ; les modifications contradictoires doivent être résolues.",
   },
   pt: {
+    sharedMembers: "Pessoas com acesso",
+    sharedNoMembers: "Esta rede ainda é privada.",
+    sharedOwner: "Proprietário",
+    sharedYou: "Tu",
+    sharedUnnamed: "Conta Google",
+    sharedOtherAccess: "Outra permissão",
+    sharedRevoke: "Revogar acesso",
+    sharedRevokePerson: "Revogar acesso de {{name}}",
+    sharedRevokeConfirm: "Revogar acesso de {{name}} ({{email}})?",
+    sharedRevokeHelp:
+      "Remove a permissão individual. Não elimina cópias descarregadas nem acesso através de grupos ou pastas.",
+    sharedRevoked: "Acesso individual revogado.",
+    sharedAlreadyMember: "Esta conta já tem acesso à rede.",
+    sharedSyncHelp:
+      "Todas as alterações são guardadas antes do convite. As redes abertas procuram atualizações a cada 3 segundos e ao regressar ao separador; a ligação pode causar atrasos.",
+    sharedAccessLost:
+      "Já não podes aceder à rede. A permissão pode ter sido revogada ou o ficheiro eliminado. As alterações pendentes continuam guardadas localmente.",
+    driveNotFound: "Ficheiro do Drive não encontrado.",
     renameNetwork: "Renomear",
     shareNetwork: "Partilhar rede",
     openSharedNetwork: "Abrir rede partilhada",

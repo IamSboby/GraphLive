@@ -41,6 +41,7 @@ export const useNetwork = create<State>((set, get) => {
   let firstEdit = 0,
     failures = 0;
   let flight: Promise<void> | null = null;
+  let refreshing = false;
   let journal: { id: string; scope: string } | null = null;
   let record: PendingWrite | null = null;
   let activeScope: string | null = null;
@@ -90,7 +91,13 @@ export const useNetwork = create<State>((set, get) => {
         firstEdit = 0;
         void get().persist();
       },
-      Math.min(800, Math.max(0, 4000 - (Date.now() - firstEdit))),
+      Math.min(
+        get().repo?.shared ? 300 : 800,
+        Math.max(
+          0,
+          (get().repo?.shared ? 1200 : 4000) - (Date.now() - firstEdit),
+        ),
+      ),
     );
   };
   const finishDetached = async (
@@ -312,6 +319,8 @@ export const useNetwork = create<State>((set, get) => {
                   "driveExpired",
                   "drivePermission",
                   "sharedReadOnly",
+                  "sharedAccessLost",
+                  "driveNotFound",
                   "driveSharingPermission",
                   "driveAccountChanged",
                   "folderPermission",
@@ -383,7 +392,8 @@ export const useNetwork = create<State>((set, get) => {
     refresh: async () => {
       const s = get(),
         generation = epoch;
-      if (!s.repo || s.dirty || s.saving || s.conflict) return;
+      if (!s.repo || s.dirty || s.saving || s.conflict || refreshing) return;
+      refreshing = true;
       try {
         const wasReadOnly = s.repo.readOnly;
         const remote = await s.repo.load();
@@ -394,11 +404,13 @@ export const useNetwork = create<State>((set, get) => {
           get().base !== s.base
         )
           return;
+        if (get().error) set({ error: null });
         if (
           remote.revision !== s.base?.revision ||
           wasReadOnly !== s.repo.readOnly
         )
           set({
+            error: null,
             data: remote,
             base: structuredClone(remote),
             history: [],
@@ -407,6 +419,8 @@ export const useNetwork = create<State>((set, get) => {
       } catch (e) {
         if (generation === epoch)
           set({ error: e instanceof Error ? e.message : "storageError" });
+      } finally {
+        refreshing = false;
       }
     },
   };

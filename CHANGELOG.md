@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0-rc.1 — 2026-10-06
+
+- Panel de participantes con nombre, correo, permisos y revocación de accesos individuales.
+- Invitaciones después de guardar los cambios pendientes, reutilizando autorizaciones vigentes.
+- Sincronización compartida cada tres segundos en primer plano, al volver a la pestaña y al recuperar conexión.
+- Protección de cambios locales cuando se pierde el acceso; control de conflictos conservado.
+- Nombres de archivos compartidos actualizados al renombrar la red.
+
 ## GitHub Pages — 2026-09-19
 
 - Exportación estática con rutas bajo `/GraphLive/`, sin API ni almacenamiento remoto.

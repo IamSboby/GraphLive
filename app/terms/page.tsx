@@ -61,11 +61,11 @@ export default function TermsPage() {
       </p>
       <h2>Disponibilidad y versión preliminar</h2>
       <p>
-        GraphLive está en fase pre-beta. Puede contener errores, cambiar de
-        funcionalidad o sufrir interrupciones. No se promete disponibilidad
-        continua ni ausencia de pérdida de datos. Los servicios de terceros,
-        incluidos Google Drive y GitHub, se rigen también por sus propias
-        condiciones.
+        GraphLive está en fase de versión candidata (prerelease). Puede contener
+        errores, cambiar de funcionalidad o sufrir interrupciones. No se promete
+        disponibilidad continua ni ausencia de pérdida de datos. Los servicios
+        de terceros, incluidos Google Drive y GitHub, se rigen también por sus
+        propias condiciones.
       </p>
       <p>
         GraphLive no sustituye registros profesionales ni debe ser la única

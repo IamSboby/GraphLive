@@ -2388,3 +2388,56 @@ th {
 .legal-date {
   opacity: 0.75;
 }
+
+.sharing-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sharing-members {
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+.sharing-members li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.member-avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--soft);
+  color: var(--accent);
+}
+.member-identity {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 3px;
+  overflow-wrap: anywhere;
+}
+.member-identity span,
+.member-identity small {
+  color: var(--muted);
+}
+.sharing-invite {
+  display: grid;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.sharing-panel h3,
+.sharing-panel h4 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

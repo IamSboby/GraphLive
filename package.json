@@ -1,6 +1,6 @@
 {
   "name": "graphlive",
-  "version": "0.2.0-pre-beta.1",
+  "version": "0.2.0-rc.1",
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",

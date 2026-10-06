@@ -20,6 +20,7 @@ export interface StorageAdapter {
 }
 export interface Repository {
   readonly readOnly?: boolean;
+  readonly shared?: boolean;
   readonly journalScope?: string;
   requiresMigration?: boolean;
   load(): Promise<Snapshot>;

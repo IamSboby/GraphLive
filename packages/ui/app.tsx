@@ -176,23 +176,46 @@ export function App({
     localStorage.setItem("graphlive-theme", theme);
   }, [theme, dark, themeReady]);
   useEffect(() => {
-    const timer = setInterval(
-      () => void useNetwork.getState().refresh(),
-      15000,
-    );
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    let running = false;
+    const sync = async () => {
+      if (stopped || running) return;
+      clearTimeout(timer);
+      running = true;
+      try {
+        if (document.visibilityState !== "hidden" && navigator.onLine) {
+          await useNetwork.getState().persist();
+          await useNetwork.getState().refresh();
+        }
+      } finally {
+        running = false;
+        if (!stopped) {
+          const state = useNetwork.getState();
+          const delay = state.error ? 30000 : state.repo?.shared ? 3000 : 15000;
+          timer = setTimeout(() => void sync(), delay);
+        }
+      }
+    };
+    const wake = () => {
+      void sync();
+    };
+    timer = setTimeout(wake, 1000);
     const before = (e: BeforeUnloadEvent) => {
       const state = useNetwork.getState();
       if (state.dirty && !state.localSaved) e.preventDefault();
     };
-    const online = () => {
-      void useNetwork.getState().persist();
-    };
-    window.addEventListener("online", online);
+    window.addEventListener("online", wake);
+    window.addEventListener("focus", wake);
+    document.addEventListener("visibilitychange", wake);
     window.addEventListener("beforeunload", before);
     return () => {
-      clearInterval(timer);
+      stopped = true;
+      clearTimeout(timer);
       window.removeEventListener("beforeunload", before);
-      window.removeEventListener("online", online);
+      window.removeEventListener("online", wake);
+      window.removeEventListener("focus", wake);
+      document.removeEventListener("visibilitychange", wake);
     };
   }, []);
   const stats = useMemo(() => (data ? metrics(data) : new Map()), [data]);

@@ -365,3 +365,36 @@ it("finishes a switched network whose remote debounce has not started", async ()
   );
   expect(useNetwork.getState().data!.people[0].profile.nickname).toBe("Game");
 });
+
+it("does not overlap refreshes or replace an edit made while loading a remote update", async () => {
+  const initial = emptySnapshot();
+  createPerson(initial, { nickname: "Alex" });
+  let release: (value: Snapshot) => void = () => {};
+  const load = vi.fn(
+    () =>
+      new Promise<Snapshot>((resolve) => {
+        release = resolve;
+      }),
+  );
+  const repo: Repository = {
+    shared: true,
+    load,
+    save: async (value) => value,
+    backup: async () => "",
+    backups: async () => [],
+    restorePreview: async () => initial,
+  };
+  await useNetwork.getState().open(initial, repo);
+  const first = useNetwork.getState().refresh();
+  await useNetwork.getState().refresh();
+  expect(load).toHaveBeenCalledTimes(1);
+  useNetwork.getState().mutate((d) => {
+    d.preferences.networkName = "Local edit";
+  });
+  release({ ...structuredClone(initial), revision: 1 });
+  await first;
+  expect(useNetwork.getState().data?.preferences.networkName).toBe(
+    "Local edit",
+  );
+  expect(useNetwork.getState().dirty).toBe(true);
+});

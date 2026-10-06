@@ -52,6 +52,11 @@ export class GoogleSession {
   get accountId() {
     return this.account;
   }
+  ensureFileAccess(): Promise<void> {
+    if (this.token && Date.now() < this.expires && this.hasFileAccess)
+      return Promise.resolve();
+    return this.connect(true);
+  }
   connect(shared = this.hasFileAccess): Promise<void> {
     const google = identity();
     if (!google) return Promise.reject(new Error("driveUnavailable"));
@@ -133,6 +138,7 @@ export class GoogleSession {
       throw new Error("driveExpired");
     }
     if (response.status === 403) throw new Error("drivePermission");
+    if (response.status === 404) throw new Error("driveNotFound");
     if (!response.ok && response.status !== 412)
       throw new Error("storageError");
     return response;
