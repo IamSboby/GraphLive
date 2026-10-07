@@ -21,6 +21,7 @@ jobs:
       - run: npm run check
       - run: npm run build:pages
       - run: npx playwright install --with-deps chromium
+        timeout-minutes: 10
       - run: npx playwright test --config playwright.pages.config.ts
         env:
           PLAYWRIGHT_CHANNEL: chromium
