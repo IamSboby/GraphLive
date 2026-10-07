@@ -1,3 +1,4 @@
+import { embeddedImage, imageLimits } from "./images";
 import { genderClassification } from "./gender";
 import { z } from "zod";
 import { languageCodes } from "../i18n/languages";
@@ -32,6 +33,7 @@ const tags = z
   });
 export const profileSchema = z
   .object({
+    portrait: embeddedImage(imageLimits.portrait),
     firstName: text.default(""),
     lastName: text.default(""),
     nickname: text.default(""),
@@ -176,6 +178,7 @@ export const connectionSchema = z.preprocess(
 );
 export const preferencesSchema = z
   .object({
+    banner: embeddedImage(imageLimits.banner),
     networkName: z.string().trim().min(1).max(80).optional(),
     ...appearancePreferencesShape,
     language: z.enum(languageCodes).default("es"),

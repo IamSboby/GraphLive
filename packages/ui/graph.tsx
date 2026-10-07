@@ -27,7 +27,11 @@ export type GraphControls = {
 const flagValues = <T extends string | number>(
   n: cytoscape.NodeSingular,
   value: T,
-) => Array.from({ length: Math.max(1, n.data("flags").length) }, () => value);
+  portraitValue: T | string | number = value,
+) =>
+  n.data("portrait")
+    ? [portraitValue, ...n.data("flags").map(() => value)]
+    : Array.from({ length: Math.max(1, n.data("flags").length) }, () => value);
 
 type Props = {
   data: Snapshot;
@@ -245,6 +249,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
                 (p.profile.birthYear ??
                   p.profile.birthDate?.slice(0, 4) ??
                   "N/A"),
+              portrait: p.profile.portrait,
               flags: p.profile.nationalities.map(flagUrl),
               color:
                 p.id === data.ownerId
@@ -308,25 +313,35 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
         selector: "node",
         style: {
           "background-color": "data(color)",
+          "background-fit": (n: cytoscape.NodeSingular) =>
+            flagValues(n, "none", "cover"),
           "background-image": (n: cytoscape.NodeSingular) =>
-            n.data("flags").length ? n.data("flags") : "none",
-          "background-width": (n: cytoscape.NodeSingular) => flagValues(n, 20),
-          "background-height": (n: cytoscape.NodeSingular) => flagValues(n, 15),
+            n.data("portrait")
+              ? [n.data("portrait"), ...n.data("flags")]
+              : n.data("flags").length
+                ? n.data("flags")
+                : "none",
+          "background-width": (n: cytoscape.NodeSingular) =>
+            flagValues(n, 20, "100%"),
+          "background-height": (n: cytoscape.NodeSingular) =>
+            flagValues(n, 15, "100%"),
           "background-position-x": (n: cytoscape.NodeSingular) =>
             flagValues(n, "50%"),
           "background-position-y": (n: cytoscape.NodeSingular) =>
-            flagValues(n, "100%"),
+            flagValues(n, "100%", "50%"),
           "background-offset-x": (n: cytoscape.NodeSingular) =>
-            n
-              .data("flags")
-              .map(
-                (_: string, i: number) =>
-                  (i - (n.data("flags").length - 1) / 2) * 24,
-              ),
+            (n.data("portrait") ? [0] : []).concat(
+              n
+                .data("flags")
+                .map(
+                  (_: string, i: number) =>
+                    (i - (n.data("flags").length - 1) / 2) * 24,
+                ),
+            ),
           "background-offset-y": (n: cytoscape.NodeSingular) =>
-            flagValues(n, 64),
+            flagValues(n, 64, 0),
           "background-clip": (n: cytoscape.NodeSingular) =>
-            flagValues(n, "none"),
+            flagValues(n, "none", "node"),
           "bounds-expansion": (n: cytoscape.NodeSingular) =>
             Math.max(65, n.data("flags").length * 12),
           width: "data(size)",

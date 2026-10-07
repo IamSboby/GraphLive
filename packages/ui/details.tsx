@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { relationshipPalette } from "../appearance/config";
 import { useState } from "react";
 import { Modal } from "./primitives";
@@ -61,7 +62,17 @@ export function Details({
               : colors[relation],
         }}
       >
-        {displayName(person).slice(0, 1)}
+        {person.profile.portrait ? (
+          <Image
+            unoptimized
+            src={person.profile.portrait}
+            alt=""
+            width={96}
+            height={96}
+          />
+        ) : (
+          displayName(person).slice(0, 1)
+        )}
       </div>
       <h2>{displayName(person)}</h2>
       <p className="muted-copy">

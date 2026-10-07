@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -527,7 +528,17 @@ export function Dashboard({
                 style={cardStyle}
               >
                 <div className="network-card-art" aria-hidden="true">
-                  <Network size={52} />
+                  {entry.data.preferences.banner ? (
+                    <Image
+                      unoptimized
+                      src={entry.data.preferences.banner}
+                      alt=""
+                      width={960}
+                      height={320}
+                    />
+                  ) : (
+                    <Network size={52} />
+                  )}
                 </div>
                 <h2>{title(entry)}</h2>
                 {entry.shared && (

@@ -1,4 +1,5 @@
 "use client";
+import { ImagePicker } from "./image-picker";
 import { useState, useRef, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -31,6 +32,7 @@ export function PersonForm({
   const { t } = useTranslation(),
     data = useNetwork((s) => s.data)!,
     mutate = useNetwork((s) => s.mutate);
+  const [imageBusy, setImageBusy] = useState(false);
   const drafts = useRef({ interests: "", tags: "" });
   const [profile, setProfile] = useState<Profile>(
     person?.profile ?? {
@@ -71,6 +73,7 @@ export function PersonForm({
     setProfile((current) => ({ ...current, [key]: value }));
   function submit(e: FormEvent) {
     e.preventDefault();
+    if (imageBusy) return;
     const parsed = profileSchema.safeParse({
       ...profile,
       interests: [
@@ -150,6 +153,12 @@ export function PersonForm({
         className="form-content"
         aria-describedby={error ? "person-form-error" : undefined}
       >
+        <ImagePicker
+          kind="portrait"
+          value={profile.portrait}
+          onChange={(v) => set("portrait", v)}
+          onBusy={setImageBusy}
+        />
         <div className="form-grid">
           {(["firstName", "lastName", "nickname"] as const).map((k) => (
             <Field key={k} label={t(k)}>
@@ -353,7 +362,7 @@ export function PersonForm({
           <button type="button" onClick={onClose}>
             {t("cancel")}
           </button>
-          <button className="primary" type="submit">
+          <button className="primary" type="submit" disabled={imageBusy}>
             {t("save")}
           </button>
         </footer>

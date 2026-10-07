@@ -1,4 +1,5 @@
 "use client";
+import { ImagePicker } from "./image-picker";
 import { DriveBackupSettings } from "./drive-backup-settings";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
 
@@ -70,6 +71,12 @@ export function Settings({
               }}
             />
           </Field>
+          <ImagePicker
+            kind="banner"
+            value={data.preferences.banner}
+            disabled={Boolean(s.conflict)}
+            onChange={(v) => change("banner", v)}
+          />
           {!s.demo && (
             <button
               disabled={Boolean(s.conflict)}

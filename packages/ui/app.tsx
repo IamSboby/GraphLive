@@ -10,6 +10,7 @@ import { Dashboard } from "./dashboard";
 import { useLibrary } from "./library";
 import { IconSelect } from "./icon-select";
 import { relationshipPalette, themePalette } from "../appearance/config";
+import Image from "next/image";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
 import "../i18n";
 import Link from "next/link";
@@ -409,7 +410,17 @@ export function App({
                       : colors[ownerRelationship(data, p.id)],
                 }}
               >
-                {displayName(p)[0]}
+                {p.profile.portrait ? (
+                  <Image
+                    unoptimized
+                    src={p.profile.portrait}
+                    alt=""
+                    width={32}
+                    height={32}
+                  />
+                ) : (
+                  displayName(p)[0]
+                )}
               </span>
               <span>
                 <strong>
