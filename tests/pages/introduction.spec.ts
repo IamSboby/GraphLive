@@ -55,7 +55,10 @@ for (const mobile of [false, true])
       .selectOption("nonBinary");
     await dialog
       .getByRole("combobox", { name: "Añadir nacionalidad" })
-      .selectOption("GB");
+      .fill("Reino Unido");
+    await page
+      .getByRole("option", { name: "Reino Unido (GB)", exact: true })
+      .click();
     await page.screenshot({
       path: `../../work/intro-${mobile ? "mobile" : "desktop"}-about.png`,
     });

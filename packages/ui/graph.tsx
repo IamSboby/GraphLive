@@ -15,6 +15,7 @@ import { relationshipPalette, themePalette } from "../appearance/config";
 import { Flag } from "./primitives";
 import { flagUrl } from "./flags";
 import { metrics, nodeSize } from "../graph-engine/metrics";
+import { wheelZoomDelta } from "../graph-engine/wheel-zoom";
 export type GraphControls = {
   fit: () => void;
   zoom: (factor: number) => void;
@@ -170,6 +171,58 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
   }));
   useEffect(() => {
     if (!container.current) return;
+    const element = container.current;
+    let frame = 0,
+      pending = 0,
+      previousTime = -Infinity,
+      previousDirection = 0;
+    let anchor = { x: 0, y: 0 };
+    const onWheel = (event: WheelEvent) => {
+      const c = cy.current;
+      if (!c || !c.userZoomingEnabled() || !event.deltaY) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (c.nodes(":grabbed").length) return;
+      const now = performance.now(),
+        direction = Math.sign(event.deltaY);
+      if (direction !== previousDirection || now - previousTime > 200)
+        pending = 0;
+      const elapsed =
+        direction === previousDirection ? now - previousTime : Infinity;
+      previousTime = now;
+      previousDirection = direction;
+      pending = Math.max(
+        -0.9,
+        Math.min(
+          0.9,
+          pending +
+            wheelZoomDelta(
+              event.deltaY,
+              event.deltaMode,
+              element.clientHeight,
+              elapsed,
+            ),
+        ),
+      );
+      const rect = element.getBoundingClientRect();
+      anchor = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        c.zoom({
+          level: Math.max(
+            c.minZoom(),
+            Math.min(c.maxZoom(), c.zoom() * Math.exp(pending)),
+          ),
+          renderedPosition: anchor,
+        });
+        pending = 0;
+      });
+    };
+    element.addEventListener("wheel", onWheel, {
+      capture: true,
+      passive: false,
+    });
     const c = cytoscape({
       container: container.current,
       elements: [],
@@ -209,6 +262,8 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     c.on("dragfree", "node", () => savePositions(true));
     return () => {
       worker.current?.terminate();
+      element.removeEventListener("wheel", onWheel, true);
+      cancelAnimationFrame(frame);
       c.off("pan zoom", syncGrid);
       c.destroy();
       cy.current = null;

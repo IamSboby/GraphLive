@@ -2522,3 +2522,35 @@ th {
   object-fit: cover;
   display: block;
 }
+
+.country-picker {
+  position: relative;
+}
+.country-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px #0002;
+}
+.country-options button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px;
+}
+.country-options button[aria-selected="true"] {
+  background: var(--bg);
+  outline: 1px solid var(--border);
+}
