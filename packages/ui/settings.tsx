@@ -105,7 +105,13 @@ export function Settings({
             </select>
           </Field>
           {(
-            ["showLabels", "showOwner", "searchNotes", "autoBackup"] as const
+            [
+              "showLabels",
+              "showOwner",
+              "showPhotos",
+              "searchNotes",
+              "autoBackup",
+            ] as const
           ).map((k, i) => (
             <label className="check" key={k}>
               <input
@@ -113,7 +119,11 @@ export function Settings({
                 checked={data.preferences[k]}
                 onChange={(e) => change(k, e.target.checked)}
               />
-              {t(["labels", "owner", "searchNotes", "autoBackup"][i])}
+              {t(
+                ["labels", "owner", "showPhotos", "searchNotes", "autoBackup"][
+                  i
+                ],
+              )}
             </label>
           ))}
           <DriveBackupSettings />

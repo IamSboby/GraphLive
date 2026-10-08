@@ -183,6 +183,7 @@ export const preferencesSchema = z
     ...appearancePreferencesShape,
     language: z.enum(languageCodes).default("es"),
     theme: z.enum(["light", "dark", "system"]).default("system"),
+    showPhotos: z.boolean().default(true),
     showLabels: z.boolean().default(true),
     showOwner: z.boolean().default(true),
     sizeMode: z

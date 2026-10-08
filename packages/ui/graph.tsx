@@ -249,7 +249,9 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
                 (p.profile.birthYear ??
                   p.profile.birthDate?.slice(0, 4) ??
                   "N/A"),
-              portrait: p.profile.portrait,
+              portrait: data.preferences.showPhotos
+                ? p.profile.portrait
+                : undefined,
               flags: p.profile.nationalities.map(flagUrl),
               color:
                 p.id === data.ownerId
@@ -356,8 +358,8 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
           color: palette.text,
           "text-outline-width": 2,
           "text-outline-color": palette.bg,
-          "border-width": 2,
-          "border-color": palette.surface,
+          "border-width": 4,
+          "border-color": "data(color)",
           "overlay-opacity": 0,
           "min-zoomed-font-size": 8,
         },
@@ -407,7 +409,13 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
       { selector: ".muted", style: { opacity: 0.14 } },
       {
         selector: ".chosen",
-        style: { "border-width": 5, "border-color": "#548bf0", "z-index": 10 },
+        style: {
+          "border-width": 5,
+          "underlay-color": palette.accent,
+          "underlay-opacity": 0.2,
+          "underlay-padding": 7,
+          "z-index": 10,
+        },
       },
       {
         selector: ".route",
@@ -449,6 +457,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     path,
     dark,
     data.preferences.showLabels,
+    data.preferences.showPhotos,
     colors,
     palette,
   ]);

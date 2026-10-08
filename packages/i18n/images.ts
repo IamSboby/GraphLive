@@ -1,5 +1,6 @@
 export const imageTranslations = {
   es: {
+    showPhotos: "Mostrar fotos en los círculos",
     personPhoto: "Foto de la persona",
     networkBanner: "Banner de la red",
     chooseImage: "Elegir imagen",
@@ -11,6 +12,7 @@ export const imageTranslations = {
       "Esta imagen es demasiado grande. Elige una de hasta 10 MB y 40 megapíxeles.",
   },
   en: {
+    showPhotos: "Show photos in circles",
     personPhoto: "Person photo",
     networkBanner: "Network banner",
     chooseImage: "Choose image",
@@ -22,6 +24,7 @@ export const imageTranslations = {
       "This image is too large. Choose one up to 10 MB and 40 megapixels.",
   },
   it: {
+    showPhotos: "Mostra le foto nei cerchi",
     personPhoto: "Foto della persona",
     networkBanner: "Banner della rete",
     chooseImage: "Scegli immagine",
@@ -32,6 +35,7 @@ export const imageTranslations = {
     imageTooLarge: "Immagine troppo grande. Massimo 10 MB e 40 megapixel.",
   },
   de: {
+    showPhotos: "Fotos in Kreisen anzeigen",
     personPhoto: "Personenfoto",
     networkBanner: "Netzwerkbanner",
     chooseImage: "Bild auswählen",
@@ -42,6 +46,7 @@ export const imageTranslations = {
     imageTooLarge: "Bild zu groß. Maximal 10 MB und 40 Megapixel.",
   },
   fr: {
+    showPhotos: "Afficher les photos dans les cercles",
     personPhoto: "Photo de la personne",
     networkBanner: "Bannière du réseau",
     chooseImage: "Choisir une image",
@@ -52,6 +57,7 @@ export const imageTranslations = {
     imageTooLarge: "Image trop grande. Maximum 10 Mo et 40 mégapixels.",
   },
   pt: {
+    showPhotos: "Mostrar fotos nos círculos",
     personPhoto: "Foto da pessoa",
     networkBanner: "Banner da rede",
     chooseImage: "Escolher imagem",
