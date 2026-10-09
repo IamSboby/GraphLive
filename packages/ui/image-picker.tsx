@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { ImagePlus, Trash2, LoaderCircle } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { PhotoCropper } from "./photo-cropper";
@@ -23,6 +24,7 @@ export function ImagePicker({
   const [crop, setCrop] = useState<ImageBitmap | null>(null);
   useEffect(() => () => crop?.close(), [crop]);
   const sequence = useRef(0);
+  const fileInput = useRef<HTMLInputElement>(null);
   useEffect(
     () => () => {
       sequence.current++;
@@ -43,9 +45,20 @@ export function ImagePicker({
           alt={t(kind === "portrait" ? "personPhoto" : "networkBanner")}
         />
       )}
-      <label>
-        {t("chooseImage")}
+      <div className="image-upload-control">
+        <button
+          type="button"
+          className="image-upload-button"
+          disabled={disabled || busy || Boolean(crop)}
+          onClick={() => fileInput.current?.click()}
+        >
+          <ImagePlus size={20} aria-hidden="true" />
+          {t("chooseImage")}
+        </button>
         <input
+          ref={fileInput}
+          hidden
+          aria-label={t("chooseImage")}
           type="file"
           accept="image/jpeg,image/png,image/webp"
           disabled={disabled || busy || Boolean(crop)}
@@ -80,7 +93,7 @@ export function ImagePicker({
             }
           }}
         />
-      </label>
+      </div>
       {crop && (
         <PhotoCropper
           bitmap={crop}
@@ -102,10 +115,16 @@ export function ImagePicker({
           disabled={disabled || busy || Boolean(crop)}
           onClick={() => onChange(undefined)}
         >
+          <Trash2 size={16} aria-hidden="true" />
           {t("removeImage")}
         </button>
       )}
-      {busy && <p role="status">{t("loading")}</p>}
+      {busy && (
+        <p role="status" className="image-loading">
+          <LoaderCircle size={16} aria-hidden="true" />
+          {t("loading")}
+        </p>
+      )}
       {error && (
         <p role="alert" className="error">
           {t(error)}

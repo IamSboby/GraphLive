@@ -965,7 +965,7 @@ small {
   max-width: 270px;
   font-size: 12px;
 }
-.legend summary {
+.legend-toggle {
   cursor: pointer;
   color: var(--muted);
   padding: 8px 10px;
@@ -974,7 +974,7 @@ small {
   border-radius: 7px;
   width: max-content;
 }
-.legend > div {
+.legend-content {
   margin-top: 8px;
   padding: 14px;
   border: 1px solid var(--border);
@@ -984,7 +984,7 @@ small {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
-.legend span {
+.legend-item {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -1562,7 +1562,7 @@ th {
     bottom: 110px;
     max-width: 240px;
   }
-  .legend summary {
+  .legend-toggle {
     font-size: 11px;
   }
   .path-control {
@@ -1996,12 +1996,12 @@ th {
     left: 12px;
     max-width: min(280px, calc(100% - 24px));
   }
-  .legend summary {
+  .legend-toggle {
     min-height: 44px;
     display: flex;
     align-items: center;
   }
-  .legend > div {
+  .legend-content {
     max-height: 35dvh;
     overflow-y: auto;
   }
@@ -2583,4 +2583,157 @@ th {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.image-upload-button,
+.crop-actions button,
+.image-picker > button,
+.legend-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: 14px;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+.image-upload-button {
+  width: 100%;
+  padding: 14px 18px;
+  border: 1px dashed var(--accent);
+  color: var(--accent);
+  background: var(--soft);
+}
+.image-upload-button:not(:disabled):hover,
+.crop-actions button:not(:disabled):hover,
+.legend-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 16px #0001;
+  border-color: var(--accent);
+}
+.image-upload-button:not(:disabled):active,
+.crop-actions button:not(:disabled):active,
+.legend-toggle:active {
+  transform: scale(0.97);
+}
+.image-upload-button svg,
+.crop-actions svg,
+.legend-toggle svg {
+  transition: transform 220ms ease;
+  flex-shrink: 0;
+}
+.image-upload-button:hover svg {
+  transform: rotate(-8deg) scale(1.12);
+}
+.crop-actions button:hover svg {
+  transform: scale(1.15);
+}
+.crop-actions .primary {
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.crop-heading,
+.image-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.photo-cropper {
+  animation: crop-appear 240ms ease-out;
+}
+@keyframes crop-appear {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.image-loading svg {
+  animation: image-spin 1s linear infinite;
+}
+@keyframes image-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.legend-toggle {
+  padding: 10px 14px;
+}
+.legend-content {
+  border-radius: 16px;
+  box-shadow: 0 8px 26px #0002;
+}
+.legend-motion {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition:
+    grid-template-rows 240ms ease,
+    opacity 180ms ease,
+    transform 240ms ease,
+    visibility 0s 240ms;
+}
+.legend-clip {
+  overflow: hidden;
+  min-height: 0;
+}
+.legend[data-open="true"] .legend-motion {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+.legend[data-open="true"] .legend-chevron {
+  transform: rotate(180deg);
+}
+.legend-item {
+  transition: transform 180ms ease;
+}
+.legend-item:hover {
+  transform: translateX(3px);
+}
+.legend-item i {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+.legend-item:hover i {
+  transform: scale(1.3);
+  box-shadow: 0 0 0 3px var(--soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo-cropper,
+  .image-loading svg {
+    animation: none;
+  }
+  .image-upload-button,
+  .crop-actions button,
+  .image-picker > button,
+  .legend-toggle,
+  .image-upload-button svg,
+  .crop-actions svg,
+  .legend-toggle svg,
+  .legend-motion,
+  .legend-item,
+  .legend-item i {
+    transition: none;
+  }
+  .image-upload-button:not(:disabled):hover,
+  .crop-actions button:not(:disabled):hover,
+  .legend-toggle:hover,
+  .legend-item:hover,
+  .image-upload-button:hover svg,
+  .crop-actions button:hover svg,
+  .legend-item:hover i {
+    transform: none;
+  }
 }

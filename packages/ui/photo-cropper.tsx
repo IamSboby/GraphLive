@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { Scan, X, Check, Crop } from "lucide-react";
 import { useTranslation } from "react-i18next";
 const clamp = (n: number) => Math.max(0, Math.min(1, n));
 export function PhotoCropper({
@@ -38,7 +39,10 @@ export function PhotoCropper({
   }, [bitmap, side, x, y]);
   return (
     <div className="photo-cropper" role="group" aria-label={t("cropPhoto")}>
-      <strong>{t("cropPhoto")}</strong>
+      <strong className="crop-heading">
+        <Crop size={18} aria-hidden="true" />
+        {t("cropPhoto")}
+      </strong>
       <p>{t("cropHelp")}</p>
       <canvas
         ref={canvas}
@@ -123,9 +127,11 @@ export function PhotoCropper({
             setY(0.5);
           }}
         >
+          <Scan size={18} aria-hidden="true" />
           {t("cropReset")}
         </button>
         <button type="button" onClick={onCancel}>
+          <X size={18} aria-hidden="true" />
           {t("cancel")}
         </button>
         <button
@@ -142,6 +148,7 @@ export function PhotoCropper({
             setError(true);
           }}
         >
+          <Check size={18} aria-hidden="true" />
           {t("cropApply")}
         </button>
       </div>

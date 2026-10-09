@@ -8,6 +8,7 @@ import {
 import { dashboardPalette } from "../appearance/dashboard";
 import { Dashboard } from "./dashboard";
 import { useLibrary } from "./library";
+import { Legend } from "./legend";
 import { IconSelect } from "./icon-select";
 import { relationshipPalette, themePalette } from "../appearance/config";
 import Image from "next/image";
@@ -45,7 +46,6 @@ import {
   type Person,
   type Connection,
   displayName,
-  relationshipTypes,
   ownerRelationship,
   normalize,
 } from "../domain/model";
@@ -664,18 +664,7 @@ export function App({
                 <p>{t("emptyHint")}</p>
               </div>
             )}
-          <details className="legend">
-            <summary>{t("legend")}</summary>
-            <div>
-              {relationshipTypes.map((r) => (
-                <span key={r}>
-                  <i style={{ background: colors[r] }} />
-                  {t(r)}
-                </span>
-              ))}
-              <p>{t("legendHelp")}</p>
-            </div>
-          </details>
+          <Legend colors={colors} />
           <div className="canvas-bottom">
             <div className="graph-controls">
               {[
