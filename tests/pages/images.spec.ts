@@ -76,6 +76,7 @@ test("photos and banners survive saving, reopening and removal", async ({
   await page.locator(".people-list button").first().click();
   await page.getByRole("button", { name: "Editar", exact: true }).click();
   await page.locator(".image-picker input").setInputFiles(file);
+  await page.getByRole("button", { name: "Usar recorte", exact: true }).click();
   await expect(page.locator(".image-picker img")).toHaveAttribute(
     "src",
     /^data:image\/jpeg;base64,/,

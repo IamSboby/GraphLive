@@ -1,4 +1,4 @@
-export async function prepareImage(file: File, kind: "portrait" | "banner") {
+export async function readImage(file: File) {
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
     throw new Error("imageInvalid");
   if (file.size > 10 * 1024 * 1024) throw new Error("imageTooLarge");
@@ -8,13 +8,19 @@ export async function prepareImage(file: File, kind: "portrait" | "banner") {
   } catch {
     throw new Error("imageInvalid");
   }
+  if (
+    !bitmap.width ||
+    !bitmap.height ||
+    bitmap.width * bitmap.height > 40000000
+  ) {
+    bitmap.close();
+    throw new Error("imageTooLarge");
+  }
+  return bitmap;
+}
+export async function prepareImage(file: File, kind: "portrait" | "banner") {
+  const bitmap = await readImage(file);
   try {
-    if (
-      !bitmap.width ||
-      !bitmap.height ||
-      bitmap.width * bitmap.height > 40000000
-    )
-      throw new Error("imageTooLarge");
     const canvas = document.createElement("canvas");
     canvas.width = kind === "portrait" ? 256 : 960;
     canvas.height = kind === "portrait" ? 256 : 320;
