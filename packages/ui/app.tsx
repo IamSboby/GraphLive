@@ -35,8 +35,6 @@ import {
   Share2,
   ChevronDown,
   Check,
-  Pause,
-  Play,
   LogOut,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -94,7 +92,7 @@ export function App({
     [filters, setFilters] = useState(emptyFilters),
     [filterOpen, setFilterOpen] = useState(false),
     [list, setList] = useState(false),
-    [paused, setPaused] = useState(false),
+    [layoutBusy, setLayoutBusy] = useState(false),
     [pathTo, setPathTo] = useState(""),
     [systemDark, setSystemDark] = useState(false),
     [welcomeTheme, setWelcomeTheme] = useState<"light" | "dark" | "system">(
@@ -590,6 +588,7 @@ export function App({
             <div className="view-toggle">
               <button
                 aria-label={t("network")}
+                aria-pressed={!list}
                 className={!list ? "active" : ""}
                 onClick={() => setList(false)}
               >
@@ -597,6 +596,7 @@ export function App({
               </button>
               <button
                 aria-label={t("list")}
+                aria-pressed={list}
                 className={list ? "active" : ""}
                 onClick={() => setList(true)}
               >
@@ -604,7 +604,12 @@ export function App({
               </button>
             </div>
           </div>
-          {list ? (
+          <div
+            className="network-view-layer"
+            data-active={list}
+            aria-hidden={!list}
+            inert={!list}
+          >
             <div className="table-wrap">
               <table>
                 <thead>
@@ -636,9 +641,16 @@ export function App({
                 </tbody>
               </table>
             </div>
-          ) : (
+          </div>
+          <div
+            className="network-view-layer"
+            data-active={!list}
+            aria-hidden={list}
+            inert={list}
+          >
             <GraphView
               ref={graph}
+              onLayoutBusy={setLayoutBusy}
               data={data}
               visible={visible}
               selected={selected}
@@ -655,7 +667,7 @@ export function App({
                 }, recordHistory)
               }
             />
-          )}
+          </div>
           {data.people.length <= 1 &&
             !selected &&
             (s.demo || ["done", "skipped"].includes(guideStage)) && (
@@ -688,30 +700,32 @@ export function App({
                   icon: RotateCcw,
                   fn: () => {
                     graph.current?.layout();
-                    setPaused(false);
                   },
                 },
                 {
-                  label: paused ? "resume" : "pause",
-                  icon: paused ? Play : Pause,
-                  fn: () => {
-                    if (paused) graph.current?.layout();
-                    else graph.current?.pause();
-                    setPaused(!paused);
-                  },
+                  label: "undo",
+                  icon: Undo2,
+                  fn: s.undo,
+                  disabled: !s.history.length || busy || layoutBusy,
+                },
+                {
+                  label: "redo",
+                  icon: Redo2,
+                  fn: s.redo,
+                  disabled: !s.future.length || busy || layoutBusy,
                 },
                 {
                   label: "screenshot",
                   icon: Download,
                   fn: () => graph.current?.png(),
                 },
-              ].map(({ label, icon: Icon, fn }) => (
+              ].map(({ label, icon: Icon, fn, disabled }) => (
                 <button
                   key={label}
                   className="icon-button"
                   aria-label={t(label)}
                   title={t(label)}
-                  disabled={list}
+                  disabled={disabled ?? list}
                   onClick={fn}
                 >
                   <Icon size={18} />
@@ -719,24 +733,6 @@ export function App({
               ))}
             </div>
             <span className="pan-hint">{t("hintPan")}</span>
-            <div className="graph-controls">
-              <button
-                className="icon-button"
-                aria-label={t("undo")}
-                disabled={!s.history.length || busy}
-                onClick={s.undo}
-              >
-                <Undo2 size={18} />
-              </button>
-              <button
-                className="icon-button"
-                aria-label={t("redo")}
-                disabled={!s.future.length || busy}
-                onClick={s.redo}
-              >
-                <Redo2 size={18} />
-              </button>
-            </div>
           </div>
           <button
             className={"add-fab " + (guideInvite ? "guide-glow" : "")}

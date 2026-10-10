@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 — 2026-10-10
+
+Primera versión estable. Transiciones entre gráfico y lista sin reiniciar el grafo, fotos recortables y banners, controles animados, selección explícita de países y zoom adaptativo.
+
 ## 0.2.0-rc.1 — 2026-10-06
 
 - Panel de participantes con nombre, correo, permisos y revocación de accesos individuales.

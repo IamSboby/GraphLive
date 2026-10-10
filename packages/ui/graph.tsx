@@ -20,7 +20,6 @@ export type GraphControls = {
   fit: () => void;
   zoom: (factor: number) => void;
   layout: () => void;
-  pause: () => void;
   png: () => void;
   center: (id: string) => void;
   position: (id: string) => { x: number; y: number } | undefined;
@@ -44,11 +43,22 @@ type Props = {
     positions: { id: string; x: number; y: number }[],
     recordHistory: boolean,
   ) => void;
+  onLayoutBusy: (busy: boolean) => void;
   dark: boolean;
   me: string;
 };
 export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
-  { data, visible, selected, path, onSelect, onPositions, dark, me },
+  {
+    data,
+    visible,
+    selected,
+    path,
+    onSelect,
+    onPositions,
+    onLayoutBusy,
+    dark,
+    me,
+  },
   ref,
 ) {
   const { t } = useTranslation();
@@ -67,9 +77,10 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
   } | null>(null);
   const container = useRef<HTMLDivElement>(null),
     cy = useRef<Core | null>(null),
+    motion = useRef<cytoscape.Layouts | null>(null),
     worker = useRef<Worker | null>(null),
-    latest = useRef({ data, onSelect, onPositions });
-  latest.current = { data, onSelect, onPositions };
+    latest = useRef({ data, onSelect, onPositions, onLayoutBusy });
+  latest.current = { data, onSelect, onPositions, onLayoutBusy };
   const savePositions = useCallback((recordHistory = false) => {
     const c = cy.current;
     if (!c) return;
@@ -88,10 +99,14 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
       const c = cy.current;
       if (!c) return;
       worker.current?.terminate();
+      worker.current = null;
+      motion.current?.stop();
+      motion.current = null;
       const w = new Worker(
         new URL("../graph-engine/layout.worker.ts", import.meta.url),
       );
       worker.current = w;
+      latest.current.onLayoutBusy(true);
       if (container.current) container.current.dataset.layout = "running";
       const nodes = c.nodes().map((n) => ({
         id: n.id(),
@@ -109,17 +124,31 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
         event: MessageEvent<{ id: string; x: number; y: number }[]>,
       ) => {
         if (c.destroyed() || worker.current !== w) return;
-        c.batch(() =>
-          event.data.forEach((n) => {
-            const node = c.getElementById(n.id);
-            if (!node.locked()) node.position({ x: n.x, y: n.y });
-          }),
-        );
-        c.fit(undefined, 80);
-        if (container.current) container.current.dataset.layout = "ready";
         w.terminate();
-        worker.current = null;
-        savePositions(!preserveSaved);
+        const positions = Object.fromEntries(
+          event.data.map((n) => [n.id, { x: n.x, y: n.y }]),
+        );
+        const layout = c.layout({
+          name: "preset",
+          positions,
+          fit: true,
+          padding: 80,
+          animate: !window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches,
+          animationDuration: 700,
+          animationEasing: "ease-in-out-cubic",
+          stop: () => {
+            if (c.destroyed() || worker.current !== w) return;
+            worker.current = null;
+            motion.current = null;
+            if (container.current) container.current.dataset.layout = "ready";
+            latest.current.onLayoutBusy(false);
+            savePositions(!preserveSaved);
+          },
+        });
+        motion.current = layout;
+        if (container.current) container.current.dataset.layout = "animating";
+        layout.run();
       };
       w.postMessage({
         nodes,
@@ -142,12 +171,6 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
         });
     },
     layout: () => runLayout(),
-    pause: () => {
-      worker.current?.terminate();
-      worker.current = null;
-      if (container.current) container.current.dataset.layout = "ready";
-      savePositions();
-    },
     center: (id) => {
       const c = cy.current;
       if (c) {
@@ -257,11 +280,17 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     c.on("grab", "node", () => {
       worker.current?.terminate();
       worker.current = null;
+      motion.current?.stop();
+      motion.current = null;
+      latest.current.onLayoutBusy(false);
       if (container.current) container.current.dataset.layout = "ready";
     });
     c.on("dragfree", "node", () => savePositions(true));
     return () => {
       worker.current?.terminate();
+      worker.current = null;
+      motion.current?.stop();
+      motion.current = null;
       element.removeEventListener("wheel", onWheel, true);
       cancelAnimationFrame(frame);
       c.off("pan zoom", syncGrid);
@@ -274,6 +303,14 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
   useEffect(() => {
     const c = cy.current;
     if (!c) return;
+    if (worker.current) {
+      worker.current.terminate();
+      worker.current = null;
+      motion.current?.stop();
+      motion.current = null;
+      latest.current.onLayoutBusy(false);
+      if (container.current) container.current.dataset.layout = "ready";
+    }
     const stats = metrics(data),
       max = Math.max(1, ...[...stats.values()].map((m) => m.degree));
     const savedPositions = new Map(

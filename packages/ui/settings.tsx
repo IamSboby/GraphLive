@@ -169,7 +169,7 @@ export function Settings({
                   JSON.stringify(
                     {
                       app: "GraphLive",
-                      version: "0.2.0-rc.1",
+                      version: "1.0.3",
                       schemaVersion: data.schemaVersion,
                       provider: s.demo ? "demo" : s.repo?.constructor.name,
                       pending: s.dirty,

@@ -2737,3 +2737,49 @@ th {
     transform: none;
   }
 }
+
+.network-view-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.99);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease,
+    visibility 0s 220ms;
+}
+.network-view-layer[data-active="true"] {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition-delay: 0s;
+}
+.view-toggle button {
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+.view-toggle svg {
+  transition: transform 200ms ease;
+}
+.view-toggle button.active svg {
+  transform: scale(1.12);
+}
+@media (prefers-reduced-motion: reduce) {
+  .network-view-layer,
+  .view-toggle button,
+  .view-toggle svg {
+    transition: none;
+    transform: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .canvas-bottom .graph-controls {
+    flex-wrap: wrap;
+    max-width: calc(100vw - 100px);
+  }
+}
