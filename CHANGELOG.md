@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4 — 2026-10-11
+
+Mejoras táctiles, confirmación de etiquetas e intereses, foto inicial y cámara móvil, parámetros de conexión y distribución por etiquetas.
+
 ## 1.0.3 — 2026-10-10
 
 Primera versión estable. Transiciones entre gráfico y lista sin reiniciar el grafo, fotos recortables y banners, controles animados, selección explícita de países y zoom adaptativo.

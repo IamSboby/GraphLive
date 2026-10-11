@@ -733,6 +733,7 @@ export function App({
               ))}
             </div>
             <span className="pan-hint">{t("hintPan")}</span>
+            <span className="pinch-hint">{t("pinchHelp")}</span>
           </div>
           <button
             className={"add-fab " + (guideInvite ? "guide-glow" : "")}

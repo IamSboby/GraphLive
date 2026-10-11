@@ -1,0 +1,7 @@
+GraphLive 1.0.4 — correcciones móviles
+
+- Navegación táctil con pinch-to-zoom y ayuda visible en dispositivos táctiles.
+- Intereses y etiquetas: tecla de confirmación del teclado móvil y botón para añadir sin cambiar de campo.
+- Foto en la introducción, acceso a la cámara móvil y recorte antes de guardar.
+- Frecuencia e intensidad configurables al crear o editar la relación con el propietario.
+- Redistribución con afinidad por etiquetas, respetando posiciones bloqueadas y sin crear relaciones adicionales.

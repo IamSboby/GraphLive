@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { ImagePlus, Trash2, LoaderCircle } from "lucide-react";
+import { ImagePlus, Trash2, LoaderCircle, Camera } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { PhotoCropper } from "./photo-cropper";
@@ -50,11 +50,28 @@ export function ImagePicker({
           type="button"
           className="image-upload-button"
           disabled={disabled || busy || Boolean(crop)}
-          onClick={() => fileInput.current?.click()}
+          onClick={() => {
+            fileInput.current?.removeAttribute("capture");
+            fileInput.current?.click();
+          }}
         >
           <ImagePlus size={20} aria-hidden="true" />
           {t("chooseImage")}
         </button>
+        {kind === "portrait" && (
+          <button
+            type="button"
+            className="image-upload-button"
+            disabled={disabled || busy || Boolean(crop)}
+            onClick={() => {
+              fileInput.current?.setAttribute("capture", "user");
+              fileInput.current?.click();
+            }}
+          >
+            <Camera size={20} aria-hidden="true" />
+            {t("takePhoto")}
+          </button>
+        )}
         <input
           ref={fileInput}
           hidden

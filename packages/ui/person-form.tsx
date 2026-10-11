@@ -60,6 +60,19 @@ export function PersonForm({
         [edge.sourceId, edge.targetId].includes(data.ownerId!),
     ),
   );
+  const ownerConnection =
+    person &&
+    data.connections.find(
+      (edge) =>
+        [edge.sourceId, edge.targetId].includes(person.id) &&
+        [edge.sourceId, edge.targetId].includes(data.ownerId!),
+    );
+  const [intensity, setIntensity] = useState(
+    ownerConnection ? ownerConnection.intensity : 3,
+  );
+  const [frequency, setFrequency] = useState(
+    ownerConnection ? ownerConnection.frequency : 3,
+  );
   const [knowsDirectly, setKnowsDirectly] = useState(false);
   const connectToOwner = person ? hasOwnerConnection : knowsDirectly;
   const [relationship, setRelationship] = useState<RelationshipType>(
@@ -121,8 +134,8 @@ export function PersonForm({
           sourceId: old?.sourceId ?? s.ownerId,
           targetId: old?.targetId ?? p.id,
           relationshipType: relationship,
-          intensity: old?.intensity ?? 3,
-          frequency: old?.frequency ?? 3,
+          intensity,
+          frequency,
           importance: old?.importance ?? 3,
           status: old?.status ?? "confirmed",
           notes: old?.notes ?? "",
@@ -195,6 +208,30 @@ export function PersonForm({
                 ))}
               </select>
             </Field>
+          )}
+          {person?.id !== data.ownerId && connectToOwner && (
+            <>
+              <Field label={t("intensity")}>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={intensity}
+                  onChange={(e) => setIntensity(Number(e.target.value))}
+                />
+                <output>{intensity}/5</output>
+              </Field>
+              <Field label={t("frequency")}>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={frequency}
+                  onChange={(e) => setFrequency(Number(e.target.value))}
+                />
+                <output>{frequency}/5</output>
+              </Field>
+            </>
           )}
           <Field label={t("birthYear")}>
             <input

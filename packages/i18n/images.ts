@@ -1,5 +1,8 @@
 export const imageTranslations = {
   es: {
+    pinchHelp: "Pellizca con dos dedos para ampliar",
+    takePhoto: "Hacer foto",
+    addTagEntry: "Añadir {{label}}",
     cropPhoto: "Recortar foto",
     cropHelp: "Arrastra la imagen o usa los controles para encuadrarla.",
     cropPreview: "Vista previa del recorte",
@@ -22,6 +25,9 @@ export const imageTranslations = {
       "Esta imagen es demasiado grande. Elige una de hasta 10 MB y 40 megapíxeles.",
   },
   en: {
+    pinchHelp: "Pinch with two fingers to zoom",
+    takePhoto: "Take photo",
+    addTagEntry: "Add {{label}}",
     cropPhoto: "Crop photo",
     cropHelp: "Drag the image or use the controls to frame it.",
     cropPreview: "Crop preview",
@@ -44,6 +50,9 @@ export const imageTranslations = {
       "This image is too large. Choose one up to 10 MB and 40 megapixels.",
   },
   it: {
+    pinchHelp: "Pizzica con due dita per ingrandire",
+    takePhoto: "Scatta foto",
+    addTagEntry: "Aggiungi {{label}}",
     cropPhoto: "Ritaglia foto",
     cropHelp: "Trascina l’immagine o usa i controlli per inquadrarla.",
     cropPreview: "Anteprima ritaglio",
@@ -65,6 +74,9 @@ export const imageTranslations = {
     imageTooLarge: "Immagine troppo grande. Massimo 10 MB e 40 megapixel.",
   },
   de: {
+    pinchHelp: "Mit zwei Fingern zoomen",
+    takePhoto: "Foto aufnehmen",
+    addTagEntry: "{{label}} hinzufügen",
     cropPhoto: "Foto zuschneiden",
     cropHelp: "Ziehe das Bild oder verwende die Regler.",
     cropPreview: "Zuschnittvorschau",
@@ -86,6 +98,9 @@ export const imageTranslations = {
     imageTooLarge: "Bild zu groß. Maximal 10 MB und 40 Megapixel.",
   },
   fr: {
+    pinchHelp: "Pincez avec deux doigts pour zoomer",
+    takePhoto: "Prendre une photo",
+    addTagEntry: "Ajouter {{label}}",
     cropPhoto: "Recadrer la photo",
     cropHelp: "Faites glisser l’image ou utilisez les commandes.",
     cropPreview: "Aperçu du recadrage",
@@ -107,6 +122,9 @@ export const imageTranslations = {
     imageTooLarge: "Image trop grande. Maximum 10 Mo et 40 mégapixels.",
   },
   pt: {
+    pinchHelp: "Usa dois dedos para ampliar",
+    takePhoto: "Tirar foto",
+    addTagEntry: "Adicionar {{label}}",
     cropPhoto: "Recortar foto",
     cropHelp: "Arrasta a imagem ou usa os controlos para a enquadrar.",
     cropPreview: "Pré-visualização do recorte",

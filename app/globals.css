@@ -2783,3 +2783,30 @@ th {
     max-width: calc(100vw - 100px);
   }
 }
+
+.image-upload-control {
+  display: grid;
+  gap: 8px;
+}
+.tag-add {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+}
+
+.graph-canvas {
+  overscroll-behavior: none;
+}
+.pinch-hint {
+  display: none;
+}
+@media (pointer: coarse) {
+  .pinch-hint {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+}

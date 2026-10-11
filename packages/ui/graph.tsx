@@ -110,6 +110,9 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
       if (container.current) container.current.dataset.layout = "running";
       const nodes = c.nodes().map((n) => ({
         id: n.id(),
+        tags:
+          latest.current.data.people.find((p) => p.id === n.id())?.profile
+            .tags ?? [],
         x: n.position("x"),
         y: n.position("y"),
         fixed:
@@ -249,6 +252,10 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     const c = cytoscape({
       container: container.current,
       elements: [],
+      zoomingEnabled: true,
+      userZoomingEnabled: true,
+      panningEnabled: true,
+      userPanningEnabled: true,
       minZoom: 0.08,
       maxZoom: 3,
       selectionType: "single",

@@ -2,9 +2,9 @@
 import Image from "next/image";
 import { countryCodes, flagUrl } from "./flags";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useId, useState, type ReactNode } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { normalize } from "../domain/model";
 export function Modal({
   title,
@@ -86,6 +86,7 @@ export function TagInput({
 }) {
   const { t } = useTranslation(),
     [input, setInput] = useState("");
+  const tagInput = useRef<HTMLInputElement>(null);
   const commit = () => {
     const v = input.trim();
     if (
@@ -96,12 +97,16 @@ export function TagInput({
       onChange([...value, v]);
     setInput("");
     onDraftChange("");
+    tagInput.current?.focus();
   };
   return (
     <div className="field">
       <label>
         {label}
         <input
+          ref={tagInput}
+          enterKeyHint="done"
+          autoComplete="off"
           value={input}
           maxLength={200}
           placeholder={t("tagHelp")}
@@ -110,14 +115,35 @@ export function TagInput({
             setInput(e.target.value);
             onDraftChange(e.target.value);
           }}
+          onBeforeInput={(e) => {
+            const event = e.nativeEvent as InputEvent;
+            if (
+              !event.isComposing &&
+              ["insertLineBreak", "insertParagraph"].includes(event.inputType)
+            ) {
+              e.preventDefault();
+              commit();
+            }
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.nativeEvent.isComposing) {
               e.preventDefault();
+              e.stopPropagation();
               commit();
             }
           }}
         />
       </label>
+      <button
+        type="button"
+        className="tag-add"
+        aria-label={t("addTagEntry", { label })}
+        disabled={!input.trim()}
+        onClick={commit}
+      >
+        <Plus size={16} aria-hidden="true" />
+        {t("addTagEntry", { label })}
+      </button>
       <datalist id={label + "-tags"}>
         {suggestions.map((s) => (
           <option key={s} value={s} />
