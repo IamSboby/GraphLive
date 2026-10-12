@@ -51,7 +51,7 @@ test("positions survive adding people, explicit layout, dragging and reopening; 
     await expect(
       dialog
         .getByRole("combobox", { name: "Persona conectada", exact: true })
-        .locator("option"),
+        .locator('option:not([value^="tag:"])'),
     ).toHaveCount(2);
     await expect(
       dialog.getByRole("combobox", { name: "Persona conectada", exact: true }),
