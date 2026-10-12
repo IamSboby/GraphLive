@@ -6,6 +6,7 @@ import {
   type Connection,
   relationshipTypes,
   displayName,
+  followsRelationship,
   normalize,
   edgeInputSchema,
   upsertConnection,
@@ -58,8 +59,8 @@ export function ConnectionForm({
         },
   );
   const [explicit, setExplicit] = useState({
-    sourcePerspective: Boolean(edge),
-    targetPerspective: Boolean(edge),
+    sourcePerspective: !followsRelationship(edge, "source"),
+    targetPerspective: !followsRelationship(edge, "target"),
   });
   const [query, setQuery] = useState(""),
     [error, setError] = useState(false);
@@ -117,7 +118,12 @@ export function ConnectionForm({
               ? (selectedGroup?.ids ?? [])
               : [v.targetId];
           const parsed = targets.map((targetId) =>
-            edgeInputSchema.safeParse({ ...v, targetId }),
+            edgeInputSchema.safeParse({
+              ...v,
+              targetId,
+              sourcePerspectiveAutomatic: !explicit.sourcePerspective,
+              targetPerspectiveAutomatic: !explicit.targetPerspective,
+            }),
           );
           if (!parsed.length || parsed.some((result) => !result.success)) {
             setError(true);

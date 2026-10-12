@@ -11,6 +11,7 @@ import {
   createPerson,
   updatePerson,
   upsertConnection,
+  followsRelationship,
   ownerRelationship,
   personSchema,
   displayName,
@@ -139,8 +140,14 @@ export function PersonForm({
           importance: old?.importance ?? 3,
           status: old?.status ?? "confirmed",
           notes: old?.notes ?? "",
-          sourcePerspective: old?.sourcePerspective ?? null,
-          targetPerspective: old?.targetPerspective ?? null,
+          sourcePerspective: followsRelationship(old, "source")
+            ? relationship
+            : old!.sourcePerspective,
+          sourcePerspectiveAutomatic: followsRelationship(old, "source"),
+          targetPerspective: followsRelationship(old, "target")
+            ? relationship
+            : old!.targetPerspective,
+          targetPerspectiveAutomatic: followsRelationship(old, "target"),
           startedAt: old?.startedAt ?? null,
           endedAt: old?.endedAt ?? null,
         });

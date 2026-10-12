@@ -151,6 +151,8 @@ const edgeObjectSchema = z
     sourceId: z.uuid(),
     targetId: z.uuid(),
     relationshipType: z.enum(relationshipTypes),
+    sourcePerspectiveAutomatic: z.boolean().optional(),
+    targetPerspectiveAutomatic: z.boolean().optional(),
     sourcePerspective: z.enum(relationshipTypes),
     targetPerspective: z.enum(relationshipTypes),
     intensity: z.number().int().min(1).max(5).default(3),
@@ -377,5 +379,16 @@ export function ownerRelationship(s: Snapshot, id: string): RelationshipType {
         e.canonicalKey ===
         (id === s.ownerId ? "" : canonicalKey(id, s.ownerId ?? s.deviceId)),
     )?.relationshipType ?? "acquaintance"
+  );
+}
+
+export function followsRelationship(
+  edge: Connection | undefined,
+  side: "source" | "target",
+) {
+  return (
+    !edge ||
+    (edge[`${side}PerspectiveAutomatic`] ??
+      edge[`${side}Perspective`] === edge.relationshipType)
   );
 }
