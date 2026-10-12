@@ -1,4 +1,5 @@
 "use client";
+import { formatDate, formatBackupDate } from "../i18n/dates";
 import { ImagePicker } from "./image-picker";
 import { DriveBackupSettings } from "./drive-backup-settings";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
@@ -203,10 +204,12 @@ export function Settings({
                   s.repo.backupInfo(id).timestamp
                     ? t(s.repo.backupInfo(id).kind) +
                       " · " +
-                      new Date(s.repo.backupInfo(id).timestamp).toLocaleString(
+                      formatDate(
+                        s.repo.backupInfo(id).timestamp,
                         data.preferences.language,
+                        true,
                       )
-                    : id.slice(0, 19)}
+                    : formatBackupDate(id, data.preferences.language)}
                 </button>
               ))}
             </div>

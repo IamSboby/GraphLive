@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { formatDate } from "../i18n/dates";
 import { relationshipPalette } from "../appearance/config";
 import { useState } from "react";
 import { Modal } from "./primitives";
@@ -30,7 +31,7 @@ export function Details({
   onSelect: (id: string) => void;
   onLock: () => void;
 }) {
-  const { t } = useTranslation(),
+  const { t, i18n } = useTranslation(),
     s = useNetwork(),
     data = s.data!,
     m = metrics(data).get(person.id)!,
@@ -80,9 +81,9 @@ export function Details({
       </p>
       <div className="profile-meta">
         <span>
-          {person.profile.birthYear ??
-            person.profile.birthDate?.slice(0, 4) ??
-            t("unknown")}
+          {person.profile.birthDate
+            ? formatDate(person.profile.birthDate, i18n.language)
+            : (person.profile.birthYear ?? t("unknown"))}
         </span>
         {person.profile.nationalities.map((c) => (
           <Flag key={c} code={c} />
