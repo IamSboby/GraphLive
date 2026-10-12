@@ -181,6 +181,7 @@ export const connectionSchema = z.preprocess(
 export const preferencesSchema = z
   .object({
     banner: embeddedImage(imageLimits.banner),
+    lastEditedAt: z.iso.datetime().optional(),
     networkName: z.string().trim().min(1).max(80).optional(),
     ...appearancePreferencesShape,
     language: z.enum(languageCodes).default("es"),

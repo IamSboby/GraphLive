@@ -12,7 +12,11 @@ import {
 
 export type NetworkEntry = {
   id: string;
-  data: Snapshot;
+  preferences: Snapshot["preferences"];
+  identity: string;
+  peopleCount: number;
+  connectionCount: number;
+  modifiedAt: string;
   shared?: boolean;
   ownerLabel?: string;
   readOnly?: boolean;
@@ -21,6 +25,7 @@ export type NetworkLibrary = {
   provider: "browser" | "drive" | "local" | "server";
   multiple: boolean;
   session?: GoogleSession;
+  directory?: Directory;
   ids(): Promise<string[]>;
   repository(id: string): Repository;
 };
@@ -44,6 +49,7 @@ export function driveLibrary(root: GoogleDriveRepository): NetworkLibrary {
 export function folderLibrary(root: Directory): NetworkLibrary {
   return {
     provider: "local",
+    directory: root,
     multiple: true,
     ids: () => new LocalRepository(root).networkIds(),
     repository: (id) => new LocalRepository(root, id),
