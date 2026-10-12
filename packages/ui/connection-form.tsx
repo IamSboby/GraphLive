@@ -10,6 +10,7 @@ import {
   edgeInputSchema,
   upsertConnection,
 } from "../domain/model";
+import { addMissingConnections } from "./connection-targets";
 import { matchesSearch } from "../graph-engine/metrics";
 import { useNetwork } from "./store";
 import { Modal, Field } from "./primitives";
@@ -124,7 +125,10 @@ export function ConnectionForm({
           }
           s.mutate((d) => {
             for (const result of parsed) {
-              if (result.success) upsertConnection(d, result.data);
+              if (result.success) {
+                if (edge) upsertConnection(d, result.data);
+                else addMissingConnections(d, [result.data]);
+              }
             }
           });
           onClose();
