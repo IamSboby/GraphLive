@@ -2810,3 +2810,94 @@ th {
     pointer-events: none;
   }
 }
+.crop-stage {
+  position: relative;
+  justify-self: center;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  border-radius: 8px;
+}
+.photo-cropper .crop-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+  box-shadow: none;
+  cursor: default;
+}
+.crop-frame {
+  position: absolute;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2000px #0008;
+  cursor: move;
+  touch-action: none;
+}
+.crop-frame:focus-visible,
+.crop-handle:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.crop-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to right,
+      transparent 33%,
+      #ffffff60 33%,
+      #ffffff60 33.5%,
+      transparent 33.5%,
+      transparent 66%,
+      #ffffff60 66%,
+      #ffffff60 66.5%,
+      transparent 66.5%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 33%,
+      #ffffff60 33%,
+      #ffffff60 33.5%,
+      transparent 33.5%,
+      transparent 66%,
+      #ffffff60 66%,
+      #ffffff60 66.5%,
+      transparent 66.5%
+    );
+}
+.crop-handle {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  touch-action: none;
+}
+.crop-handle::after {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  background: #fff;
+  border: 1px solid #111;
+  border-radius: 3px;
+}
+.crop-handle-nw {
+  left: -12px;
+  top: -12px;
+  cursor: nwse-resize;
+}
+.crop-handle-ne {
+  right: -12px;
+  top: -12px;
+  cursor: nesw-resize;
+}
+.crop-handle-sw {
+  left: -12px;
+  bottom: -12px;
+  cursor: nesw-resize;
+}
+.crop-handle-se {
+  right: -12px;
+  bottom: -12px;
+  cursor: nwse-resize;
+}

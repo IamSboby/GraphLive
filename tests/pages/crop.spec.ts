@@ -36,35 +36,37 @@ for (const mobile of [false, true])
     await expect(
       dialog.getByRole("button", { name: "Guardar", exact: true }),
     ).toBeDisabled();
-    const horizontal = crop.getByRole("slider", {
-      name: "Posición horizontal",
-    });
-    await horizontal.fill("0");
-    const pixel = () =>
-      crop
-        .locator("canvas")
-        .evaluate((el) =>
-          Array.from(
-            (el as HTMLCanvasElement)
-              .getContext("2d")!
-              .getImageData(128, 128, 1, 1).data,
-          ),
-        );
-    await expect.poll(pixel).toEqual([255, 0, 0, 255]);
-    await crop.getByRole("slider", { name: "Ampliación" }).fill("2");
-    await expect.poll(pixel).toEqual([255, 0, 0, 255]);
-    await crop.getByRole("button", { name: "Centrar", exact: true }).click();
-    await expect.poll(pixel).toEqual([0, 255, 0, 255]);
+    await expect(crop.getByRole("slider")).toHaveCount(0);
+    const frame = crop.locator(".crop-frame");
     const canvas = crop.locator("canvas");
     await canvas.scrollIntoViewIfNeeded();
     const box = (await canvas.boundingBox())!;
-    await page.mouse.move(box.x + box.width * 0.1, box.y + box.height / 2);
+    const selected = (await frame.boundingBox())!;
+    await page.mouse.move(
+      selected.x + selected.width / 2,
+      selected.y + selected.height / 2,
+    );
     await page.mouse.down();
-    await page.mouse.move(box.x + box.width * 0.9, box.y + box.height / 2, {
-      steps: 5,
+    await page.mouse.move(box.x + 1, selected.y + selected.height / 2, {
+      steps: 8,
     });
     await page.mouse.up();
-    await expect.poll(pixel).toEqual([255, 0, 0, 255]);
+    await expect
+      .poll(async () => (await frame.boundingBox())!.x)
+      .toBeCloseTo(box.x, 0);
+    const handle = crop.locator(".crop-handle-se");
+    const h = (await handle.boundingBox())!;
+    await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(
+      h.x + h.width / 2 - selected.width / 4,
+      h.y + h.height / 2 - selected.height / 4,
+      { steps: 8 },
+    );
+    await page.mouse.up();
+    await expect
+      .poll(async () => (await frame.boundingBox())!.width)
+      .toBeLessThan(selected.width * 0.85);
     await page.screenshot({
       path: `../../work/crop-${mobile ? "mobile" : "desktop"}.png`,
     });
@@ -73,6 +75,19 @@ for (const mobile of [false, true])
       .click();
     const preview = dialog.locator(".image-picker img");
     const original = await preview.getAttribute("src");
+    const pixel = await preview.evaluate(async (el) => {
+      const img = el as HTMLImageElement;
+      await img.decode();
+      const c = document.createElement("canvas");
+      c.width = 256;
+      c.height = 256;
+      const ctx = c.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
+      return Array.from(ctx.getImageData(128, 128, 1, 1).data);
+    });
+    expect(pixel[0]).toBeGreaterThan(240);
+    expect(pixel[1]).toBeLessThan(10);
+    expect(pixel[2]).toBeLessThan(10);
     await expect(
       dialog.getByRole("button", { name: "Guardar", exact: true }),
     ).toBeEnabled();
