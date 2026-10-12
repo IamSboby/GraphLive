@@ -1,5 +1,7 @@
 export const imageTranslations = {
   es: {
+    importAsNewNetwork:
+      "Se importará como una red nueva, sin sustituir las existentes.",
     connectionTag: "Etiqueta",
     connectionGroupHelp:
       "Se crearán {{count}} conexiones con los mismos valores para:",
@@ -30,6 +32,8 @@ export const imageTranslations = {
       "Esta imagen es demasiado grande. Elige una de hasta 10 MB y 40 megapíxeles.",
   },
   en: {
+    importAsNewNetwork:
+      "Import as a new network without replacing existing networks.",
     connectionTag: "Tag",
     connectionGroupHelp:
       "Create {{count}} connections with the same settings for:",
@@ -60,6 +64,8 @@ export const imageTranslations = {
       "This image is too large. Choose one up to 10 MB and 40 megapixels.",
   },
   it: {
+    importAsNewNetwork:
+      "Importa come nuova rete senza sostituire quelle esistenti.",
     connectionTag: "Etichetta",
     connectionGroupHelp:
       "Verranno create {{count}} connessioni con gli stessi valori per:",
@@ -89,6 +95,8 @@ export const imageTranslations = {
     imageTooLarge: "Immagine troppo grande. Massimo 10 MB e 40 megapixel.",
   },
   de: {
+    importAsNewNetwork:
+      "Als neues Netzwerk importieren, ohne vorhandene zu ersetzen.",
     connectionTag: "Tag",
     connectionGroupHelp:
       "{{count}} Verbindungen mit denselben Einstellungen für:",
@@ -118,6 +126,8 @@ export const imageTranslations = {
     imageTooLarge: "Bild zu groß. Maximal 10 MB und 40 Megapixel.",
   },
   fr: {
+    importAsNewNetwork:
+      "Importer comme nouveau réseau sans remplacer les réseaux existants.",
     connectionTag: "Étiquette",
     connectionGroupHelp:
       "Créer {{count}} connexions avec les mêmes réglages pour :",
@@ -147,6 +157,8 @@ export const imageTranslations = {
     imageTooLarge: "Image trop grande. Maximum 10 Mo et 40 mégapixels.",
   },
   pt: {
+    importAsNewNetwork:
+      "Importar como uma nova rede sem substituir as existentes.",
     connectionTag: "Etiqueta",
     connectionGroupHelp:
       "Serão criadas {{count}} ligações com os mesmos valores para:",

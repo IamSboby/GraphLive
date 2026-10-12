@@ -14,7 +14,10 @@ import {
   RefreshCw,
   Pencil,
   Share2,
+  Upload,
 } from "lucide-react";
+import { importFile } from "../storage-core/export";
+import type { Snapshot } from "../domain/model";
 import { themePalette } from "../appearance/config";
 import type { Repository } from "../storage-core";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
@@ -50,6 +53,9 @@ export function Dashboard({
   const { library, ownerName, activeId } = useLibrary();
   const active = useNetwork((s) => s.data);
   const demo = useNetwork((s) => s.demo);
+  const [importPreview, setImportPreview] = useState<Snapshot | null>(null);
+  const [importName, setImportName] = useState("");
+  const importInput = useRef<HTMLInputElement>(null);
   const [entries, setEntries] = useState<NetworkEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -300,6 +306,30 @@ export function Dashboard({
       setBusy(false);
     }
   }
+  async function importNetwork() {
+    if (!library || !importPreview || !importName.trim()) return;
+    setBusy(true);
+    setError("");
+    try {
+      if (!(await useNetwork.getState().prepareSwitch()))
+        throw new Error("resolveBeforeSwitch");
+      const id = library.multiple ? crypto.randomUUID() : "default";
+      const repo = library.repository(id);
+      if (!library.multiple && (await repo.load()).people.length)
+        throw new Error("storageError");
+      const copy = structuredClone(importPreview);
+      copy.revision = 0;
+      copy.deviceId = crypto.randomUUID();
+      copy.preferences.networkName = importName.trim();
+      await repo.save(copy, 0);
+      setImportPreview(null);
+      setReload((v) => v + 1);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "storageError");
+    } finally {
+      setBusy(false);
+    }
+  }
   async function create() {
     if (!library || !name.trim() || !identity.trim()) return;
     setBusy(true);
@@ -427,7 +457,89 @@ export function Dashboard({
           <Plus size={20} />
           {t("newNetwork")}
         </button>
+        <button
+          disabled={
+            busy || loading || (!library?.multiple && entries.length > 0)
+          }
+          onClick={() => importInput.current?.click()}
+          data-testid="import-network"
+        >
+          <Upload size={20} />
+          {t("import")}
+        </button>
+        <input
+          ref={importInput}
+          type="file"
+          accept=".json,.zip"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (!file) return;
+            setBusy(true);
+            setError("");
+            void importFile(file)
+              .then((data) => {
+                if (!data.people.length) throw new Error("invalidData");
+                setImportName(
+                  data.preferences.networkName ||
+                    file.name.replace(/\.(zip|json)$/i, ""),
+                );
+                setImportPreview(data);
+              })
+              .catch((e) =>
+                setError(
+                  e instanceof Error && e.message === "tooLarge"
+                    ? "tooLarge"
+                    : "invalidData",
+                ),
+              )
+              .finally(() => setBusy(false));
+          }}
+        />
       </section>
+      {importPreview && (
+        <Modal
+          title={t("importPreview")}
+          onClose={() => {
+            if (!busy) setImportPreview(null);
+          }}
+        >
+          <form
+            className="form-content"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void importNetwork();
+            }}
+          >
+            <Field label={t("networkName")}>
+              <input
+                required
+                maxLength={80}
+                value={importName}
+                onChange={(e) => setImportName(e.target.value)}
+              />
+            </Field>
+            <p>
+              {importPreview.people.length} {t("people")} ·{" "}
+              {importPreview.connections.length} {t("connections")}
+            </p>
+            <p>{t("importAsNewNetwork")}</p>
+            <footer className="modal-actions">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setImportPreview(null)}
+              >
+                {t("cancel")}
+              </button>
+              <button className="primary" disabled={busy || !importName.trim()}>
+                {t("import")}
+              </button>
+            </footer>
+          </form>
+        </Modal>
+      )}
       {library?.session && (
         <div
           className="network-tabs"
