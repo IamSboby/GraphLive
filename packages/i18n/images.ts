@@ -1,5 +1,8 @@
 export const imageTranslations = {
   es: {
+    connectionTag: "Etiqueta",
+    connectionGroupHelp:
+      "Se crearán {{count}} conexiones con los mismos valores para:",
     pinchHelp: "Pellizca con dos dedos para ampliar",
     takePhoto: "Hacer foto",
     addTagEntry: "Añadir {{label}}",
@@ -27,6 +30,9 @@ export const imageTranslations = {
       "Esta imagen es demasiado grande. Elige una de hasta 10 MB y 40 megapíxeles.",
   },
   en: {
+    connectionTag: "Tag",
+    connectionGroupHelp:
+      "Create {{count}} connections with the same settings for:",
     pinchHelp: "Pinch with two fingers to zoom",
     takePhoto: "Take photo",
     addTagEntry: "Add {{label}}",
@@ -54,6 +60,9 @@ export const imageTranslations = {
       "This image is too large. Choose one up to 10 MB and 40 megapixels.",
   },
   it: {
+    connectionTag: "Etichetta",
+    connectionGroupHelp:
+      "Verranno create {{count}} connessioni con gli stessi valori per:",
     pinchHelp: "Pizzica con due dita per ingrandire",
     takePhoto: "Scatta foto",
     addTagEntry: "Aggiungi {{label}}",
@@ -80,6 +89,9 @@ export const imageTranslations = {
     imageTooLarge: "Immagine troppo grande. Massimo 10 MB e 40 megapixel.",
   },
   de: {
+    connectionTag: "Tag",
+    connectionGroupHelp:
+      "{{count}} Verbindungen mit denselben Einstellungen für:",
     pinchHelp: "Mit zwei Fingern zoomen",
     takePhoto: "Foto aufnehmen",
     addTagEntry: "{{label}} hinzufügen",
@@ -106,6 +118,9 @@ export const imageTranslations = {
     imageTooLarge: "Bild zu groß. Maximal 10 MB und 40 Megapixel.",
   },
   fr: {
+    connectionTag: "Étiquette",
+    connectionGroupHelp:
+      "Créer {{count}} connexions avec les mêmes réglages pour :",
     pinchHelp: "Pincez avec deux doigts pour zoomer",
     takePhoto: "Prendre une photo",
     addTagEntry: "Ajouter {{label}}",
@@ -132,6 +147,9 @@ export const imageTranslations = {
     imageTooLarge: "Image trop grande. Maximum 10 Mo et 40 mégapixels.",
   },
   pt: {
+    connectionTag: "Etiqueta",
+    connectionGroupHelp:
+      "Serão criadas {{count}} ligações com os mesmos valores para:",
     pinchHelp: "Usa dois dedos para ampliar",
     takePhoto: "Tirar foto",
     addTagEntry: "Adicionar {{label}}",
