@@ -11,6 +11,7 @@ import {
   type Person,
   type Connection,
   displayName,
+  visibleYear,
   ownerRelationship,
   removeEntity,
 } from "../domain/model";
@@ -80,11 +81,13 @@ export function Details({
         {[person.profile.firstName, person.profile.lastName].join(" ")}
       </p>
       <div className="profile-meta">
-        <span>
-          {person.profile.birthDate
-            ? formatDate(person.profile.birthDate, i18n.language)
-            : (person.profile.birthYear ?? t("unknown"))}
-        </span>
+        {visibleYear(person.profile, data.preferences) && (
+          <span>
+            {person.profile.birthDate
+              ? formatDate(person.profile.birthDate, i18n.language)
+              : visibleYear(person.profile, data.preferences)}
+          </span>
+        )}
         {person.profile.nationalities.map((c) => (
           <Flag key={c} code={c} />
         ))}
@@ -164,6 +167,22 @@ export function Details({
             ))}
           </div>
         </>
+      )}
+      {person.profile.socialProfiles.length > 0 && (
+        <section className="social-links">
+          <h3>{t("socialProfiles")}</h3>
+          {person.profile.socialProfiles.map((social, i) => (
+            <a
+              key={i}
+              href={social.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {social.platform === "other" ? social.label : social.platform}
+              <ArrowUpRight size={16} />
+            </a>
+          ))}
+        </section>
       )}
       {person.profile.notes && (
         <>

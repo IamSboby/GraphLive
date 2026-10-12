@@ -44,6 +44,7 @@ import {
   type Person,
   type Connection,
   displayName,
+  visibleYear,
   ownerRelationship,
   normalize,
 } from "../domain/model";
@@ -77,6 +78,9 @@ export function App({
   authError: boolean;
 }) {
   const router = useRouter();
+  const animateEntry = useLibrary((s) =>
+    Boolean(s.animationId && s.animationId === s.activeId),
+  );
   const { t, i18n } = useTranslation(),
     s = useNetwork(),
     data = s.data;
@@ -632,7 +636,7 @@ export function App({
                           {displayName(p)}
                         </button>
                       </td>
-                      <td>{p.profile.birthYear ?? t("unknown")}</td>
+                      <td>{visibleYear(p.profile, data.preferences)}</td>
                       <td>{t(ownerRelationship(data, p.id))}</td>
                       <td>{stats.get(p.id)?.degree}</td>
                       <td>{stats.get(p.id)?.affinity ?? "—"}</td>
@@ -650,6 +654,8 @@ export function App({
           >
             <GraphView
               ref={graph}
+              animateEntry={animateEntry}
+              onEntryComplete={() => useLibrary.getState().finishEntry()}
               onLayoutBusy={setLayoutBusy}
               data={data}
               visible={visible}
@@ -676,7 +682,7 @@ export function App({
                 <p>{t("emptyHint")}</p>
               </div>
             )}
-          <Legend colors={colors} />
+          <Legend colors={colors} hidden={list} />
           <div className="canvas-bottom">
             <div className="graph-controls">
               {[

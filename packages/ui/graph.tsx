@@ -10,11 +10,17 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import cytoscape, { type Core, type StylesheetJson } from "cytoscape";
-import { type Snapshot, displayName, ownerRelationship } from "../domain/model";
+import {
+  type Snapshot,
+  displayName,
+  ownerRelationship,
+  visibleYear,
+} from "../domain/model";
 import { relationshipPalette, themePalette } from "../appearance/config";
 import { Flag } from "./primitives";
 import { flagUrl } from "./flags";
 import { metrics, nodeSize } from "../graph-engine/metrics";
+import { newPersonPosition } from "../graph-engine/new-person-position";
 import { wheelZoomDelta } from "../graph-engine/wheel-zoom";
 export type GraphControls = {
   fit: () => void;
@@ -34,6 +40,8 @@ const flagValues = <T extends string | number>(
     : Array.from({ length: Math.max(1, n.data("flags").length) }, () => value);
 
 type Props = {
+  animateEntry?: boolean;
+  onEntryComplete?: () => void;
   data: Snapshot;
   visible: Set<string>;
   selected: string | null;
@@ -50,6 +58,8 @@ type Props = {
 export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
   {
     data,
+    animateEntry,
+    onEntryComplete,
     visible,
     selected,
     path,
@@ -75,6 +85,9 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     x: number;
     y: number;
   } | null>(null);
+  const entryComplete = useRef(onEntryComplete);
+  entryComplete.current = onEntryComplete;
+  const effects = useRef<HTMLCanvasElement>(null);
   const container = useRef<HTMLDivElement>(null),
     cy = useRef<Core | null>(null),
     motion = useRef<cytoscape.Layouts | null>(null),
@@ -95,7 +108,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     if (changed.length) latest.current.onPositions(changed, recordHistory);
   }, []);
   const runLayout = useCallback(
-    (preserveSaved = false) => {
+    (preserveSaved = false, fit = true) => {
       const c = cy.current;
       if (!c) return;
       worker.current?.terminate();
@@ -134,7 +147,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
         const layout = c.layout({
           name: "preset",
           positions,
-          fit: true,
+          fit,
           padding: 80,
           animate: !window.matchMedia("(prefers-reduced-motion: reduce)")
             .matches,
@@ -344,10 +357,9 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
               id: p.id,
               label:
                 (p.id === data.ownerId ? me : displayName(p)).slice(0, 22) +
-                "\n" +
-                (p.profile.birthYear ??
-                  p.profile.birthDate?.slice(0, 4) ??
-                  "N/A"),
+                (visibleYear(p.profile, data.preferences)
+                  ? "\n" + visibleYear(p.profile, data.preferences)
+                  : ""),
               portrait: data.preferences.showPhotos
                 ? p.profile.portrait
                 : undefined,
@@ -359,13 +371,15 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
               size: nodeSize(score, max),
               owner: p.id === data.ownerId,
               bestFriend: ownerRelationship(data, p.id) === "bestFriend",
+              married: ownerRelationship(data, p.id) === "married",
             },
             position: {
               ...(p.display.manualPosition ??
-                savedPositions.get(p.id) ?? {
+                savedPositions.get(p.id) ??
+                newPersonPosition(p, data.people, savedPositions, {
                   x: Math.cos(angle) * radius,
                   y: Math.sin(angle) * radius,
-                }),
+                })),
             },
             locked: p.display.positionLocked,
           };
@@ -384,6 +398,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
             width: 0.7 + e.intensity * 0.55,
             opacity: 0.25 + e.frequency * 0.12,
             status: e.status,
+            married: e.relationshipType === "married",
           },
         })),
       );
@@ -505,6 +520,14 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
         selector: 'edge[status != "confirmed"]',
         style: { "line-style": "dashed" },
       },
+      {
+        selector: "node[?married], edge[?married]",
+        style: {
+          "underlay-color": colors.married,
+          "underlay-opacity": 0.22,
+          "underlay-padding": 6,
+        },
+      },
       { selector: ".muted", style: { opacity: 0.14 } },
       {
         selector: ".chosen",
@@ -565,6 +588,151 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     if (container.current) observer.observe(container.current);
     return () => observer.disconnect();
   }, []);
+  useEffect(() => {
+    if (!animateEntry) return;
+    const c = cy.current,
+      element = container.current;
+    if (!c || !element) return;
+    let frame = 0,
+      start = 0;
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    element.dataset.entry = "waiting";
+    const tick = (time: number) => {
+      if (c.destroyed()) return;
+      if (element.dataset.layout !== "ready") {
+        frame = requestAnimationFrame(tick);
+        return;
+      }
+      if (reduced) {
+        element.dataset.entry = "ready";
+        entryComplete.current?.();
+        return;
+      }
+      if (!start) start = time;
+      element.dataset.entry = "animating";
+      const progress = Math.min(1, (time - start) / 1100),
+        nodes = c.nodes(),
+        edges = c.edges();
+      c.batch(() => {
+        nodes.forEach(
+          (n, i) =>
+            void n.style(
+              "opacity",
+              Math.min(
+                1,
+                Math.max(
+                  0,
+                  (progress - (i / Math.max(1, nodes.length)) * 0.55) / 0.25,
+                ),
+              ),
+            ),
+        );
+        edges.forEach(
+          (e, i) =>
+            void e.style(
+              "opacity",
+              Math.min(
+                1,
+                Math.max(
+                  0,
+                  (progress - 0.2 - (i / Math.max(1, edges.length)) * 0.55) /
+                    0.25,
+                ),
+              ) * Number(e.data("opacity")),
+            ),
+        );
+      });
+      if (progress < 1) frame = requestAnimationFrame(tick);
+      else {
+        c.elements().removeStyle("opacity");
+        element.dataset.entry = "ready";
+        entryComplete.current?.();
+      }
+    };
+    frame = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(frame);
+      if (!c.destroyed()) c.elements().removeStyle("opacity");
+    };
+  }, [animateEntry]);
+  useEffect(() => {
+    const c = cy.current,
+      canvas = effects.current;
+    if (!c || !canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    let frame = 0,
+      last = 0;
+    const draw = (time: number) => {
+      if (c.destroyed()) return;
+      if (time - last < 40 && !reduced) {
+        frame = requestAnimationFrame(draw);
+        return;
+      }
+      last = time;
+      const rect = canvas.getBoundingClientRect(),
+        ratio = Math.min(devicePixelRatio || 1, 2);
+      if (
+        canvas.width !== Math.round(rect.width * ratio) ||
+        canvas.height !== Math.round(rect.height * ratio)
+      ) {
+        canvas.width = Math.round(rect.width * ratio);
+        canvas.height = Math.round(rect.height * ratio);
+      }
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      if (!document.hidden && !canvas.closest("[inert]")) {
+        const edges = c
+          .edges("[?married]")
+          .filter((e) => !e.hasClass("filtered") && !e.hasClass("muted"));
+        edges.slice(0, 60).forEach((edge, i) => {
+          const a = edge.source().renderedPosition(),
+            b = edge.target().renderedPosition();
+          for (let j = 0; j < 3; j++) {
+            const phase = reduced
+              ? (j + 1) / 4
+              : (time / 3500 + j / 3 + i * 0.13) % 1;
+            const x = a.x + (b.x - a.x) * phase,
+              y = a.y + (b.y - a.y) * phase;
+            const size = 2 + Math.sin(phase * Math.PI) * 2;
+            ctx.globalAlpha = reduced
+              ? 0.75
+              : 0.25 + 0.7 * Math.sin(phase * Math.PI);
+            ctx.shadowColor = colors.married;
+            ctx.shadowBlur = 10;
+            ctx.fillStyle = "#fff";
+            ctx.beginPath();
+            ctx.moveTo(x, y - size);
+            ctx.lineTo(x + size * 0.35, y - size * 0.35);
+            ctx.lineTo(x + size, y);
+            ctx.lineTo(x + size * 0.35, y + size * 0.35);
+            ctx.lineTo(x, y + size);
+            ctx.lineTo(x - size * 0.35, y + size * 0.35);
+            ctx.lineTo(x - size, y);
+            ctx.lineTo(x - size * 0.35, y - size * 0.35);
+            ctx.closePath();
+            ctx.fill();
+          }
+        });
+      }
+      if (!reduced && c.edges("[?married]").length)
+        frame = requestAnimationFrame(draw);
+    };
+    const render = () => {
+      if (reduced || !frame) draw(performance.now());
+    };
+    c.on("render", render);
+    draw(performance.now());
+    return () => {
+      cancelAnimationFrame(frame);
+      c.off("render", render);
+    };
+  }, [data, colors.married]);
   const hovered = hover
     ? data.people.find((p) => p.id === hover.id)
     : undefined;
@@ -577,6 +745,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
         role="img"
         aria-label="GraphLive"
       />
+      <canvas ref={effects} className="marriage-effects" aria-hidden="true" />
       {hover && hovered && stat && (
         <div
           className="graph-tooltip"
@@ -589,7 +758,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
           </span>
           <span>{hovered.profile.nickname}</span>
           <span>
-            {hovered.profile.birthYear ?? t("unknown")} ·{" "}
+            {visibleYear(hovered.profile, data.preferences)}{" "}
             {hovered.profile.nationalities.map((code) => (
               <Flag key={code} code={code} />
             ))}{" "}

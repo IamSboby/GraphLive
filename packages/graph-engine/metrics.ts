@@ -8,6 +8,7 @@ export const affinityWeights: Record<RelationshipType, number> = {
   bestFriend: 100,
   closeFriends: 90,
   partner: 100,
+  married: 100,
   crush: 60,
   family: 75,
   friend: 70,

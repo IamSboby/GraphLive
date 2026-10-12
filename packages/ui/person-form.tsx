@@ -1,4 +1,6 @@
 "use client";
+import { SocialProfiles } from "./social-profiles";
+import { socialUrl } from "../domain/social";
 import { ImagePicker } from "./image-picker";
 import { useState, useRef, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -37,6 +39,7 @@ export function PersonForm({
   const drafts = useRef({ interests: "", tags: "" });
   const [profile, setProfile] = useState<Profile>(
     person?.profile ?? {
+      socialProfiles: [],
       firstName: "",
       lastName: "",
       nickname: "",
@@ -90,6 +93,10 @@ export function PersonForm({
     if (imageBusy) return;
     const parsed = profileSchema.safeParse({
       ...profile,
+      socialProfiles: profile.socialProfiles.map((p) => ({
+        ...p,
+        url: socialUrl(p.platform, p.url),
+      })),
       interests: [
         ...profile.interests,
         ...(drafts.current.interests.trim()
@@ -344,6 +351,10 @@ export function PersonForm({
             />
           </Field>
         </div>
+        <SocialProfiles
+          value={profile.socialProfiles}
+          onChange={(v) => set("socialProfiles", v)}
+        />
         <Field label={t("notes")}>
           <textarea
             value={profile.notes}

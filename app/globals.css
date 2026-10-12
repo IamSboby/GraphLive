@@ -2901,3 +2901,114 @@ th {
   bottom: -12px;
   cursor: nwse-resize;
 }
+.legend {
+  transition:
+    transform 260ms ease,
+    opacity 220ms ease,
+    visibility 260ms;
+}
+.legend[data-hidden="true"] {
+  transform: translateY(90px) scale(0.94);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.married-swatch {
+  box-shadow:
+    0 0 5px currentColor,
+    0 0 12px currentColor;
+  position: relative;
+}
+.married-swatch::after {
+  content: "✦";
+  position: absolute;
+  color: white;
+  font-size: 10px;
+  right: -5px;
+  top: -5px;
+  animation: married-twinkle 1.8s ease-in-out infinite alternate;
+}
+@keyframes married-twinkle {
+  from {
+    opacity: 0.3;
+    transform: scale(0.7) rotate(0deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.2) rotate(30deg);
+  }
+}
+.marriage-effects {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .legend {
+    transition: none;
+  }
+  .married-swatch::after {
+    animation: none;
+  }
+}
+.social-editor {
+  display: grid;
+  gap: 12px;
+}
+.social-editor header,
+.social-editor h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.social-editor header {
+  justify-content: space-between;
+}
+.social-editor-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  animation: crop-appear 200ms ease-out;
+}
+.social-editor-row .field {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.social-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.social-links h3 {
+  width: 100%;
+}
+.social-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--accent);
+}
+.social-links a:hover {
+  background: var(--soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  .social-editor-row {
+    animation: none;
+  }
+}
+.graph-canvas[data-entry="waiting"] {
+  opacity: 0;
+}

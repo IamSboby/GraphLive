@@ -1,5 +1,17 @@
 export const imageTranslations = {
   es: {
+    socialProfiles: "Redes sociales",
+    addSocialProfile: "Añadir red social",
+    socialPlatform: "Red social",
+    otherSocial: "Otra red",
+    socialName: "Nombre de la red",
+    socialAddress: "Usuario o URL del perfil",
+    removeSocialProfile: "Eliminar {{name}}",
+    married: "Casados",
+    hideUnknownYears: "Ocultar años no definidos (N/A)",
+    hideYears: "Ocultar todos los años",
+    legendHelp:
+      "Tamaño: métrica elegida. Grosor: intensidad. Opacidad: frecuencia. Degradado: percepción de cada lado. Discontinua: incierta o finalizada. Borde: relación contigo; tu perfil usa un degradado. Selección: halo del tema. Casados: brillo rojo.",
     importAsNewNetwork:
       "Se importará como una red nueva, sin sustituir las existentes.",
     connectionTag: "Etiqueta",
@@ -32,6 +44,18 @@ export const imageTranslations = {
       "Esta imagen es demasiado grande. Elige una de hasta 10 MB y 40 megapíxeles.",
   },
   en: {
+    socialProfiles: "Social profiles",
+    addSocialProfile: "Add social profile",
+    socialPlatform: "Platform",
+    otherSocial: "Other platform",
+    socialName: "Platform name",
+    socialAddress: "Username or profile URL",
+    removeSocialProfile: "Remove {{name}}",
+    married: "Married",
+    hideUnknownYears: "Hide unknown years (N/A)",
+    hideYears: "Hide all years",
+    legendHelp:
+      "Size: selected metric. Width: intensity. Opacity: frequency. Gradient: each person’s perspective. Dashed: uncertain or ended. Border: relationship to you; your profile has a gradient. Selection: theme halo. Married: red glow.",
     importAsNewNetwork:
       "Import as a new network without replacing existing networks.",
     connectionTag: "Tag",
@@ -64,6 +88,18 @@ export const imageTranslations = {
       "This image is too large. Choose one up to 10 MB and 40 megapixels.",
   },
   it: {
+    socialProfiles: "Profili social",
+    addSocialProfile: "Aggiungi profilo social",
+    socialPlatform: "Piattaforma",
+    otherSocial: "Altra piattaforma",
+    socialName: "Nome della piattaforma",
+    socialAddress: "Nome utente o URL del profilo",
+    removeSocialProfile: "Rimuovi {{name}}",
+    married: "Sposati",
+    hideUnknownYears: "Nascondi anni non definiti (N/A)",
+    hideYears: "Nascondi tutti gli anni",
+    legendHelp:
+      "Dimensione: metrica scelta. Spessore: intensità. Opacità: frequenza. Sfumatura: percezioni dei due lati. Tratteggio: incerta o terminata. Bordo: relazione con te; il tuo profilo ha una sfumatura. Selezione: alone del tema. Sposati: bagliore rosso.",
     importAsNewNetwork:
       "Importa come nuova rete senza sostituire quelle esistenti.",
     connectionTag: "Etichetta",
@@ -95,6 +131,18 @@ export const imageTranslations = {
     imageTooLarge: "Immagine troppo grande. Massimo 10 MB e 40 megapixel.",
   },
   de: {
+    socialProfiles: "Social-Media-Profile",
+    addSocialProfile: "Profil hinzufügen",
+    socialPlatform: "Plattform",
+    otherSocial: "Andere Plattform",
+    socialName: "Name der Plattform",
+    socialAddress: "Benutzername oder Profil-URL",
+    removeSocialProfile: "{{name}} entfernen",
+    married: "Verheiratet",
+    hideUnknownYears: "Unbekannte Jahre ausblenden (N/A)",
+    hideYears: "Alle Jahre ausblenden",
+    legendHelp:
+      "Größe: gewählte Kennzahl. Breite: Intensität. Deckkraft: Häufigkeit. Verlauf: Perspektiven beider Seiten. Gestrichelt: ungewiss oder beendet. Rand: Beziehung zu dir; dein Profil hat einen Verlauf. Auswahl: Themenhalo. Verheiratet: rotes Leuchten.",
     importAsNewNetwork:
       "Als neues Netzwerk importieren, ohne vorhandene zu ersetzen.",
     connectionTag: "Tag",
@@ -126,6 +174,18 @@ export const imageTranslations = {
     imageTooLarge: "Bild zu groß. Maximal 10 MB und 40 Megapixel.",
   },
   fr: {
+    socialProfiles: "Réseaux sociaux",
+    addSocialProfile: "Ajouter un profil",
+    socialPlatform: "Plateforme",
+    otherSocial: "Autre plateforme",
+    socialName: "Nom de la plateforme",
+    socialAddress: "Identifiant ou URL du profil",
+    removeSocialProfile: "Supprimer {{name}}",
+    married: "Mariés",
+    hideUnknownYears: "Masquer les années inconnues (N/A)",
+    hideYears: "Masquer toutes les années",
+    legendHelp:
+      "Taille : indicateur choisi. Épaisseur : intensité. Opacité : fréquence. Dégradé : perceptions des deux côtés. Pointillés : incertain ou terminé. Bordure : relation avec vous ; votre profil a un dégradé. Sélection : halo du thème. Mariés : lueur rouge.",
     importAsNewNetwork:
       "Importer comme nouveau réseau sans remplacer les réseaux existants.",
     connectionTag: "Étiquette",
@@ -157,6 +217,18 @@ export const imageTranslations = {
     imageTooLarge: "Image trop grande. Maximum 10 Mo et 40 mégapixels.",
   },
   pt: {
+    socialProfiles: "Redes sociais",
+    addSocialProfile: "Adicionar perfil",
+    socialPlatform: "Plataforma",
+    otherSocial: "Outra plataforma",
+    socialName: "Nome da plataforma",
+    socialAddress: "Utilizador ou URL do perfil",
+    removeSocialProfile: "Remover {{name}}",
+    married: "Casados",
+    hideUnknownYears: "Ocultar anos desconhecidos (N/A)",
+    hideYears: "Ocultar todos os anos",
+    legendHelp:
+      "Tamanho: métrica escolhida. Espessura: intensidade. Opacidade: frequência. Gradiente: perceções dos dois lados. Tracejado: incerta ou terminada. Contorno: relação contigo; o teu perfil tem um gradiente. Seleção: halo do tema. Casados: brilho vermelho.",
     importAsNewNetwork:
       "Importar como uma nova rede sem substituir as existentes.",
     connectionTag: "Etiqueta",

@@ -257,8 +257,7 @@ export const es = {
   pathTo: "Ruta hacia…",
   noPath: "No existe una ruta",
   legend: "Leyenda",
-  legendHelp:
-    "Tamaño: métrica elegida. Grosor: intensidad. Opacidad: frecuencia. Discontinua: incierta o finalizada. Borde oscuro: tu perfil. Selección: borde azul.",
+  legendHelp: imageTranslations.es.legendHelp,
   fit: "Centrar red",
   zoomIn: "Acercar",
   zoomOut: "Alejar",
@@ -607,8 +606,7 @@ export const en: Record<keyof typeof es, string> = {
   pathTo: "Path to…",
   noPath: "No path exists",
   legend: "Legend",
-  legendHelp:
-    "Size: chosen metric. Width: intensity. Opacity: frequency. Dashed: uncertain or ended. Dark border: your profile. Selection: blue border.",
+  legendHelp: imageTranslations.en.legendHelp,
   fit: "Fit network",
   zoomIn: "Zoom in",
   zoomOut: "Zoom out",

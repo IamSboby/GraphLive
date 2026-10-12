@@ -110,6 +110,8 @@ export function Settings({
               "showLabels",
               "showOwner",
               "showPhotos",
+              "hideUnknownYears",
+              "hideYears",
               "searchNotes",
               "autoBackup",
             ] as const
@@ -121,9 +123,15 @@ export function Settings({
                 onChange={(e) => change(k, e.target.checked)}
               />
               {t(
-                ["labels", "owner", "showPhotos", "searchNotes", "autoBackup"][
-                  i
-                ],
+                [
+                  "labels",
+                  "owner",
+                  "showPhotos",
+                  "hideUnknownYears",
+                  "hideYears",
+                  "searchNotes",
+                  "autoBackup",
+                ][i],
               )}
             </label>
           ))}
@@ -170,7 +178,7 @@ export function Settings({
                   JSON.stringify(
                     {
                       app: "GraphLive",
-                      version: "1.0.4",
+                      version: "1.1.1",
                       schemaVersion: data.schemaVersion,
                       provider: s.demo ? "demo" : s.repo?.constructor.name,
                       pending: s.dirty,

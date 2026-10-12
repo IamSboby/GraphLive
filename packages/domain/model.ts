@@ -1,3 +1,4 @@
+import { socialProfileSchema } from "./social";
 import { embeddedImage, imageLimits } from "./images";
 import { genderClassification } from "./gender";
 import { z } from "zod";
@@ -33,6 +34,7 @@ const tags = z
   });
 export const profileSchema = z
   .object({
+    socialProfiles: z.array(socialProfileSchema).max(20).default([]),
     portrait: embeddedImage(imageLimits.portrait),
     firstName: text.default(""),
     lastName: text.default(""),
@@ -186,6 +188,8 @@ export const preferencesSchema = z
     ...appearancePreferencesShape,
     language: z.enum(languageCodes).default("es"),
     theme: z.enum(["light", "dark", "system"]).default("system"),
+    hideUnknownYears: z.boolean().default(false),
+    hideYears: z.boolean().default(false),
     showPhotos: z.boolean().default(true),
     showLabels: z.boolean().default(true),
     showOwner: z.boolean().default(true),
@@ -392,4 +396,17 @@ export function followsRelationship(
     (edge[`${side}PerspectiveAutomatic`] ??
       edge[`${side}Perspective`] === edge.relationshipType)
   );
+}
+
+export function visibleYear(
+  profile: Profile,
+  preferences: Pick<Preferences, "hideYears" | "hideUnknownYears">,
+) {
+  if (preferences.hideYears) return "";
+  const year = profile.birthYear ?? profile.birthDate?.slice(0, 4);
+  return year == null
+    ? preferences.hideUnknownYears
+      ? ""
+      : "N/A"
+    : String(year);
 }

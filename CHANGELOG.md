@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.1 — 2026-10-12
+
+- Dashboard con caché local, actualización progresiva, orden por última edición e importación de redes JSON/ZIP.
+- Animación de construcción al abrir cada red por primera vez en la sesión y leyenda que se oculta al pasar a lista.
+- Relación Casados en rojo corazón con brillo y destellos; leyenda actualizada.
+- Opciones para ocultar años desconocidos o todos los años, y perfiles de redes sociales por persona.
+- Nuevas personas cerca de quienes comparten etiquetas, conservando las posiciones existentes.
+- Fechas adaptadas al idioma sin cambiar el formato guardado; grupos que preservan conexiones existentes y percepciones que siguen el tipo general hasta personalizarlas.
+
 ## 1.0.4 — 2026-10-11
 
 Mejoras táctiles, confirmación de etiquetas e intereses, foto inicial y cámara móvil, parámetros de conexión y distribución por etiquetas.

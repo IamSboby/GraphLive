@@ -1,18 +1,29 @@
 "use client";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Palette, ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { relationshipTypes, type RelationshipType } from "../domain/model";
 export function Legend({
   colors,
+  hidden = false,
 }: {
+  hidden?: boolean;
   colors: Record<RelationshipType, string>;
 }) {
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (hidden) setOpen(false);
+  }, [hidden]);
   const id = useId();
   const { t } = useTranslation();
   return (
-    <section className="legend" data-open={open}>
+    <section
+      className="legend"
+      data-open={open && !hidden}
+      data-hidden={hidden}
+      aria-hidden={hidden}
+      inert={hidden}
+    >
       <button
         type="button"
         className="legend-toggle"
@@ -29,7 +40,10 @@ export function Legend({
           <div className="legend-content">
             {relationshipTypes.map((r) => (
               <span className="legend-item" key={r}>
-                <i style={{ background: colors[r] }} />
+                <i
+                  className={r === "married" ? "married-swatch" : undefined}
+                  style={{ background: colors[r], color: colors[r] }}
+                />
                 {t(r)}
               </span>
             ))}

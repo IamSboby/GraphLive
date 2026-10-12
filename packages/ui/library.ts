@@ -67,12 +67,24 @@ export const useLibrary = create<{
   library: NetworkLibrary | null;
   ownerName: string;
   activeId: string | null;
+  seen: string[];
+  animationId: string | null;
+  requestEntry: (id: string) => void;
+  finishEntry: () => void;
   connect: (library: NetworkLibrary, ownerName: string) => void;
   select: (id: string) => void;
 }>((set) => ({
   library: null,
   ownerName: "",
   activeId: null,
-  connect: (library, ownerName) => set({ library, ownerName, activeId: null }),
+  seen: [],
+  animationId: null,
+  requestEntry: (id) =>
+    set((s) =>
+      s.seen.includes(id) ? {} : { seen: [...s.seen, id], animationId: id },
+    ),
+  finishEntry: () => set({ animationId: null }),
+  connect: (library, ownerName) =>
+    set({ library, ownerName, activeId: null, seen: [], animationId: null }),
   select: (activeId) => set({ activeId }),
 }));

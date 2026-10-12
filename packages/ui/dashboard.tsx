@@ -407,6 +407,7 @@ export function Dashboard({
         await useNetwork.getState().open(data, repo);
       }
       useLibrary.getState().select(id);
+      useLibrary.getState().requestEntry(id);
       router.push("/graph");
     } catch (e) {
       setError(e instanceof Error ? e.message : "storageError");

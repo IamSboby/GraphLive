@@ -50,11 +50,16 @@ export function computeLayout(input: LayoutInput) {
     const angle = groupIndex * 2.39996;
     const radius =
       Math.sqrt(groupIndex + 1) * (300 + Math.sqrt(members.length) * 100);
-    const x = Math.cos(angle) * radius,
-      y = Math.sin(angle) * radius;
+    const fixedMembers = members.filter((n) => n.fixed);
+    const x = fixedMembers.length
+        ? fixedMembers.reduce((sum, n) => sum + n.x, 0) / fixedMembers.length
+        : Math.cos(angle) * radius,
+      y = fixedMembers.length
+        ? fixedMembers.reduce((sum, n) => sum + n.y, 0) / fixedMembers.length
+        : Math.sin(angle) * radius;
     let id = "layout-tag-" + groupIndex++;
     while (graph.hasNode(id)) id += "-";
-    graph.addNode(id, { x, y, size: 1 });
+    graph.addNode(id, { x, y, size: 1, fixed: fixedMembers.length > 0 });
     for (const member of members) {
       graph.addEdge(id, member.id, { weight: 3 });
       const seed = seeds.get(member.id) ?? { x: 0, y: 0, count: 0 };
