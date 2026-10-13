@@ -1,3 +1,4 @@
+import { socialProfileSchema } from "./social";
 import { embeddedImage, imageLimits } from "./images";
 import { genderClassification } from "./gender";
 import { z } from "zod";
@@ -33,6 +34,7 @@ const tags = z
   });
 export const profileSchema = z
   .object({
+    socialProfiles: z.array(socialProfileSchema).max(20).default([]),
     portrait: embeddedImage(imageLimits.portrait),
     firstName: text.default(""),
     lastName: text.default(""),
@@ -151,6 +153,8 @@ const edgeObjectSchema = z
     sourceId: z.uuid(),
     targetId: z.uuid(),
     relationshipType: z.enum(relationshipTypes),
+    sourcePerspectiveAutomatic: z.boolean().optional(),
+    targetPerspectiveAutomatic: z.boolean().optional(),
     sourcePerspective: z.enum(relationshipTypes),
     targetPerspective: z.enum(relationshipTypes),
     intensity: z.number().int().min(1).max(5).default(3),
@@ -179,10 +183,14 @@ export const connectionSchema = z.preprocess(
 export const preferencesSchema = z
   .object({
     banner: embeddedImage(imageLimits.banner),
+    lastEditedAt: z.iso.datetime().optional(),
     networkName: z.string().trim().min(1).max(80).optional(),
     ...appearancePreferencesShape,
     language: z.enum(languageCodes).default("es"),
     theme: z.enum(["light", "dark", "system"]).default("system"),
+    hideUnknownYears: z.boolean().default(false),
+    hideYears: z.boolean().default(false),
+    showPhotos: z.boolean().default(true),
     showLabels: z.boolean().default(true),
     showOwner: z.boolean().default(true),
     sizeMode: z
@@ -377,4 +385,28 @@ export function ownerRelationship(s: Snapshot, id: string): RelationshipType {
         (id === s.ownerId ? "" : canonicalKey(id, s.ownerId ?? s.deviceId)),
     )?.relationshipType ?? "acquaintance"
   );
+}
+
+export function followsRelationship(
+  edge: Connection | undefined,
+  side: "source" | "target",
+) {
+  return (
+    !edge ||
+    (edge[`${side}PerspectiveAutomatic`] ??
+      edge[`${side}Perspective`] === edge.relationshipType)
+  );
+}
+
+export function visibleYear(
+  profile: Profile,
+  preferences: Pick<Preferences, "hideYears" | "hideUnknownYears">,
+) {
+  if (preferences.hideYears) return "";
+  const year = profile.birthYear ?? profile.birthDate?.slice(0, 4);
+  return year == null
+    ? preferences.hideUnknownYears
+      ? ""
+      : "N/A"
+    : String(year);
 }

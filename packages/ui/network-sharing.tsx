@@ -122,7 +122,7 @@ export function NetworkSharing({
       }}
     >
       <div className="form-content sharing-panel">
-        <h3>{entry.data.preferences.networkName || t("defaultNetwork")}</h3>
+        <h3>{entry.preferences.networkName || t("defaultNetwork")}</h3>
         <p>{t("shareNetworkHelp")}</p>
         <section aria-label={t("sharedMembers")}>
           <div className="sharing-heading">

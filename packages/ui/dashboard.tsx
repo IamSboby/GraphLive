@@ -14,17 +14,26 @@ import {
   RefreshCw,
   Pencil,
   Share2,
+  Upload,
 } from "lucide-react";
+import { importFile } from "../storage-core/export";
+import type { Snapshot } from "../domain/model";
+import {
+  summarizeNetwork,
+  sortNetworks,
+  dashboardScope,
+  readDashboard,
+  readBanner,
+  cacheDashboard,
+  cacheIndex,
+  cacheBanner,
+} from "./dashboard-cache";
+import { formatDate } from "../i18n/dates";
 import { themePalette } from "../appearance/config";
 import type { Repository } from "../storage-core";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
 import { pickSharedNetworks } from "../storage-adapters/google-picker";
-import {
-  emptySnapshot,
-  createPerson,
-  displayName,
-  normalize,
-} from "../domain/model";
+import { emptySnapshot, createPerson, normalize } from "../domain/model";
 import { useLibrary, type NetworkEntry } from "./library";
 import { useNetwork } from "./store";
 import { NetworkSharing } from "./network-sharing";
@@ -50,6 +59,10 @@ export function Dashboard({
   const { library, ownerName, activeId } = useLibrary();
   const active = useNetwork((s) => s.data);
   const demo = useNetwork((s) => s.demo);
+  const dirty = useNetwork((s) => s.dirty);
+  const [importPreview, setImportPreview] = useState<Snapshot | null>(null);
+  const [importName, setImportName] = useState("");
+  const importInput = useRef<HTMLInputElement>(null);
   const [entries, setEntries] = useState<NetworkEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -81,55 +94,153 @@ export function Dashboard({
     }
     const repositories = repositoryCache.current.entries;
     let cancelled = false;
+    let cacheKey: string | null = null;
+    let latestCards: NetworkEntry[] = [];
+    let cacheTimer: ReturnType<typeof setTimeout> | undefined;
     setLoading(!loadedOnce.current);
     setRefreshing(true);
     setError("");
     void (async () => {
-      const loaded: NetworkEntry[] = [];
-      const ids = await library.ids();
-      let ignored = 0;
-      for (let offset = 0; offset < ids.length; offset += 4) {
-        const batch = await Promise.all(
-          ids.slice(offset, offset + 4).map(async (id) => {
-            const repo = repositories.get(id) ?? library.repository(id);
-            repositories.set(id, repo);
-            try {
-              const data = await repo.load();
-              return data.people.length
-                ? {
-                    id,
-                    data,
-                    readOnly: repo.readOnly,
-                    shared:
-                      repo instanceof GoogleDriveRepository && repo.shared,
-                    ownerLabel:
-                      repo instanceof GoogleDriveRepository
-                        ? repo.ownerLabel
-                        : undefined,
-                  }
-                : null;
-            } catch (e) {
-              if (
-                e instanceof Error &&
-                (e.message === "sharedAccessLost" ||
-                  (id.startsWith("shared:") &&
-                    ["invalidData", "tooLarge"].includes(e.message)))
-              ) {
-                ignored++;
-                return null;
+      // Discovery does not hold up previously known cards or their refresh.
+      const discovery = library.ids().then(
+        (ids) => ({ ids, error: null }),
+        (error) => ({ ids: null, error }),
+      );
+      const scope = await dashboardScope(library);
+      if (cancelled) return;
+      cacheKey = scope;
+      const cached = scope ? await readDashboard(scope) : [];
+      const cards = new Map(cached.map((entry) => [entry.id, entry]));
+      const state = useNetwork.getState(),
+        selectedId = useLibrary.getState().activeId;
+      if (selectedId && state.data && !state.demo)
+        cards.set(
+          selectedId,
+          summarizeNetwork(selectedId, state.data, {
+            ...cards.get(selectedId),
+            readOnly: state.repo?.readOnly,
+            shared: state.repo?.shared,
+          }),
+        );
+      const publish = () => {
+        if (cancelled) return;
+        latestCards = sortNetworks([...cards.values()]);
+        setEntries(latestCards);
+        clearTimeout(cacheTimer);
+        if (scope)
+          cacheTimer = setTimeout(
+            () => void cacheIndex(scope, latestCards),
+            250,
+          );
+        if (cards.size) setLoading(false);
+      };
+      publish();
+      const fresh = new Set<string>();
+      const banners = scope
+        ? Promise.all(
+            cached.map(async (entry) => {
+              const banner = await readBanner(scope, entry.id);
+              if (cancelled || fresh.has(entry.id) || !banner) return;
+              const current = cards.get(entry.id);
+              if (current) {
+                cards.set(entry.id, {
+                  ...current,
+                  preferences: { ...current.preferences, banner },
+                });
+                publish();
               }
-              throw e;
+            }),
+          )
+        : Promise.resolve();
+      const scheduled = new Set<string>();
+      let ignored = 0;
+      const loadIds = async (ids: string[]) => {
+        const pending = ids.filter((id) => !scheduled.has(id));
+        pending.forEach((id) => scheduled.add(id));
+        let cursor = 0;
+        await Promise.all(
+          Array.from({ length: Math.min(3, pending.length) }, async () => {
+            while (cursor < pending.length && !cancelled) {
+              const id = pending[cursor++];
+              const repo = repositories.get(id) ?? library.repository(id);
+              repositories.set(id, repo);
+              try {
+                const data = await repo.load();
+                if (cancelled) return;
+                fresh.add(id);
+                if (data.people.length)
+                  cards.set(
+                    id,
+                    summarizeNetwork(id, data, {
+                      readOnly: repo.readOnly,
+                      shared: repo.shared,
+                      ownerLabel:
+                        repo instanceof GoogleDriveRepository
+                          ? repo.ownerLabel
+                          : undefined,
+                    }),
+                  );
+                else cards.delete(id);
+                const updated = cards.get(id);
+                if (scope && updated) void cacheBanner(scope, updated);
+              } catch (e) {
+                if (cancelled) return;
+                if (
+                  e instanceof Error &&
+                  (e.message === "sharedAccessLost" ||
+                    (id.startsWith("shared:") &&
+                      ["invalidData", "tooLarge"].includes(e.message)))
+                ) {
+                  cards.delete(id);
+                  fresh.add(id);
+                  ignored++;
+                } else
+                  setError(e instanceof Error ? e.message : "storageError");
+              }
+              publish();
             }
           }),
         );
-        loaded.push(
-          ...batch.filter((e): e is NonNullable<typeof e> => Boolean(e)),
+      };
+      const known = loadIds(sortNetworks([...cards.values()]).map((e) => e.id));
+      const result = await discovery;
+      if (cancelled) return;
+      if (result.ids) {
+        for (const id of cards.keys())
+          if (!result.ids.includes(id)) cards.delete(id);
+        publish();
+        await Promise.all([known, loadIds(result.ids)]);
+        // A removed network must not be reintroduced by an in-flight refresh.
+        for (const id of cards.keys())
+          if (!result.ids.includes(id)) cards.delete(id);
+        for (const id of repositories.keys())
+          if (!result.ids.includes(id)) repositories.delete(id);
+      } else {
+        setError(
+          result.error instanceof Error ? result.error.message : "storageError",
         );
+        await known;
       }
-      for (const id of repositories.keys())
-        if (!ids.includes(id)) repositories.delete(id);
-      if (!cancelled) setSkipped(ignored);
-      if (!cancelled) setEntries(loaded);
+      await banners;
+      if (cancelled) return;
+      const current = useNetwork.getState(),
+        currentId = useLibrary.getState().activeId;
+      if (
+        currentId &&
+        cards.has(currentId) &&
+        current.data &&
+        !current.demo &&
+        (current.dirty ||
+          summarizeNetwork(currentId, current.data).modifiedAt >=
+            cards.get(currentId)!.modifiedAt)
+      )
+        cards.set(
+          currentId,
+          summarizeNetwork(currentId, current.data, cards.get(currentId)),
+        );
+      publish();
+      setSkipped(ignored);
+      if (scope) await cacheDashboard(scope, [...cards.values()]);
     })()
       .catch((e) => {
         if (!cancelled)
@@ -144,6 +255,9 @@ export function Dashboard({
       });
     return () => {
       cancelled = true;
+      clearTimeout(cacheTimer);
+      if (cacheKey && latestCards.length)
+        void cacheIndex(cacheKey, latestCards);
     };
   }, [library, router, reload]);
   useEffect(() => {
@@ -282,7 +396,7 @@ export function Dashboard({
     setError("");
     try {
       const state = useNetwork.getState();
-      if (id !== activeId || !state.data || state.demo) {
+      if (id !== activeId || !state.data || state.demo || !state.dirty) {
         if (!(await state.prepareSwitch()))
           throw new Error(
             state.conflict ? "resolveBeforeSwitch" : "localSaveFailed",
@@ -293,7 +407,32 @@ export function Dashboard({
         await useNetwork.getState().open(data, repo);
       }
       useLibrary.getState().select(id);
+      useLibrary.getState().requestEntry(id);
       router.push("/graph");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "storageError");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function importNetwork() {
+    if (!library || !importPreview || !importName.trim()) return;
+    setBusy(true);
+    setError("");
+    try {
+      if (!(await useNetwork.getState().prepareSwitch()))
+        throw new Error("resolveBeforeSwitch");
+      const id = library.multiple ? crypto.randomUUID() : "default";
+      const repo = library.repository(id);
+      if (!library.multiple && (await repo.load()).people.length)
+        throw new Error("storageError");
+      const copy = structuredClone(importPreview);
+      copy.revision = 0;
+      copy.deviceId = crypto.randomUUID();
+      copy.preferences.networkName = importName.trim();
+      await repo.save(copy, 0);
+      setImportPreview(null);
+      setReload((v) => v + 1);
     } catch (e) {
       setError(e instanceof Error ? e.message : "storageError");
     } finally {
@@ -332,28 +471,24 @@ export function Dashboard({
       setBusy(false);
     }
   }
-  const networks = entries.map((entry) =>
-    entry.id === activeId && active && !demo
-      ? { ...entry, data: active }
-      : entry,
+  const networks = sortNetworks(
+    entries.map((entry) =>
+      entry.id === activeId &&
+      active &&
+      !demo &&
+      (dirty ||
+        summarizeNetwork(entry.id, active).modifiedAt >= entry.modifiedAt)
+        ? summarizeNetwork(entry.id, active, entry)
+        : entry,
+    ),
   );
   const title = (entry: NetworkEntry) =>
-    entry.data.preferences.networkName || t("defaultNetwork");
+    entry.preferences.networkName || t("defaultNetwork");
   const shown = networks.filter(
     (entry) =>
       (tab === "all" || entry.shared) &&
       normalize(
-        [
-          title(entry),
-          entry.ownerLabel ?? "",
-          ...entry.data.people
-            .filter((p) => p.id === entry.data.ownerId)
-            .flatMap((p) => [
-              p.profile.nickname,
-              p.profile.firstName,
-              p.profile.lastName,
-            ]),
-        ].join(" "),
+        [title(entry), entry.ownerLabel ?? "", entry.identity].join(" "),
       ).includes(normalize(query)),
   );
   return (
@@ -427,7 +562,89 @@ export function Dashboard({
           <Plus size={20} />
           {t("newNetwork")}
         </button>
+        <button
+          disabled={
+            busy || loading || (!library?.multiple && entries.length > 0)
+          }
+          onClick={() => importInput.current?.click()}
+          data-testid="import-network"
+        >
+          <Upload size={20} />
+          {t("import")}
+        </button>
+        <input
+          ref={importInput}
+          type="file"
+          accept=".json,.zip"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (!file) return;
+            setBusy(true);
+            setError("");
+            void importFile(file)
+              .then((data) => {
+                if (!data.people.length) throw new Error("invalidData");
+                setImportName(
+                  data.preferences.networkName ||
+                    file.name.replace(/\.(zip|json)$/i, ""),
+                );
+                setImportPreview(data);
+              })
+              .catch((e) =>
+                setError(
+                  e instanceof Error && e.message === "tooLarge"
+                    ? "tooLarge"
+                    : "invalidData",
+                ),
+              )
+              .finally(() => setBusy(false));
+          }}
+        />
       </section>
+      {importPreview && (
+        <Modal
+          title={t("importPreview")}
+          onClose={() => {
+            if (!busy) setImportPreview(null);
+          }}
+        >
+          <form
+            className="form-content"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void importNetwork();
+            }}
+          >
+            <Field label={t("networkName")}>
+              <input
+                required
+                maxLength={80}
+                value={importName}
+                onChange={(e) => setImportName(e.target.value)}
+              />
+            </Field>
+            <p>
+              {importPreview.people.length} {t("people")} ·{" "}
+              {importPreview.connections.length} {t("connections")}
+            </p>
+            <p>{t("importAsNewNetwork")}</p>
+            <footer className="modal-actions">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setImportPreview(null)}
+              >
+                {t("cancel")}
+              </button>
+              <button className="primary" disabled={busy || !importName.trim()}>
+                {t("import")}
+              </button>
+            </footer>
+          </form>
+        </Modal>
+      )}
       {library?.session && (
         <div
           className="network-tabs"
@@ -505,13 +722,10 @@ export function Dashboard({
       ) : (
         <section className="network-cards" aria-label={t("myNetworks")}>
           {shown.map((entry) => {
-            const owner = entry.data.people.find(
-              (p) => p.id === entry.data.ownerId,
-            );
             const cardDark =
-              entry.data.preferences.theme === "dark" ||
-              (entry.data.preferences.theme === "system" && systemDark);
-            const cardPalette = themePalette(entry.data.preferences, cardDark);
+              entry.preferences.theme === "dark" ||
+              (entry.preferences.theme === "system" && systemDark);
+            const cardPalette = themePalette(entry.preferences, cardDark);
             const cardStyle = {
               ...Object.fromEntries(
                 Object.entries(cardPalette).map(([key, value]) => [
@@ -528,10 +742,11 @@ export function Dashboard({
                 style={cardStyle}
               >
                 <div className="network-card-art" aria-hidden="true">
-                  {entry.data.preferences.banner ? (
+                  {entry.preferences.banner ? (
                     <Image
                       unoptimized
-                      src={entry.data.preferences.banner}
+                      loading="lazy"
+                      src={entry.preferences.banner}
                       alt=""
                       width={960}
                       height={320}
@@ -541,6 +756,13 @@ export function Dashboard({
                   )}
                 </div>
                 <h2>{title(entry)}</h2>
+                {entry.modifiedAt && (
+                  <p className="muted-copy">
+                    <time dateTime={entry.modifiedAt}>
+                      {formatDate(entry.modifiedAt, i18n.language, true)}
+                    </time>
+                  </p>
+                )}
                 {entry.shared && (
                   <p className="muted-copy">
                     {t(entry.readOnly ? "sharedReadOnly" : "sharedEditable")}
@@ -550,7 +772,7 @@ export function Dashboard({
                   {t(
                     entry.shared ? "sharedCentralProfile" : "networkIdentity",
                     {
-                      name: owner ? displayName(owner) : t("me"),
+                      name: entry.identity || t("me"),
                     },
                   )}
                 </p>
@@ -562,12 +784,11 @@ export function Dashboard({
                 <div className="network-card-counts">
                   <span>
                     <Users size={16} />
-                    {entry.data.people.length} {t("people").toLowerCase()}
+                    {entry.peopleCount} {t("people").toLowerCase()}
                   </span>
                   <span>
                     <Link2 size={16} />
-                    {entry.data.connections.length}{" "}
-                    {t("connections").toLowerCase()}
+                    {entry.connectionCount} {t("connections").toLowerCase()}
                   </span>
                 </div>
                 <button

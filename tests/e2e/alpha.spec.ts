@@ -33,9 +33,8 @@ test("English onboarding, automatic gender filenames and SVG flags", async ({
   }
   await gender.selectOption("female");
   const initialFilename = await filename.inputValue();
-  await page
-    .getByRole("combobox", { name: "Add nationality" })
-    .selectOption("ES");
+  await page.getByRole("combobox", { name: "Add nationality" }).fill("Spain");
+  await page.getByRole("option", { name: "Spain (ES)", exact: true }).click();
   const flag = page.getByRole("img", { name: "Spain", exact: true });
   await expect(flag).toHaveAttribute("src", "/flags/es.svg");
   await expect

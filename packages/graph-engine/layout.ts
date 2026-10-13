@@ -1,7 +1,13 @@
 import Graph from "graphology";
 import forceAtlas2 from "graphology-layout-forceatlas2";
 export type LayoutInput = {
-  nodes: { id: string; x: number; y: number; fixed: boolean }[];
+  nodes: {
+    id: string;
+    x: number;
+    y: number;
+    fixed: boolean;
+    tags?: string[];
+  }[];
   edges: { source: string; target: string }[];
 };
 export function computeLayout(input: LayoutInput) {
@@ -15,9 +21,64 @@ export function computeLayout(input: LayoutInput) {
       !graph.hasEdge(e.source, e.target)
     )
       graph.addEdge(e.source, e.target, { weight: 1 });
+  // Temporary anchors influence geometry only; they never become saved relationships.
+  const groups = new Map<string, typeof input.nodes>();
+  for (const node of input.nodes) {
+    const tags = new Set(
+      (node.tags ?? [])
+        .map((tag) =>
+          tag
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim()
+            .toLowerCase(),
+        )
+        .filter(Boolean),
+    );
+    for (const tag of tags) {
+      const members = groups.get(tag) ?? [];
+      members.push(node);
+      groups.set(tag, members);
+    }
+  }
+  let groupIndex = 0;
+  const seeds = new Map<string, { x: number; y: number; count: number }>();
+  for (const [, members] of [...groups].sort(([a], [b]) =>
+    a.localeCompare(b),
+  )) {
+    if (members.length < 2) continue;
+    const angle = groupIndex * 2.39996;
+    const radius =
+      Math.sqrt(groupIndex + 1) * (300 + Math.sqrt(members.length) * 100);
+    const fixedMembers = members.filter((n) => n.fixed);
+    const x = fixedMembers.length
+        ? fixedMembers.reduce((sum, n) => sum + n.x, 0) / fixedMembers.length
+        : Math.cos(angle) * radius,
+      y = fixedMembers.length
+        ? fixedMembers.reduce((sum, n) => sum + n.y, 0) / fixedMembers.length
+        : Math.sin(angle) * radius;
+    let id = "layout-tag-" + groupIndex++;
+    while (graph.hasNode(id)) id += "-";
+    graph.addNode(id, { x, y, size: 1, fixed: fixedMembers.length > 0 });
+    for (const member of members) {
+      graph.addEdge(id, member.id, { weight: 3 });
+      const seed = seeds.get(member.id) ?? { x: 0, y: 0, count: 0 };
+      seed.x += x;
+      seed.y += y;
+      seed.count++;
+      seeds.set(member.id, seed);
+    }
+  }
+  for (const node of input.nodes) {
+    const seed = seeds.get(node.id);
+    if (seed && !node.fixed) {
+      graph.setNodeAttribute(node.id, "x", seed.x / seed.count + node.x * 0.15);
+      graph.setNodeAttribute(node.id, "y", seed.y / seed.count + node.y * 0.15);
+    }
+  }
   if (graph.order > 1)
     forceAtlas2.assign(graph, {
-      iterations: 150,
+      iterations: groups.size ? 350 : 150,
       settings: {
         ...forceAtlas2.inferSettings(graph),
         barnesHutOptimize: true,
@@ -29,8 +90,8 @@ export function computeLayout(input: LayoutInput) {
     });
   const nodes = input.nodes.map((n) => ({
     ...n,
-    x: graph.getNodeAttribute(n.id, "x") as number,
-    y: graph.getNodeAttribute(n.id, "y") as number,
+    x: n.fixed ? n.x : (graph.getNodeAttribute(n.id, "x") as number),
+    y: n.fixed ? n.y : (graph.getNodeAttribute(n.id, "y") as number),
   }));
   const clearance = 115;
   for (let pass = 0; pass < 20; pass++) {

@@ -6,9 +6,12 @@ import {
   type Connection,
   relationshipTypes,
   displayName,
+  followsRelationship,
+  normalize,
   edgeInputSchema,
   upsertConnection,
 } from "../domain/model";
+import { addMissingConnections } from "./connection-targets";
 import { matchesSearch } from "../graph-engine/metrics";
 import { useNetwork } from "./store";
 import { Modal, Field } from "./primitives";
@@ -21,7 +24,7 @@ export function ConnectionForm({
   edge?: Connection;
   onClose: () => void;
 }) {
-  const { t } = useTranslation(),
+  const { t, i18n } = useTranslation(),
     s = useNetwork(),
     data = s.data!;
   const [v, setV] = useState<z.infer<typeof edgeInputSchema>>(
@@ -56,12 +59,13 @@ export function ConnectionForm({
         },
   );
   const [explicit, setExplicit] = useState({
-    sourcePerspective: Boolean(edge),
-    targetPerspective: Boolean(edge),
+    sourcePerspective: !followsRelationship(edge, "source"),
+    targetPerspective: !followsRelationship(edge, "target"),
   });
   const [query, setQuery] = useState(""),
     [error, setError] = useState(false);
-  const available = data.people.filter(
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const eligible = data.people.filter(
     (p) =>
       p.id !== sourceId &&
       (edge ||
@@ -69,9 +73,37 @@ export function ConnectionForm({
           (e) =>
             [e.sourceId, e.targetId].includes(sourceId) &&
             [e.sourceId, e.targetId].includes(p.id),
-        )) &&
-      matchesSearch(p, query),
+        )),
   );
+  const collator = new Intl.Collator(i18n.language, {
+    sensitivity: "base",
+    numeric: true,
+  });
+  const sorted = [...eligible].sort(
+    (a, b) =>
+      collator.compare(displayName(a), displayName(b)) ||
+      collator.compare(a.profile.lastName, b.profile.lastName) ||
+      a.id.localeCompare(b.id),
+  );
+  const available = sorted.filter((p) => matchesSearch(p, query));
+  const groups = new Map<string, { label: string; ids: string[] }>();
+  for (const person of sorted) {
+    for (const tag of person.profile.tags) {
+      const key = normalize(tag);
+      if (!key) continue;
+      const group = groups.get(key) ?? { label: tag.trim(), ids: [] };
+      if (!group.ids.includes(person.id)) group.ids.push(person.id);
+      groups.set(key, group);
+    }
+  }
+  const tagOptions = [...groups.entries()]
+    .sort((a, b) => collator.compare(a[1].label, b[1].label))
+    .filter(
+      ([key]) =>
+        !query.trim() || key.includes(normalize(query)) || key === selectedTag,
+    );
+  const selectedGroup =
+    selectedTag === null ? undefined : groups.get(selectedTag);
   return (
     <Modal
       title={t(edge ? "editConnection" : "addConnection")}
@@ -81,13 +113,29 @@ export function ConnectionForm({
         className="form-content"
         onSubmit={(e) => {
           e.preventDefault();
-          const parsed = edgeInputSchema.safeParse(v);
-          if (!parsed.success) {
+          const targets =
+            !edge && selectedTag !== null
+              ? (selectedGroup?.ids ?? [])
+              : [v.targetId];
+          const parsed = targets.map((targetId) =>
+            edgeInputSchema.safeParse({
+              ...v,
+              targetId,
+              sourcePerspectiveAutomatic: !explicit.sourcePerspective,
+              targetPerspectiveAutomatic: !explicit.targetPerspective,
+            }),
+          );
+          if (!parsed.length || parsed.some((result) => !result.success)) {
             setError(true);
             return;
           }
           s.mutate((d) => {
-            upsertConnection(d, parsed.data);
+            for (const result of parsed) {
+              if (result.success) {
+                if (edge) upsertConnection(d, result.data);
+                else addMissingConnections(d, [result.data]);
+              }
+            }
           });
           onClose();
         }}
@@ -100,8 +148,18 @@ export function ConnectionForm({
             <Field label={t("otherPerson")}>
               <select
                 required
-                value={v.targetId}
-                onChange={(e) => setV({ ...v, targetId: e.target.value })}
+                value={selectedTag !== null ? "tag:" + selectedTag : v.targetId}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSelectedTag(
+                    value.startsWith("tag:") ? value.slice(4) : null,
+                  );
+                  setV({
+                    ...v,
+                    targetId: value.startsWith("tag:") ? "" : value,
+                  });
+                  setError(false);
+                }}
               >
                 <option value="">{t("none")}</option>
                 {available.map((p) => (
@@ -109,8 +167,22 @@ export function ConnectionForm({
                     {displayName(p)} · {p.profile.lastName}
                   </option>
                 ))}
+                {tagOptions.map(([key, group]) => (
+                  <option key={"tag:" + key} value={"tag:" + key}>
+                    [{t("connectionTag")}]: {group.label} ({group.ids.length})
+                  </option>
+                ))}
               </select>
             </Field>
+            {selectedGroup && (
+              <p role="status">
+                {t("connectionGroupHelp", { count: selectedGroup.ids.length })}{" "}
+                {sorted
+                  .filter((p) => selectedGroup.ids.includes(p.id))
+                  .map(displayName)
+                  .join(", ")}
+              </p>
+            )}
           </>
         )}
         <Field label={t("relationship")}>

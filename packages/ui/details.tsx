@@ -1,15 +1,18 @@
 "use client";
 import Image from "next/image";
+import { formatDate } from "../i18n/dates";
 import { relationshipPalette } from "../appearance/config";
 import { useState } from "react";
 import { Modal } from "./primitives";
 import { useTranslation } from "react-i18next";
 import { X, Plus, ArrowUpRight, Pencil, Trash2, Pin } from "lucide-react";
+import { SocialLogo } from "./social-logo";
 import { useNetwork } from "./store";
 import {
   type Person,
   type Connection,
   displayName,
+  visibleYear,
   ownerRelationship,
   removeEntity,
 } from "../domain/model";
@@ -30,7 +33,7 @@ export function Details({
   onSelect: (id: string) => void;
   onLock: () => void;
 }) {
-  const { t } = useTranslation(),
+  const { t, i18n } = useTranslation(),
     s = useNetwork(),
     data = s.data!,
     m = metrics(data).get(person.id)!,
@@ -79,11 +82,13 @@ export function Details({
         {[person.profile.firstName, person.profile.lastName].join(" ")}
       </p>
       <div className="profile-meta">
-        <span>
-          {person.profile.birthYear ??
-            person.profile.birthDate?.slice(0, 4) ??
-            t("unknown")}
-        </span>
+        {visibleYear(person.profile, data.preferences) && (
+          <span>
+            {person.profile.birthDate
+              ? formatDate(person.profile.birthDate, i18n.language)
+              : visibleYear(person.profile, data.preferences)}
+          </span>
+        )}
         {person.profile.nationalities.map((c) => (
           <Flag key={c} code={c} />
         ))}
@@ -163,6 +168,31 @@ export function Details({
             ))}
           </div>
         </>
+      )}
+      {person.profile.socialProfiles.length > 0 && (
+        <section className="social-links">
+          <h3>{t("socialProfiles")}</h3>
+          {person.profile.socialProfiles.map((social, i) => (
+            <a
+              key={i}
+              href={social.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={
+                social.platform === "other" ? social.label : social.platform
+              }
+              title={
+                social.platform === "other" ? social.label : social.platform
+              }
+              className={
+                social.platform === "other" ? "social-custom" : "social-brand"
+              }
+            >
+              <SocialLogo platform={social.platform} />
+              {social.platform === "other" && social.label}
+            </a>
+          ))}
+        </section>
       )}
       {person.profile.notes && (
         <>

@@ -1,0 +1,12 @@
+GraphLive 1.0.3 — versión estable
+
+- Transición suave entre gráfico y lista, conservando el zoom y la posición del grafo.
+- Fotos de personas con recorte, vista previa circular, bordes por relación y opción para ocultarlas.
+- Banners por red, controles con iconos y leyenda animada.
+- Selección de países con confirmación explícita y zoom adaptativo.
+- Dashboard con varias redes e identidad propia en cada una.
+- Almacenamiento local y Google Drive, con redes compartidas.
+
+Las animaciones respetan la preferencia de movimiento reducido. La web se publica después de superar las comprobaciones y pruebas de navegador.
+
+Redistribución animada y controles de Deshacer/Rehacer agrupados en la barra del grafo.

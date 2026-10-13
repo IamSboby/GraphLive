@@ -1,0 +1,11 @@
+GraphLive 1.1.1
+
+Dashboard más rápido: muestra redes conocidas desde la caché local mientras actualiza datos y descubre nuevas redes en paralelo. Orden por última edición e importación directa de archivos JSON y ZIP.
+
+Animación de construcción en la primera apertura de cada red durante la sesión. La leyenda se cierra y se oculta con una transición al cambiar a lista, y sus explicaciones reflejan el comportamiento actual.
+
+Nueva relación Casados, de color rojo corazón, con halo y destellos. Opciones para ocultar los años no definidos o todos los años. Redes sociales por persona, con plataformas habituales y enlaces personalizados.
+
+Las nuevas personas aparecen cerca de quienes comparten sus etiquetas sin mover las posiciones existentes. Las conexiones por grupos conservan las relaciones previas; las percepciones automáticas siguen el tipo general hasta modificarlas manualmente.
+
+Fechas visibles adaptadas al idioma, manteniendo intacto el formato de almacenamiento. Compatibilidad con redes y archivos de colores anteriores.
