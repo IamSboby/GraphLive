@@ -30,6 +30,11 @@ test("married relationship, social profiles, year visibility and collapsing lege
     "href",
     "https://www.instagram.com/alex",
   );
+  await expect(page.locator(".social-links a")).toHaveAccessibleName(
+    "Instagram",
+  );
+  await expect(page.locator(".social-links a svg")).toBeVisible();
+  await expect(page.locator(".social-links a")).toHaveText("");
   await expect(page.locator(".relation-badge")).toContainText("Casados");
   await expect(page.locator(".relation-badge")).toHaveCSS(
     "border-color",
@@ -85,16 +90,41 @@ test("dashboard opening reveals the network only once per session", async ({
   await page.getByTestId("new-network").click();
   await page.getByTestId("create-network").click();
   await page.getByRole("button", { name: "Omitir por ahora" }).click();
+  const positions = () =>
+    page
+      .locator(".graph-canvas")
+      .evaluate((el) =>
+        (el as HTMLElement & { _cyreg: { cy: Core } })._cyreg.cy
+          .nodes()
+          .map((n) => ({ id: n.id(), ...n.position() })),
+      );
+  for (const nickname of ["Alice", "Bob"]) {
+    await page.locator(".add-fab").click();
+    const form = page.getByRole("dialog");
+    await form
+      .getByRole("textbox", { name: "Sobrenombre", exact: true })
+      .fill(nickname);
+    await form.getByRole("button", { name: "Guardar", exact: true }).click();
+  }
+  const saved = await positions();
   await page.getByRole("button", { name: "Mis redes", exact: true }).click();
   await page.getByTestId("open-network").click();
   await expect(page.locator(".graph-canvas")).toHaveAttribute(
     "data-entry",
     "animating",
   );
+  await expect
+    .poll(async () =>
+      (await positions()).some(
+        (n, i) => Math.hypot(n.x - saved[i].x, n.y - saved[i].y) > 5,
+      ),
+    )
+    .toBe(true);
   await expect(page.locator(".graph-canvas")).toHaveAttribute(
     "data-entry",
     "ready",
   );
+  expect(await positions()).toEqual(saved);
   await page.getByRole("button", { name: "Mis redes", exact: true }).click();
   await page.getByTestId("open-network").click();
   await expect(page.locator(".graph-canvas")).toHaveAttribute(
@@ -105,4 +135,5 @@ test("dashboard opening reveals the network only once per session", async ({
     "data-entry",
     "animating",
   );
+  expect(await positions()).toEqual(saved);
 });

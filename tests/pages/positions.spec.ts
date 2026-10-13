@@ -79,6 +79,7 @@ test("positions survive adding people, explicit layout, dragging and reopening; 
     .getByRole("button", { name: "Abrir red existente", exact: true })
     .click();
   await expect(canvas).toHaveAttribute("data-layout", "ready");
+  await expect(canvas).not.toHaveAttribute("data-entry", /waiting|animating/);
   expect(await positions()).toEqual(before);
   await expect(page.locator(".sync-state")).toContainText(
     "Todos los cambios guardados",

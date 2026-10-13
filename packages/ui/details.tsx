@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Modal } from "./primitives";
 import { useTranslation } from "react-i18next";
 import { X, Plus, ArrowUpRight, Pencil, Trash2, Pin } from "lucide-react";
+import { SocialLogo } from "./social-logo";
 import { useNetwork } from "./store";
 import {
   type Person,
@@ -177,9 +178,18 @@ export function Details({
               href={social.url}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={
+                social.platform === "other" ? social.label : social.platform
+              }
+              title={
+                social.platform === "other" ? social.label : social.platform
+              }
+              className={
+                social.platform === "other" ? "social-custom" : "social-brand"
+              }
             >
-              {social.platform === "other" ? social.label : social.platform}
-              <ArrowUpRight size={16} />
+              <SocialLogo platform={social.platform} />
+              {social.platform === "other" && social.label}
             </a>
           ))}
         </section>

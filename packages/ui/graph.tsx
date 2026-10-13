@@ -21,6 +21,7 @@ import { Flag } from "./primitives";
 import { flagUrl } from "./flags";
 import { metrics, nodeSize } from "../graph-engine/metrics";
 import { newPersonPosition } from "../graph-engine/new-person-position";
+import { animateEntry as unfoldNetwork } from "../graph-engine/entry-motion";
 import { wheelZoomDelta } from "../graph-engine/wheel-zoom";
 export type GraphControls = {
   fit: () => void;
@@ -88,6 +89,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
   const entryComplete = useRef(onEntryComplete);
   entryComplete.current = onEntryComplete;
   const effects = useRef<HTMLCanvasElement>(null);
+  const finishEntryMotion = useRef<(() => void) | null>(null);
   const container = useRef<HTMLDivElement>(null),
     cy = useRef<Core | null>(null),
     motion = useRef<cytoscape.Layouts | null>(null),
@@ -95,6 +97,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     latest = useRef({ data, onSelect, onPositions, onLayoutBusy });
   latest.current = { data, onSelect, onPositions, onLayoutBusy };
   const savePositions = useCallback((recordHistory = false) => {
+    finishEntryMotion.current?.();
     const c = cy.current;
     if (!c) return;
     const changed = c
@@ -109,6 +112,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
   }, []);
   const runLayout = useCallback(
     (preserveSaved = false, fit = true) => {
+      finishEntryMotion.current?.();
       const c = cy.current;
       if (!c) return;
       worker.current?.terminate();
@@ -321,6 +325,9 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
   }, [savePositions]);
   const initialized = useRef(false);
   useEffect(() => {
+    // Background save acknowledgements must not interrupt the visual reveal.
+    // The latest data is applied when animateEntry becomes false.
+    if (finishEntryMotion.current) return;
     const c = cy.current;
     if (!c) return;
     if (worker.current) {
@@ -420,7 +427,15 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     } else if (!worker.current) {
       savePositions();
     }
-  }, [data, me, colors, palette.ownerStart, runLayout, savePositions]);
+  }, [
+    data,
+    me,
+    colors,
+    palette.ownerStart,
+    runLayout,
+    savePositions,
+    animateEntry,
+  ]);
   useEffect(() => {
     const c = cy.current;
     if (!c) return;
@@ -593,68 +608,42 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     const c = cy.current,
       element = container.current;
     if (!c || !element) return;
-    let frame = 0,
-      start = 0;
+    let frame = 0;
+    let stop: (() => void) | undefined;
     const reduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
     element.dataset.entry = "waiting";
-    const tick = (time: number) => {
+    const finish = () => {
+      finishEntryMotion.current = null;
+      element.dataset.entry = "ready";
+      entryComplete.current?.();
+    };
+    const tick = () => {
       if (c.destroyed()) return;
       if (element.dataset.layout !== "ready") {
         frame = requestAnimationFrame(tick);
         return;
       }
       if (reduced) {
-        element.dataset.entry = "ready";
-        entryComplete.current?.();
+        finish();
         return;
       }
-      if (!start) start = time;
       element.dataset.entry = "animating";
-      const progress = Math.min(1, (time - start) / 1100),
-        nodes = c.nodes(),
-        edges = c.edges();
-      c.batch(() => {
-        nodes.forEach(
-          (n, i) =>
-            void n.style(
-              "opacity",
-              Math.min(
-                1,
-                Math.max(
-                  0,
-                  (progress - (i / Math.max(1, nodes.length)) * 0.55) / 0.25,
-                ),
-              ),
-            ),
-        );
-        edges.forEach(
-          (e, i) =>
-            void e.style(
-              "opacity",
-              Math.min(
-                1,
-                Math.max(
-                  0,
-                  (progress - 0.2 - (i / Math.max(1, edges.length)) * 0.55) /
-                    0.25,
-                ),
-              ) * Number(e.data("opacity")),
-            ),
-        );
-      });
-      if (progress < 1) frame = requestAnimationFrame(tick);
-      else {
-        c.elements().removeStyle("opacity");
-        element.dataset.entry = "ready";
-        entryComplete.current?.();
-      }
+      stop = unfoldNetwork(c, finish);
+      finishEntryMotion.current = stop;
     };
+    const interact = () => {
+      cancelAnimationFrame(frame);
+      if (stop) stop();
+      else finish();
+    };
+    window.addEventListener("pointerdown", interact, true);
     frame = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(frame);
-      if (!c.destroyed()) c.elements().removeStyle("opacity");
+      window.removeEventListener("pointerdown", interact, true);
+      stop?.();
     };
   }, [animateEntry]);
   useEffect(() => {
