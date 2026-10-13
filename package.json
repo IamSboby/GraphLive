@@ -20,7 +20,7 @@
     "node": "^22.13.0 || >=24.0.0"
   },
   "dependencies": {
-    "@radix-ui/react-dialog": "1.1.23",
+    "@radix-ui/react-dialog": "1.2.0",
     "@tailwindcss/postcss": "4.3.3",
     "cytoscape": "3.34.3",
     "fflate": "0.8.3",
@@ -33,7 +33,7 @@
     "next-auth": "4.24.15",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-i18next": "17.0.14",
+    "react-i18next": "17.0.16",
     "tailwindcss": "4.3.3",
     "zod": "4.6.5",
     "zustand": "5.0.15"
@@ -46,7 +46,7 @@
     "@types/react-dom": "19.3.0",
     "eslint": "10.10.0",
     "eslint-config-next": "16.4.0",
-    "prettier": "3.9.7",
+    "prettier": "3.9.10",
     "typescript": "6.0.3",
     "vitest": "5.0.1"
   },

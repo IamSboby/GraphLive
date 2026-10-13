@@ -37,7 +37,7 @@ jobs:
             playwright-report/
           retention-days: 7
           if-no-files-found: ignore
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         with:
           path: pages-dist
@@ -54,7 +54,7 @@ jobs:
     steps:
       - name: Deploy
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
   release:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: [build, deploy]
