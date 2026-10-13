@@ -1,4 +1,4 @@
-# GraphLive — 0.2.0-pre-beta.1
+# GraphLive — 1.1.1 Relase
 
 Edición web sin servidor: [GraphLive en GitHub Pages](https://iamsboby.github.io/GraphLive/). Guarda la red en Google Drive, en el navegador o en una carpeta local. [Despliegue y límites de almacenamiento](docs/github-pages.md).
 

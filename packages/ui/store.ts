@@ -236,6 +236,7 @@ export const useNetwork = create<State>((set, get) => {
       try {
         const next = structuredClone(s.data);
         fn(next);
+        next.preferences.lastEditedAt = new Date().toISOString();
         set({
           data: snapshotSchema.parse(next),
           history: recordHistory
@@ -351,6 +352,7 @@ export const useNetwork = create<State>((set, get) => {
         return;
       const restored = structuredClone(s.history.at(-1)!);
       restored.counters = { ...s.data.counters };
+      restored.preferences.lastEditedAt = new Date().toISOString();
       set({
         data: restored,
         history: s.history.slice(0, -1),
@@ -364,6 +366,7 @@ export const useNetwork = create<State>((set, get) => {
       if (!s.data || !s.future.length || s.conflict || s.repo?.readOnly) return;
       const restored = structuredClone(s.future[0]);
       restored.counters = { ...s.data.counters };
+      restored.preferences.lastEditedAt = new Date().toISOString();
       set({
         data: restored,
         history: [...s.history, s.data],

@@ -55,7 +55,10 @@ for (const mobile of [false, true])
       .selectOption("nonBinary");
     await dialog
       .getByRole("combobox", { name: "Añadir nacionalidad" })
-      .selectOption("GB");
+      .fill("Reino Unido");
+    await page
+      .getByRole("option", { name: "Reino Unido (GB)", exact: true })
+      .click();
     await page.screenshot({
       path: `../../work/intro-${mobile ? "mobile" : "desktop"}-about.png`,
     });
@@ -142,14 +145,21 @@ test("profile edits remain usable during a save failure and retry; English and r
   await page.addInitScript(() => {
     localStorage.setItem("graphlive-language", "en");
     const put = IDBObjectStore.prototype.put;
-    let failed = false;
+    let allowWrites = false;
+    document.addEventListener(
+      "click",
+      (event) => {
+        const button = (event.target as Element).closest("button");
+        if (button?.textContent === "Retry") allowWrites = true;
+      },
+      true,
+    );
     IDBObjectStore.prototype.put = function (value, key) {
       if (
         this.name === "network" &&
         value?.preferences?.introduction === "invite" &&
-        !failed
+        !allowWrites
       ) {
-        failed = true;
         throw new DOMException("Test write failure", "QuotaExceededError");
       }
       return put.call(this, value, key);

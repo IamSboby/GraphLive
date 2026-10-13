@@ -5,10 +5,13 @@ import {
   resolveLanguage,
   isLanguage,
 } from "../i18n/languages";
+import { dashboardPalette } from "../appearance/dashboard";
 import { Dashboard } from "./dashboard";
 import { useLibrary } from "./library";
+import { Legend } from "./legend";
 import { IconSelect } from "./icon-select";
 import { relationshipPalette, themePalette } from "../appearance/config";
+import Image from "next/image";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
 import "../i18n";
 import Link from "next/link";
@@ -32,8 +35,6 @@ import {
   Share2,
   ChevronDown,
   Check,
-  Pause,
-  Play,
   LogOut,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -43,7 +44,7 @@ import {
   type Person,
   type Connection,
   displayName,
-  relationshipTypes,
+  visibleYear,
   ownerRelationship,
   normalize,
 } from "../domain/model";
@@ -77,6 +78,9 @@ export function App({
   authError: boolean;
 }) {
   const router = useRouter();
+  const animateEntry = useLibrary((s) =>
+    Boolean(s.animationId && s.animationId === s.activeId),
+  );
   const { t, i18n } = useTranslation(),
     s = useNetwork(),
     data = s.data;
@@ -92,7 +96,7 @@ export function App({
     [filters, setFilters] = useState(emptyFilters),
     [filterOpen, setFilterOpen] = useState(false),
     [list, setList] = useState(false),
-    [paused, setPaused] = useState(false),
+    [layoutBusy, setLayoutBusy] = useState(false),
     [pathTo, setPathTo] = useState(""),
     [systemDark, setSystemDark] = useState(false),
     [welcomeTheme, setWelcomeTheme] = useState<"light" | "dark" | "system">(
@@ -134,8 +138,11 @@ export function App({
     [data?.preferences],
   );
   const palette = useMemo(
-    () => themePalette(data?.preferences, dark),
-    [data?.preferences, dark],
+    () =>
+      screen === "dashboard"
+        ? dashboardPalette(dark)
+        : themePalette(data?.preferences, dark),
+    [screen, data?.preferences, dark],
   );
   useEffect(() => {
     for (const [key, value] of Object.entries(palette))
@@ -185,7 +192,6 @@ export function App({
       running = true;
       try {
         if (document.visibilityState !== "hidden" && navigator.onLine) {
-          await useNetwork.getState().persist();
           await useNetwork.getState().refresh();
         }
       } finally {
@@ -200,12 +206,15 @@ export function App({
     const wake = () => {
       void sync();
     };
+    const online = () => {
+      void useNetwork.getState().persist().then(wake);
+    };
     timer = setTimeout(wake, 1000);
     const before = (e: BeforeUnloadEvent) => {
       const state = useNetwork.getState();
       if (state.dirty && !state.localSaved) e.preventDefault();
     };
-    window.addEventListener("online", wake);
+    window.addEventListener("online", online);
     window.addEventListener("focus", wake);
     document.addEventListener("visibilitychange", wake);
     window.addEventListener("beforeunload", before);
@@ -213,7 +222,7 @@ export function App({
       stopped = true;
       clearTimeout(timer);
       window.removeEventListener("beforeunload", before);
-      window.removeEventListener("online", wake);
+      window.removeEventListener("online", online);
       window.removeEventListener("focus", wake);
       document.removeEventListener("visibilitychange", wake);
     };
@@ -286,7 +295,13 @@ export function App({
     [data, selected, pathTo],
   );
   if (screen === "dashboard")
-    return <Dashboard theme={welcomeTheme} onThemeChange={setWelcomeTheme} />;
+    return (
+      <Dashboard
+        theme={welcomeTheme}
+        systemDark={systemDark}
+        onThemeChange={setWelcomeTheme}
+      />
+    );
   if (screen !== "graph")
     return (
       <Onboarding
@@ -397,7 +412,17 @@ export function App({
                       : colors[ownerRelationship(data, p.id)],
                 }}
               >
-                {displayName(p)[0]}
+                {p.profile.portrait ? (
+                  <Image
+                    unoptimized
+                    src={p.profile.portrait}
+                    alt=""
+                    width={32}
+                    height={32}
+                  />
+                ) : (
+                  displayName(p)[0]
+                )}
               </span>
               <span>
                 <strong>
@@ -567,6 +592,7 @@ export function App({
             <div className="view-toggle">
               <button
                 aria-label={t("network")}
+                aria-pressed={!list}
                 className={!list ? "active" : ""}
                 onClick={() => setList(false)}
               >
@@ -574,6 +600,7 @@ export function App({
               </button>
               <button
                 aria-label={t("list")}
+                aria-pressed={list}
                 className={list ? "active" : ""}
                 onClick={() => setList(true)}
               >
@@ -581,7 +608,12 @@ export function App({
               </button>
             </div>
           </div>
-          {list ? (
+          <div
+            className="network-view-layer"
+            data-active={list}
+            aria-hidden={!list}
+            inert={!list}
+          >
             <div className="table-wrap">
               <table>
                 <thead>
@@ -604,7 +636,7 @@ export function App({
                           {displayName(p)}
                         </button>
                       </td>
-                      <td>{p.profile.birthYear ?? t("unknown")}</td>
+                      <td>{visibleYear(p.profile, data.preferences)}</td>
                       <td>{t(ownerRelationship(data, p.id))}</td>
                       <td>{stats.get(p.id)?.degree}</td>
                       <td>{stats.get(p.id)?.affinity ?? "—"}</td>
@@ -613,9 +645,18 @@ export function App({
                 </tbody>
               </table>
             </div>
-          ) : (
+          </div>
+          <div
+            className="network-view-layer"
+            data-active={!list}
+            aria-hidden={list}
+            inert={list}
+          >
             <GraphView
               ref={graph}
+              animateEntry={animateEntry}
+              onEntryComplete={() => useLibrary.getState().finishEntry()}
+              onLayoutBusy={setLayoutBusy}
               data={data}
               visible={visible}
               selected={selected}
@@ -632,7 +673,7 @@ export function App({
                 }, recordHistory)
               }
             />
-          )}
+          </div>
           {data.people.length <= 1 &&
             !selected &&
             (s.demo || ["done", "skipped"].includes(guideStage)) && (
@@ -641,18 +682,7 @@ export function App({
                 <p>{t("emptyHint")}</p>
               </div>
             )}
-          <details className="legend">
-            <summary>{t("legend")}</summary>
-            <div>
-              {relationshipTypes.map((r) => (
-                <span key={r}>
-                  <i style={{ background: colors[r] }} />
-                  {t(r)}
-                </span>
-              ))}
-              <p>{t("legendHelp")}</p>
-            </div>
-          </details>
+          <Legend colors={colors} hidden={list} />
           <div className="canvas-bottom">
             <div className="graph-controls">
               {[
@@ -676,30 +706,32 @@ export function App({
                   icon: RotateCcw,
                   fn: () => {
                     graph.current?.layout();
-                    setPaused(false);
                   },
                 },
                 {
-                  label: paused ? "resume" : "pause",
-                  icon: paused ? Play : Pause,
-                  fn: () => {
-                    if (paused) graph.current?.layout();
-                    else graph.current?.pause();
-                    setPaused(!paused);
-                  },
+                  label: "undo",
+                  icon: Undo2,
+                  fn: s.undo,
+                  disabled: !s.history.length || busy || layoutBusy,
+                },
+                {
+                  label: "redo",
+                  icon: Redo2,
+                  fn: s.redo,
+                  disabled: !s.future.length || busy || layoutBusy,
                 },
                 {
                   label: "screenshot",
                   icon: Download,
                   fn: () => graph.current?.png(),
                 },
-              ].map(({ label, icon: Icon, fn }) => (
+              ].map(({ label, icon: Icon, fn, disabled }) => (
                 <button
                   key={label}
                   className="icon-button"
                   aria-label={t(label)}
                   title={t(label)}
-                  disabled={list}
+                  disabled={disabled ?? list}
                   onClick={fn}
                 >
                   <Icon size={18} />
@@ -707,24 +739,7 @@ export function App({
               ))}
             </div>
             <span className="pan-hint">{t("hintPan")}</span>
-            <div className="graph-controls">
-              <button
-                className="icon-button"
-                aria-label={t("undo")}
-                disabled={!s.history.length || busy}
-                onClick={s.undo}
-              >
-                <Undo2 size={18} />
-              </button>
-              <button
-                className="icon-button"
-                aria-label={t("redo")}
-                disabled={!s.future.length || busy}
-                onClick={s.redo}
-              >
-                <Redo2 size={18} />
-              </button>
-            </div>
+            <span className="pinch-hint">{t("pinchHelp")}</span>
           </div>
           <button
             className={"add-fab " + (guideInvite ? "guide-glow" : "")}

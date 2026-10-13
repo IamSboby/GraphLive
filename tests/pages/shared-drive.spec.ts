@@ -65,11 +65,26 @@ test("Drive invitations and Picker open the canonical shared network with reader
   const writes: string[] = [];
   await page.addInitScript(() => {
     class View {
+      setOwnedByMe(value: boolean) {
+        if (value !== false) throw Error("Expected shared files");
+        return this;
+      }
+      setQuery(value: string) {
+        if (value !== "graphlive.json") throw Error("Expected network search");
+        return this;
+      }
+      setLabel() {
+        return this;
+      }
       setMimeTypes() {
         return this;
       }
     }
     class Builder {
+      enableFeature(value: string) {
+        if (value !== "multi") throw Error("Expected multi-select");
+        return this;
+      }
       callback: (v: unknown) => void = () => {};
       addView() {
         return this;
@@ -93,14 +108,26 @@ test("Drive invitations and Picker open the canonical shared network with reader
       build() {
         return {
           setVisible: () =>
-            this.callback({ action: "picked", docs: [{ id: "shared-file" }] }),
+            this.callback({
+              action: "picked",
+              docs: [
+                { id: "shared-file" },
+                { id: "second-file" },
+                { id: "invalid-file" },
+                { id: "shared-file" },
+              ],
+            }),
           dispose: () => {},
         };
       }
     }
     Object.assign(window, {
       google: {
-        picker: { DocsView: View, PickerBuilder: Builder },
+        picker: {
+          DocsView: View,
+          PickerBuilder: Builder,
+          Feature: { MULTISELECT_ENABLED: "multi" },
+        },
         accounts: {
           oauth2: {
             initTokenClient: (options: {
@@ -205,6 +232,18 @@ test("Drive invitations and Picker open the canonical shared network with reader
       });
     if (reader && revoked && id === "shared-file")
       return route.fulfill({ status: 404, json: {} });
+    if (id === "invalid-file")
+      return route.fulfill({
+        json:
+          url.searchParams.get("alt") === "media"
+            ? { unrelated: true }
+            : {
+                id,
+                title: "Invalid.graphlive.json",
+                etag: "bad",
+                capabilities: { canEdit: false },
+              },
+      });
     const file = files.get(id)!;
     if (req.method() === "PUT") {
       writes.push(id);
@@ -216,7 +255,16 @@ test("Drive invitations and Picker open the canonical shared network with reader
       json:
         url.searchParams.get("alt") === "media"
           ? file.data
-          : { ...file, capabilities: { canEdit: !reader, canShare: !reader } },
+          : {
+              ...file,
+              owners: [
+                {
+                  displayName: "Alex Owner",
+                  emailAddress: "owner@example.com",
+                },
+              ],
+              capabilities: { canEdit: !reader, canShare: !reader },
+            },
     });
   });
   async function login() {
@@ -291,20 +339,60 @@ test("Drive invitations and Picker open the canonical shared network with reader
   await dialog.getByRole("button", { name: "Cerrar", exact: true }).click();
   await page.setViewportSize({ width: 1280, height: 900 });
   reader = true;
+  const other = structuredClone(files.get("shared-file")!);
+  other.id = "second-file";
+  other.title = "Game.graphlive.json";
+  other.properties = [];
+  other.data.preferences.networkName = "Game network";
+  files.set(other.id, other);
   await page.reload();
   await login();
   await page
-    .getByRole("button", { name: "Abrir red compartida", exact: true })
+    .getByRole("button", { name: "Buscar redes en Drive", exact: true })
     .click();
-  await expect(page.locator(".network-card")).toHaveCount(1);
+  await expect(page.locator(".network-card")).toHaveCount(2);
   await expect(
-    page.getByRole("button", { name: "Renombrar", exact: true }),
+    page.getByRole("button", { name: "Renombrar", exact: true }).first(),
   ).toBeDisabled();
+  await expect(
+    page.getByText("2 redes seleccionadas válidas; 1 archivos omitidos.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Compartidas 2", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".network-card").first()).toContainText(
+    "Alex Owner · owner@example.com",
+  );
+  const discovered = structuredClone(other);
+  discovered.id = "discovered-file";
+  discovered.title = "New.graphlive.json";
+  discovered.data.preferences.networkName = "New shared network";
+  files.set(discovered.id, discovered);
+  await expect(
+    page.getByRole("button", { name: "Actualizar redes", exact: true }),
+  ).toBeEnabled();
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect(page.locator(".network-card")).toHaveCount(3);
+  await page
+    .getByRole("textbox", { name: "Buscar redes…" })
+    .fill("owner@example.com");
+  await expect(page.locator(".network-card")).toHaveCount(3);
+  await page.getByRole("textbox", { name: "Buscar redes…" }).fill("New shared");
+  await expect(page.locator(".network-card")).toHaveCount(1);
+  await page.getByRole("textbox", { name: "Buscar redes…" }).fill("");
   await page.screenshot({
     path: "../../work/shared-network-reader.png",
     fullPage: true,
   });
-  await page.getByTestId("open-network").click();
+  await page
+    .locator(".network-card")
+    .filter({
+      has: page.getByRole("heading", { name: "Friends", exact: true }),
+    })
+    .getByTestId("open-network")
+    .click();
   await expect(page.locator(".sync-state")).toContainText("Solo lectura");
   await expect(page.locator(".add-fab")).toBeDisabled();
   expect(writes).toEqual([]);

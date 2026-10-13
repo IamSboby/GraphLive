@@ -3,10 +3,16 @@ import type { GoogleSession } from "./google-auth";
 // Public browser key, restricted in Google Cloud to Picker and allowed websites.
 const developerKey = "AIzaSyBxMUwsq-DpK-QAtWMA0Hm8hLAdENXb4V8";
 type PickerResult = { action: string; docs?: { id: string }[] };
-type View = { setMimeTypes(types: string): View };
+type View = {
+  setMimeTypes(types: string): View;
+  setOwnedByMe(owned: boolean): View;
+  setQuery(query: string): View;
+  setLabel(label: string): View;
+};
 type Picker = { setVisible(visible: boolean): void; dispose(): void };
 type Builder = {
   addView(view: View): Builder;
+  enableFeature(feature: string): Builder;
   setOAuthToken(token: string): Builder;
   setDeveloperKey(key: string): Builder;
   setAppId(id: string): Builder;
@@ -27,7 +33,11 @@ type PickerWindow = {
     ): void;
   };
   google?: {
-    picker?: { DocsView: new () => View; PickerBuilder: new () => Builder };
+    picker?: {
+      DocsView: new () => View;
+      PickerBuilder: new () => Builder;
+      Feature: { MULTISELECT_ENABLED: string };
+    };
   };
 };
 let loading: Promise<void> | undefined;
@@ -56,15 +66,29 @@ function preparePicker() {
     document.head.appendChild(script);
   }));
 }
-export async function pickSharedNetwork(
+export async function pickSharedNetworks(
   session: GoogleSession,
-): Promise<string | null> {
+  labels: { networks: string; allJson: string },
+): Promise<string[]> {
   await preparePicker();
   const api = (window as unknown as PickerWindow).google?.picker;
   if (!api) throw new Error("driveUnavailable");
   return new Promise((resolve) => {
     const picker = new api.PickerBuilder()
-      .addView(new api.DocsView().setMimeTypes("application/json"))
+      .addView(
+        new api.DocsView()
+          .setMimeTypes("application/json")
+          .setOwnedByMe(false)
+          .setQuery("graphlive.json")
+          .setLabel(labels.networks),
+      )
+      .addView(
+        new api.DocsView()
+          .setMimeTypes("application/json")
+          .setOwnedByMe(false)
+          .setLabel(labels.allJson),
+      )
+      .enableFeature(api.Feature.MULTISELECT_ENABLED)
       .setOAuthToken(session.pickerToken)
       .setDeveloperKey(developerKey)
       .setAppId("225177671658")
@@ -73,7 +97,9 @@ export async function pickSharedNetwork(
         if (result.action === "picked" || result.action === "cancel") {
           picker.dispose();
           resolve(
-            result.action === "picked" ? (result.docs?.[0]?.id ?? null) : null,
+            result.action === "picked"
+              ? [...new Set((result.docs ?? []).map((doc) => doc.id))]
+              : [],
           );
         }
       })

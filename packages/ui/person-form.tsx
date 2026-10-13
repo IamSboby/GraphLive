@@ -1,4 +1,7 @@
 "use client";
+import { SocialProfiles } from "./social-profiles";
+import { socialUrl } from "../domain/social";
+import { ImagePicker } from "./image-picker";
 import { useState, useRef, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -10,6 +13,7 @@ import {
   createPerson,
   updatePerson,
   upsertConnection,
+  followsRelationship,
   ownerRelationship,
   personSchema,
   displayName,
@@ -31,9 +35,11 @@ export function PersonForm({
   const { t } = useTranslation(),
     data = useNetwork((s) => s.data)!,
     mutate = useNetwork((s) => s.mutate);
+  const [imageBusy, setImageBusy] = useState(false);
   const drafts = useRef({ interests: "", tags: "" });
   const [profile, setProfile] = useState<Profile>(
     person?.profile ?? {
+      socialProfiles: [],
       firstName: "",
       lastName: "",
       nickname: "",
@@ -58,6 +64,19 @@ export function PersonForm({
         [edge.sourceId, edge.targetId].includes(data.ownerId!),
     ),
   );
+  const ownerConnection =
+    person &&
+    data.connections.find(
+      (edge) =>
+        [edge.sourceId, edge.targetId].includes(person.id) &&
+        [edge.sourceId, edge.targetId].includes(data.ownerId!),
+    );
+  const [intensity, setIntensity] = useState(
+    ownerConnection ? ownerConnection.intensity : 3,
+  );
+  const [frequency, setFrequency] = useState(
+    ownerConnection ? ownerConnection.frequency : 3,
+  );
   const [knowsDirectly, setKnowsDirectly] = useState(false);
   const connectToOwner = person ? hasOwnerConnection : knowsDirectly;
   const [relationship, setRelationship] = useState<RelationshipType>(
@@ -71,8 +90,13 @@ export function PersonForm({
     setProfile((current) => ({ ...current, [key]: value }));
   function submit(e: FormEvent) {
     e.preventDefault();
+    if (imageBusy) return;
     const parsed = profileSchema.safeParse({
       ...profile,
+      socialProfiles: profile.socialProfiles.map((p) => ({
+        ...p,
+        url: socialUrl(p.platform, p.url),
+      })),
       interests: [
         ...profile.interests,
         ...(drafts.current.interests.trim()
@@ -118,13 +142,19 @@ export function PersonForm({
           sourceId: old?.sourceId ?? s.ownerId,
           targetId: old?.targetId ?? p.id,
           relationshipType: relationship,
-          intensity: old?.intensity ?? 3,
-          frequency: old?.frequency ?? 3,
+          intensity,
+          frequency,
           importance: old?.importance ?? 3,
           status: old?.status ?? "confirmed",
           notes: old?.notes ?? "",
-          sourcePerspective: old?.sourcePerspective ?? null,
-          targetPerspective: old?.targetPerspective ?? null,
+          sourcePerspective: followsRelationship(old, "source")
+            ? relationship
+            : old!.sourcePerspective,
+          sourcePerspectiveAutomatic: followsRelationship(old, "source"),
+          targetPerspective: followsRelationship(old, "target")
+            ? relationship
+            : old!.targetPerspective,
+          targetPerspectiveAutomatic: followsRelationship(old, "target"),
           startedAt: old?.startedAt ?? null,
           endedAt: old?.endedAt ?? null,
         });
@@ -150,6 +180,12 @@ export function PersonForm({
         className="form-content"
         aria-describedby={error ? "person-form-error" : undefined}
       >
+        <ImagePicker
+          kind="portrait"
+          value={profile.portrait}
+          onChange={(v) => set("portrait", v)}
+          onBusy={setImageBusy}
+        />
         <div className="form-grid">
           {(["firstName", "lastName", "nickname"] as const).map((k) => (
             <Field key={k} label={t(k)}>
@@ -186,6 +222,30 @@ export function PersonForm({
                 ))}
               </select>
             </Field>
+          )}
+          {person?.id !== data.ownerId && connectToOwner && (
+            <>
+              <Field label={t("intensity")}>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={intensity}
+                  onChange={(e) => setIntensity(Number(e.target.value))}
+                />
+                <output>{intensity}/5</output>
+              </Field>
+              <Field label={t("frequency")}>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={frequency}
+                  onChange={(e) => setFrequency(Number(e.target.value))}
+                />
+                <output>{frequency}/5</output>
+              </Field>
+            </>
           )}
           <Field label={t("birthYear")}>
             <input
@@ -291,6 +351,10 @@ export function PersonForm({
             />
           </Field>
         </div>
+        <SocialProfiles
+          value={profile.socialProfiles}
+          onChange={(v) => set("socialProfiles", v)}
+        />
         <Field label={t("notes")}>
           <textarea
             value={profile.notes}
@@ -353,7 +417,7 @@ export function PersonForm({
           <button type="button" onClick={onClose}>
             {t("cancel")}
           </button>
-          <button className="primary" type="submit">
+          <button className="primary" type="submit" disabled={imageBusy}>
             {t("save")}
           </button>
         </footer>

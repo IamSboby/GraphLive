@@ -21,6 +21,11 @@ export function mergeSnapshots(
 ): { value: Snapshot; conflicts: Conflict[] } {
   const conflicts: Conflict[] = [];
   function merge(b: unknown, l: unknown, r: unknown, path: string): unknown {
+    if (path === "preferences.lastEditedAt")
+      return [b, l, r]
+        .filter((v): v is string => typeof v === "string")
+        .sort()
+        .at(-1);
     if (equal(l, r) || equal(r, b)) return l;
     if (equal(l, b)) return r;
     if (record(b) && record(l) && record(r)) {

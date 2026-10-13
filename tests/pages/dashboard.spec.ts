@@ -3,6 +3,7 @@ import { test, expect } from "@playwright/test";
 test("legacy network and independent game identity survive switching and reopening", async ({
   page,
 }) => {
+  await page.emulateMedia({ colorScheme: "light" });
   const id = crypto.randomUUID(),
     deviceId = crypto.randomUUID(),
     now = new Date().toISOString();
@@ -29,7 +30,15 @@ test("legacy network and independent game identity survive switching and reopeni
     connections: [],
     counters: { M: 0, F: 0, L: 0, U: 1 },
     tombstones: [],
-    preferences: { introduction: "done" },
+    preferences: {
+      introduction: "done",
+      theme: "system",
+      themePreset: "indigo",
+      customThemes: {
+        light: { accent: "#762fba" },
+        dark: { accent: "#bc91ee" },
+      },
+    },
   };
   await page.goto("./login/");
   await page.evaluate(async (data) => {
@@ -103,6 +112,46 @@ test("legacy network and independent game identity survive switching and reopeni
   await expect(
     page.locator(".network-card").filter({ hasText: "Real Alex" }),
   ).toContainText("Personal network");
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue("--accent"),
+      ),
+    )
+    .toBe("#404045");
+  await expect
+    .poll(() =>
+      original.evaluate((e) =>
+        getComputedStyle(e).getPropertyValue("--accent"),
+      ),
+    )
+    .toBe("#762fba");
+  const gameCard = page
+    .locator(".network-card")
+    .filter({ hasText: "Elden Ring" });
+  await expect
+    .poll(() =>
+      gameCard.evaluate((e) =>
+        getComputedStyle(e).getPropertyValue("--accent"),
+      ),
+    )
+    .toBe("#335eaa");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        getComputedStyle(document.documentElement).getPropertyValue("--accent"),
+      ),
+    )
+    .toBe("#d4d4d8");
+  await expect
+    .poll(() =>
+      original.evaluate((e) =>
+        getComputedStyle(e).getPropertyValue("--accent"),
+      ),
+    )
+    .toBe("#bc91ee");
+  await page.emulateMedia({ colorScheme: "light" });
   await page.screenshot({
     path: "../../work/dashboard-desktop.png",
     animations: "disabled",

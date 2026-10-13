@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Sparkles, UserRound, Check } from "lucide-react";
 import { type Snapshot, profileSchema, updatePerson } from "../domain/model";
 import { genders } from "../domain/gender";
 import { useNetwork } from "./store";
+import { ImagePicker } from "./image-picker";
 import { Modal, Field, CountryPicker } from "./primitives";
 
 export function introductionStage(data: Snapshot) {
@@ -24,10 +25,19 @@ export function Introduction({ onAdd }: { onAdd: () => void }) {
       owner?.profile ?? profileSchema.parse({ nickname: t("me") }),
     ),
   );
+  const form = useRef<HTMLFormElement>(null);
+  const [imageBusy, setImageBusy] = useState(false);
   const [step, setStep] = useState(1),
     [error, setError] = useState("");
+  useEffect(() => {
+    form.current?.scrollTo({ top: 0 });
+    if (step === 2)
+      form.current
+        ?.querySelector<HTMLButtonElement>(".image-upload-button")
+        ?.focus({ preventScroll: true });
+  }, [step]);
   const stage = introductionStage(saved),
-    busy = Boolean(s.conflict);
+    busy = Boolean(s.conflict) || imageBusy;
   const setStage = (value: "invite" | "done" | "skipped") => {
     if (busy) return;
     s.mutate((d) => {
@@ -48,6 +58,7 @@ export function Introduction({ onAdd }: { onAdd: () => void }) {
         onClose={() => setStage("skipped")}
       >
         <form
+          ref={form}
           className="form-content"
           onSubmit={(e) => {
             e.preventDefault();
@@ -100,11 +111,18 @@ export function Introduction({ onAdd }: { onAdd: () => void }) {
               </Field>
             ) : (
               <>
+                <ImagePicker
+                  kind="portrait"
+                  value={profile.portrait}
+                  onChange={(portrait) =>
+                    setProfile((current) => ({ ...current, portrait }))
+                  }
+                  onBusy={setImageBusy}
+                />
                 <div className="form-grid">
                   {(["firstName", "lastName"] as const).map((k) => (
                     <Field key={k} label={t(k)}>
                       <input
-                        autoFocus={k === "firstName"}
                         maxLength={200}
                         value={profile[k]}
                         onChange={(e) =>
@@ -157,7 +175,7 @@ export function Introduction({ onAdd }: { onAdd: () => void }) {
               </button>
             )}
             <button className="primary" disabled={busy} type="submit">
-              {t(busy ? "saving" : step === 1 ? "continue" : "guideSave")}
+              {t(step === 1 ? "continue" : "guideSave")}
             </button>
           </footer>
         </form>

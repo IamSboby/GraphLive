@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
@@ -13,15 +14,26 @@ import {
   RefreshCw,
   Pencil,
   Share2,
+  Upload,
 } from "lucide-react";
-import { GoogleDriveRepository } from "../storage-adapters/google-drive";
-import { pickSharedNetwork } from "../storage-adapters/google-picker";
+import { importFile } from "../storage-core/export";
+import type { Snapshot } from "../domain/model";
 import {
-  emptySnapshot,
-  createPerson,
-  displayName,
-  normalize,
-} from "../domain/model";
+  summarizeNetwork,
+  sortNetworks,
+  dashboardScope,
+  readDashboard,
+  readBanner,
+  cacheDashboard,
+  cacheIndex,
+  cacheBanner,
+} from "./dashboard-cache";
+import { formatDate } from "../i18n/dates";
+import { themePalette } from "../appearance/config";
+import type { Repository } from "../storage-core";
+import { GoogleDriveRepository } from "../storage-adapters/google-drive";
+import { pickSharedNetworks } from "../storage-adapters/google-picker";
+import { emptySnapshot, createPerson, normalize } from "../domain/model";
 import { useLibrary, type NetworkEntry } from "./library";
 import { useNetwork } from "./store";
 import { NetworkSharing } from "./network-sharing";
@@ -35,9 +47,11 @@ import {
 
 export function Dashboard({
   theme,
+  systemDark,
   onThemeChange,
 }: {
   theme: "light" | "dark" | "system";
+  systemDark: boolean;
   onThemeChange: (theme: "light" | "dark" | "system") => void;
 }) {
   const { t, i18n } = useTranslation();
@@ -45,6 +59,10 @@ export function Dashboard({
   const { library, ownerName, activeId } = useLibrary();
   const active = useNetwork((s) => s.data);
   const demo = useNetwork((s) => s.demo);
+  const dirty = useNetwork((s) => s.dirty);
+  const [importPreview, setImportPreview] = useState<Snapshot | null>(null);
+  const [importName, setImportName] = useState("");
+  const importInput = useRef<HTMLInputElement>(null);
   const [entries, setEntries] = useState<NetworkEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -57,46 +75,215 @@ export function Dashboard({
   const [editing, setEditing] = useState<NetworkEntry | null>(null);
   const [sharing, setSharing] = useState<NetworkEntry | null>(null);
   const [notice, setNotice] = useState("");
+  const [tab, setTab] = useState<"all" | "shared">("all");
+  const [skipped, setSkipped] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const loadedOnce = useRef(false);
+  const repositoryCache = useRef<{
+    library: typeof library;
+    entries: Map<string, Repository>;
+  } | null>(null);
   useEffect(() => {
     if (!library) {
       router.replace("/login");
       return;
     }
+    if (repositoryCache.current?.library !== library) {
+      repositoryCache.current = { library, entries: new Map() };
+      loadedOnce.current = false;
+    }
+    const repositories = repositoryCache.current.entries;
     let cancelled = false;
-    setLoading(true);
+    let cacheKey: string | null = null;
+    let latestCards: NetworkEntry[] = [];
+    let cacheTimer: ReturnType<typeof setTimeout> | undefined;
+    setLoading(!loadedOnce.current);
+    setRefreshing(true);
     setError("");
     void (async () => {
-      const loaded: NetworkEntry[] = [];
-      for (const id of await library.ids()) {
-        const repo = library.repository(id);
-        let data;
-        try {
-          data = await repo.load();
-        } catch (e) {
-          if (e instanceof Error && e.message === "sharedAccessLost") continue;
-          throw e;
-        }
-        if (data.people.length)
-          loaded.push({
-            id,
-            data,
-            readOnly: repo.readOnly,
-            shared: repo instanceof GoogleDriveRepository && repo.shared,
-          });
+      // Discovery does not hold up previously known cards or their refresh.
+      const discovery = library.ids().then(
+        (ids) => ({ ids, error: null }),
+        (error) => ({ ids: null, error }),
+      );
+      const scope = await dashboardScope(library);
+      if (cancelled) return;
+      cacheKey = scope;
+      const cached = scope ? await readDashboard(scope) : [];
+      const cards = new Map(cached.map((entry) => [entry.id, entry]));
+      const state = useNetwork.getState(),
+        selectedId = useLibrary.getState().activeId;
+      if (selectedId && state.data && !state.demo)
+        cards.set(
+          selectedId,
+          summarizeNetwork(selectedId, state.data, {
+            ...cards.get(selectedId),
+            readOnly: state.repo?.readOnly,
+            shared: state.repo?.shared,
+          }),
+        );
+      const publish = () => {
+        if (cancelled) return;
+        latestCards = sortNetworks([...cards.values()]);
+        setEntries(latestCards);
+        clearTimeout(cacheTimer);
+        if (scope)
+          cacheTimer = setTimeout(
+            () => void cacheIndex(scope, latestCards),
+            250,
+          );
+        if (cards.size) setLoading(false);
+      };
+      publish();
+      const fresh = new Set<string>();
+      const banners = scope
+        ? Promise.all(
+            cached.map(async (entry) => {
+              const banner = await readBanner(scope, entry.id);
+              if (cancelled || fresh.has(entry.id) || !banner) return;
+              const current = cards.get(entry.id);
+              if (current) {
+                cards.set(entry.id, {
+                  ...current,
+                  preferences: { ...current.preferences, banner },
+                });
+                publish();
+              }
+            }),
+          )
+        : Promise.resolve();
+      const scheduled = new Set<string>();
+      let ignored = 0;
+      const loadIds = async (ids: string[]) => {
+        const pending = ids.filter((id) => !scheduled.has(id));
+        pending.forEach((id) => scheduled.add(id));
+        let cursor = 0;
+        await Promise.all(
+          Array.from({ length: Math.min(3, pending.length) }, async () => {
+            while (cursor < pending.length && !cancelled) {
+              const id = pending[cursor++];
+              const repo = repositories.get(id) ?? library.repository(id);
+              repositories.set(id, repo);
+              try {
+                const data = await repo.load();
+                if (cancelled) return;
+                fresh.add(id);
+                if (data.people.length)
+                  cards.set(
+                    id,
+                    summarizeNetwork(id, data, {
+                      readOnly: repo.readOnly,
+                      shared: repo.shared,
+                      ownerLabel:
+                        repo instanceof GoogleDriveRepository
+                          ? repo.ownerLabel
+                          : undefined,
+                    }),
+                  );
+                else cards.delete(id);
+                const updated = cards.get(id);
+                if (scope && updated) void cacheBanner(scope, updated);
+              } catch (e) {
+                if (cancelled) return;
+                if (
+                  e instanceof Error &&
+                  (e.message === "sharedAccessLost" ||
+                    (id.startsWith("shared:") &&
+                      ["invalidData", "tooLarge"].includes(e.message)))
+                ) {
+                  cards.delete(id);
+                  fresh.add(id);
+                  ignored++;
+                } else
+                  setError(e instanceof Error ? e.message : "storageError");
+              }
+              publish();
+            }
+          }),
+        );
+      };
+      const known = loadIds(sortNetworks([...cards.values()]).map((e) => e.id));
+      const result = await discovery;
+      if (cancelled) return;
+      if (result.ids) {
+        for (const id of cards.keys())
+          if (!result.ids.includes(id)) cards.delete(id);
+        publish();
+        await Promise.all([known, loadIds(result.ids)]);
+        // A removed network must not be reintroduced by an in-flight refresh.
+        for (const id of cards.keys())
+          if (!result.ids.includes(id)) cards.delete(id);
+        for (const id of repositories.keys())
+          if (!result.ids.includes(id)) repositories.delete(id);
+      } else {
+        setError(
+          result.error instanceof Error ? result.error.message : "storageError",
+        );
+        await known;
       }
-      if (!cancelled) setEntries(loaded);
+      await banners;
+      if (cancelled) return;
+      const current = useNetwork.getState(),
+        currentId = useLibrary.getState().activeId;
+      if (
+        currentId &&
+        cards.has(currentId) &&
+        current.data &&
+        !current.demo &&
+        (current.dirty ||
+          summarizeNetwork(currentId, current.data).modifiedAt >=
+            cards.get(currentId)!.modifiedAt)
+      )
+        cards.set(
+          currentId,
+          summarizeNetwork(currentId, current.data, cards.get(currentId)),
+        );
+      publish();
+      setSkipped(ignored);
+      if (scope) await cacheDashboard(scope, [...cards.values()]);
     })()
       .catch((e) => {
         if (!cancelled)
           setError(e instanceof Error ? e.message : "storageError");
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          loadedOnce.current = true;
+          setLoading(false);
+          setRefreshing(false);
+        }
       });
     return () => {
       cancelled = true;
+      clearTimeout(cacheTimer);
+      if (cacheKey && latestCards.length)
+        void cacheIndex(cacheKey, latestCards);
     };
   }, [library, router, reload]);
+  useEffect(() => {
+    if (
+      library?.provider !== "drive" ||
+      loading ||
+      refreshing ||
+      busy ||
+      sharing ||
+      editing ||
+      creating
+    )
+      return;
+    const refresh = () => {
+      if (document.visibilityState !== "hidden" && navigator.onLine)
+        setReload((v) => v + 1);
+    };
+    const timer = setInterval(refresh, 30000);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("online", refresh);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("online", refresh);
+    };
+  }, [library, loading, refreshing, busy, sharing, editing, creating]);
   async function selectForChange(id: string) {
     if (!library) throw new Error("storageError");
     const state = useNetwork.getState();
@@ -141,13 +328,34 @@ export function Dashboard({
     setNotice("");
     try {
       await library.session.ensureFileAccess();
-      const file = await pickSharedNetwork(library.session);
-      if (file) {
-        const repo = library.repository("shared:" + file);
-        const data = await repo.load();
-        if (!data.ownerId || !data.people.length)
-          throw new Error("invalidData");
+      const files = await pickSharedNetworks(library.session, {
+        networks: t("sharedNetworks"),
+        allJson: t("sharedAllJson"),
+      });
+      if (!files.length) return;
+      let rejected = 0;
+      for (const file of files) {
+        try {
+          const repo = library.repository("shared:" + file);
+          const data = await repo.load();
+          if (!data.ownerId || !data.people.length)
+            throw new Error("invalidData");
+        } catch (e) {
+          if (
+            e instanceof Error &&
+            ["driveExpired", "driveSharingPermission"].includes(e.message)
+          )
+            throw e;
+          rejected++;
+        }
       }
+      setTab("shared");
+      setNotice(
+        t("sharedImportResult", {
+          count: files.length - rejected,
+          skipped: rejected,
+        }),
+      );
       setReload((v) => v + 1);
     } catch (e) {
       setError(e instanceof Error ? e.message : "storageError");
@@ -188,7 +396,7 @@ export function Dashboard({
     setError("");
     try {
       const state = useNetwork.getState();
-      if (id !== activeId || !state.data || state.demo) {
+      if (id !== activeId || !state.data || state.demo || !state.dirty) {
         if (!(await state.prepareSwitch()))
           throw new Error(
             state.conflict ? "resolveBeforeSwitch" : "localSaveFailed",
@@ -199,7 +407,32 @@ export function Dashboard({
         await useNetwork.getState().open(data, repo);
       }
       useLibrary.getState().select(id);
+      useLibrary.getState().requestEntry(id);
       router.push("/graph");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "storageError");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function importNetwork() {
+    if (!library || !importPreview || !importName.trim()) return;
+    setBusy(true);
+    setError("");
+    try {
+      if (!(await useNetwork.getState().prepareSwitch()))
+        throw new Error("resolveBeforeSwitch");
+      const id = library.multiple ? crypto.randomUUID() : "default";
+      const repo = library.repository(id);
+      if (!library.multiple && (await repo.load()).people.length)
+        throw new Error("storageError");
+      const copy = structuredClone(importPreview);
+      copy.revision = 0;
+      copy.deviceId = crypto.randomUUID();
+      copy.preferences.networkName = importName.trim();
+      await repo.save(copy, 0);
+      setImportPreview(null);
+      setReload((v) => v + 1);
     } catch (e) {
       setError(e instanceof Error ? e.message : "storageError");
     } finally {
@@ -238,26 +471,25 @@ export function Dashboard({
       setBusy(false);
     }
   }
-  const networks = entries.map((entry) =>
-    entry.id === activeId && active && !demo
-      ? { ...entry, data: active }
-      : entry,
+  const networks = sortNetworks(
+    entries.map((entry) =>
+      entry.id === activeId &&
+      active &&
+      !demo &&
+      (dirty ||
+        summarizeNetwork(entry.id, active).modifiedAt >= entry.modifiedAt)
+        ? summarizeNetwork(entry.id, active, entry)
+        : entry,
+    ),
   );
   const title = (entry: NetworkEntry) =>
-    entry.data.preferences.networkName || t("defaultNetwork");
-  const shown = networks.filter((entry) =>
-    normalize(
-      [
-        title(entry),
-        ...entry.data.people
-          .filter((p) => p.id === entry.data.ownerId)
-          .flatMap((p) => [
-            p.profile.nickname,
-            p.profile.firstName,
-            p.profile.lastName,
-          ]),
-      ].join(" "),
-    ).includes(normalize(query)),
+    entry.preferences.networkName || t("defaultNetwork");
+  const shown = networks.filter(
+    (entry) =>
+      (tab === "all" || entry.shared) &&
+      normalize(
+        [title(entry), entry.ownerLabel ?? "", entry.identity].join(" "),
+      ).includes(normalize(query)),
   );
   return (
     <main className="welcome dashboard page-enter">
@@ -330,12 +562,123 @@ export function Dashboard({
           <Plus size={20} />
           {t("newNetwork")}
         </button>
+        <button
+          disabled={
+            busy || loading || (!library?.multiple && entries.length > 0)
+          }
+          onClick={() => importInput.current?.click()}
+          data-testid="import-network"
+        >
+          <Upload size={20} />
+          {t("import")}
+        </button>
+        <input
+          ref={importInput}
+          type="file"
+          accept=".json,.zip"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (!file) return;
+            setBusy(true);
+            setError("");
+            void importFile(file)
+              .then((data) => {
+                if (!data.people.length) throw new Error("invalidData");
+                setImportName(
+                  data.preferences.networkName ||
+                    file.name.replace(/\.(zip|json)$/i, ""),
+                );
+                setImportPreview(data);
+              })
+              .catch((e) =>
+                setError(
+                  e instanceof Error && e.message === "tooLarge"
+                    ? "tooLarge"
+                    : "invalidData",
+                ),
+              )
+              .finally(() => setBusy(false));
+          }}
+        />
       </section>
+      {importPreview && (
+        <Modal
+          title={t("importPreview")}
+          onClose={() => {
+            if (!busy) setImportPreview(null);
+          }}
+        >
+          <form
+            className="form-content"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void importNetwork();
+            }}
+          >
+            <Field label={t("networkName")}>
+              <input
+                required
+                maxLength={80}
+                value={importName}
+                onChange={(e) => setImportName(e.target.value)}
+              />
+            </Field>
+            <p>
+              {importPreview.people.length} {t("people")} ·{" "}
+              {importPreview.connections.length} {t("connections")}
+            </p>
+            <p>{t("importAsNewNetwork")}</p>
+            <footer className="modal-actions">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setImportPreview(null)}
+              >
+                {t("cancel")}
+              </button>
+              <button className="primary" disabled={busy || !importName.trim()}>
+                {t("import")}
+              </button>
+            </footer>
+          </form>
+        </Modal>
+      )}
+      {library?.session && (
+        <div
+          className="network-tabs"
+          role="group"
+          aria-label={t("networkView")}
+        >
+          <button
+            type="button"
+            aria-pressed={tab === "all"}
+            onClick={() => setTab("all")}
+          >
+            {t("allNetworks")} <span>{networks.length}</span>
+          </button>
+          <button
+            type="button"
+            aria-pressed={tab === "shared"}
+            onClick={() => setTab("shared")}
+          >
+            <Share2 size={17} />
+            {t("sharedNetworks")}{" "}
+            <span>{networks.filter((e) => e.shared).length}</span>
+          </button>
+        </div>
+      )}
+      {library?.session && tab === "shared" && (
+        <p className="muted-copy shared-discovery-help">
+          {t("sharedDiscoveryHelp")}
+        </p>
+      )}
       <div className="dashboard-tools">
         {library?.session && (
           <button disabled={loading || busy} onClick={() => void receive()}>
             <Share2 size={18} />
-            {t("openSharedNetwork")}
+            {t("importSharedNetworks")}
           </button>
         )}
         <label className="search-box">
@@ -350,12 +693,20 @@ export function Dashboard({
         <button
           className="icon-button"
           aria-label={t("refreshNetworks")}
-          disabled={loading || busy}
+          disabled={loading || refreshing || busy}
           onClick={() => setReload((v) => v + 1)}
         >
           <RefreshCw size={19} />
         </button>
       </div>
+      {refreshing && !loading && (
+        <p className="muted-copy" role="status">
+          {t("scanningNetworks")}
+        </p>
+      )}
+      {skipped > 0 && (
+        <p className="muted-copy">{t("sharedSkipped", { count: skipped })}</p>
+      )}
       {error && (
         <p className="notice error" role="alert">
           {t(error)}
@@ -371,34 +722,73 @@ export function Dashboard({
       ) : (
         <section className="network-cards" aria-label={t("myNetworks")}>
           {shown.map((entry) => {
-            const owner = entry.data.people.find(
-              (p) => p.id === entry.data.ownerId,
-            );
+            const cardDark =
+              entry.preferences.theme === "dark" ||
+              (entry.preferences.theme === "system" && systemDark);
+            const cardPalette = themePalette(entry.preferences, cardDark);
+            const cardStyle = {
+              ...Object.fromEntries(
+                Object.entries(cardPalette).map(([key, value]) => [
+                  "--" + key,
+                  value,
+                ]),
+              ),
+              colorScheme: cardDark ? "dark" : "light",
+            } as CSSProperties;
             return (
-              <article className="network-card" key={entry.id}>
+              <article
+                className="network-card"
+                key={entry.id}
+                style={cardStyle}
+              >
                 <div className="network-card-art" aria-hidden="true">
-                  <Network size={52} />
+                  {entry.preferences.banner ? (
+                    <Image
+                      unoptimized
+                      loading="lazy"
+                      src={entry.preferences.banner}
+                      alt=""
+                      width={960}
+                      height={320}
+                    />
+                  ) : (
+                    <Network size={52} />
+                  )}
                 </div>
                 <h2>{title(entry)}</h2>
+                {entry.modifiedAt && (
+                  <p className="muted-copy">
+                    <time dateTime={entry.modifiedAt}>
+                      {formatDate(entry.modifiedAt, i18n.language, true)}
+                    </time>
+                  </p>
+                )}
                 {entry.shared && (
                   <p className="muted-copy">
                     {t(entry.readOnly ? "sharedReadOnly" : "sharedEditable")}
                   </p>
                 )}
                 <p className="network-identity">
-                  {t("networkIdentity", {
-                    name: owner ? displayName(owner) : t("me"),
-                  })}
+                  {t(
+                    entry.shared ? "sharedCentralProfile" : "networkIdentity",
+                    {
+                      name: entry.identity || t("me"),
+                    },
+                  )}
                 </p>
+                {entry.ownerLabel && (
+                  <p className="network-identity">
+                    {t("sharedOwnedBy", { name: entry.ownerLabel })}
+                  </p>
+                )}
                 <div className="network-card-counts">
                   <span>
                     <Users size={16} />
-                    {entry.data.people.length} {t("people").toLowerCase()}
+                    {entry.peopleCount} {t("people").toLowerCase()}
                   </span>
                   <span>
                     <Link2 size={16} />
-                    {entry.data.connections.length}{" "}
-                    {t("connections").toLowerCase()}
+                    {entry.connectionCount} {t("connections").toLowerCase()}
                   </span>
                 </div>
                 <button
@@ -438,8 +828,22 @@ export function Dashboard({
           {!shown.length && !error && (
             <div className="dashboard-empty">
               <Network size={44} />
-              <h2>{t(entries.length ? "noResults" : "noNetworks")}</h2>
-              <p>{t("independentIdentity")}</p>
+              <h2>
+                {t(
+                  tab === "shared" && !query
+                    ? "noSharedNetworks"
+                    : entries.length
+                      ? "noResults"
+                      : "noNetworks",
+                )}
+              </h2>
+              <p>
+                {t(
+                  tab === "shared"
+                    ? "sharedDiscoveryHelp"
+                    : "independentIdentity",
+                )}
+              </p>
             </div>
           )}
         </section>

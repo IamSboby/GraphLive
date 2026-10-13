@@ -39,7 +39,8 @@ test("Pages persists a local network, reopens it and serves graph assets without
     .fill("Local Friend");
   await page
     .getByRole("combobox", { name: "Añadir nacionalidad" })
-    .selectOption("FR");
+    .fill("Francia");
+  await page.getByRole("option", { name: "Francia (FR)", exact: true }).click();
   await page
     .getByRole("checkbox", { name: "Conozco directamente a esta persona" })
     .check();

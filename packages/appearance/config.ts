@@ -14,7 +14,9 @@ export const relationshipOverridesSchema = z.partialRecord(
 export const relationshipFileSchema = z
   .object({
     schemaVersion: z.literal(1),
-    colors: z.record(z.enum(relationshipTypes), hexColor),
+    colors: z
+      .partialRecord(z.enum(relationshipTypes), hexColor)
+      .transform((colors) => ({ ...relationships.colors, ...colors })),
   })
   .strict();
 export const defaultRelationshipColors =

@@ -16,7 +16,7 @@ export function configuration() {
     oneDrive: false,
     sbobyPiShare: false,
     customEndpoints: false,
-    avatars: false,
+    avatars: true,
     edgeDrag: false,
   };
 }

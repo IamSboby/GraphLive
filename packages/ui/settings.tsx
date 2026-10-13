@@ -1,4 +1,6 @@
 "use client";
+import { formatDate, formatBackupDate } from "../i18n/dates";
+import { ImagePicker } from "./image-picker";
 import { DriveBackupSettings } from "./drive-backup-settings";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
 
@@ -70,6 +72,12 @@ export function Settings({
               }}
             />
           </Field>
+          <ImagePicker
+            kind="banner"
+            value={data.preferences.banner}
+            disabled={Boolean(s.conflict)}
+            onChange={(v) => change("banner", v)}
+          />
           {!s.demo && (
             <button
               disabled={Boolean(s.conflict)}
@@ -98,7 +106,15 @@ export function Settings({
             </select>
           </Field>
           {(
-            ["showLabels", "showOwner", "searchNotes", "autoBackup"] as const
+            [
+              "showLabels",
+              "showOwner",
+              "showPhotos",
+              "hideUnknownYears",
+              "hideYears",
+              "searchNotes",
+              "autoBackup",
+            ] as const
           ).map((k, i) => (
             <label className="check" key={k}>
               <input
@@ -106,7 +122,17 @@ export function Settings({
                 checked={data.preferences[k]}
                 onChange={(e) => change(k, e.target.checked)}
               />
-              {t(["labels", "owner", "searchNotes", "autoBackup"][i])}
+              {t(
+                [
+                  "labels",
+                  "owner",
+                  "showPhotos",
+                  "hideUnknownYears",
+                  "hideYears",
+                  "searchNotes",
+                  "autoBackup",
+                ][i],
+              )}
             </label>
           ))}
           <DriveBackupSettings />
@@ -152,7 +178,7 @@ export function Settings({
                   JSON.stringify(
                     {
                       app: "GraphLive",
-                      version: "0.2.0-rc.1",
+                      version: "1.1.1",
                       schemaVersion: data.schemaVersion,
                       provider: s.demo ? "demo" : s.repo?.constructor.name,
                       pending: s.dirty,
@@ -186,10 +212,12 @@ export function Settings({
                   s.repo.backupInfo(id).timestamp
                     ? t(s.repo.backupInfo(id).kind) +
                       " · " +
-                      new Date(s.repo.backupInfo(id).timestamp).toLocaleString(
+                      formatDate(
+                        s.repo.backupInfo(id).timestamp,
                         data.preferences.language,
+                        true,
                       )
-                    : id.slice(0, 19)}
+                    : formatBackupDate(id, data.preferences.language)}
                 </button>
               ))}
             </div>

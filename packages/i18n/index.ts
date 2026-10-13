@@ -6,8 +6,10 @@ import de from "./locales/de.json";
 import fr from "./locales/fr.json";
 import pt from "./locales/pt.json";
 import { languageCodes, type Language } from "./languages";
+import { imageTranslations } from "./images";
 import { sharingTranslations } from "./sharing";
 export const es = {
+  ...imageTranslations.es,
   ...sharingTranslations.es,
   myNetworks: "Mis redes",
   networksIntro: "Un espacio para cada parte de tu mundo.",
@@ -255,8 +257,7 @@ export const es = {
   pathTo: "Ruta hacia…",
   noPath: "No existe una ruta",
   legend: "Leyenda",
-  legendHelp:
-    "Tamaño: métrica elegida. Grosor: intensidad. Opacidad: frecuencia. Discontinua: incierta o finalizada. Borde oscuro: tu perfil. Selección: borde azul.",
+  legendHelp: imageTranslations.es.legendHelp,
   fit: "Centrar red",
   zoomIn: "Acercar",
   zoomOut: "Alejar",
@@ -358,6 +359,7 @@ export const es = {
   knowsDirectly: "Conozco directamente a esta persona",
 };
 export const en: Record<keyof typeof es, string> = {
+  ...imageTranslations.en,
   ...sharingTranslations.en,
   myNetworks: "My networks",
   networksIntro: "A space for every part of your world.",
@@ -604,8 +606,7 @@ export const en: Record<keyof typeof es, string> = {
   pathTo: "Path to…",
   noPath: "No path exists",
   legend: "Legend",
-  legendHelp:
-    "Size: chosen metric. Width: intensity. Opacity: frequency. Dashed: uncertain or ended. Dark border: your profile. Selection: blue border.",
+  legendHelp: imageTranslations.en.legendHelp,
   fit: "Fit network",
   zoomIn: "Zoom in",
   zoomOut: "Zoom out",
@@ -707,10 +708,26 @@ export const en: Record<keyof typeof es, string> = {
 export const translations = {
   es,
   en,
-  it: { ...it, ...sharingTranslations.it },
-  de: { ...de, ...sharingTranslations.de },
-  fr: { ...fr, ...sharingTranslations.fr },
-  pt: { ...pt, ...sharingTranslations.pt },
+  it: {
+    ...it,
+    ...imageTranslations.it,
+    ...sharingTranslations.it,
+  },
+  de: {
+    ...de,
+    ...imageTranslations.de,
+    ...sharingTranslations.de,
+  },
+  fr: {
+    ...fr,
+    ...imageTranslations.fr,
+    ...sharingTranslations.fr,
+  },
+  pt: {
+    ...pt,
+    ...imageTranslations.pt,
+    ...sharingTranslations.pt,
+  },
 } satisfies Record<Language, Record<keyof typeof es, string>>;
 if (!i18next.isInitialized)
   void i18next.use(initReactI18next).init({
