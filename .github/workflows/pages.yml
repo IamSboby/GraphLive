@@ -54,7 +54,7 @@ jobs:
     steps:
       - name: Deploy
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
   release:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: [build, deploy]
