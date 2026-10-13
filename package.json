@@ -20,7 +20,7 @@
     "node": "^22.13.0 || >=24.0.0"
   },
   "dependencies": {
-    "@radix-ui/react-dialog": "1.1.23",
+    "@radix-ui/react-dialog": "1.2.0",
     "@tailwindcss/postcss": "4.3.3",
     "cytoscape": "3.34.3",
     "fflate": "0.8.3",
