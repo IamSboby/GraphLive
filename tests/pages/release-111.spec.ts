@@ -35,6 +35,31 @@ test("married relationship, social profiles, year visibility and collapsing lege
   );
   await expect(page.locator(".social-links a svg")).toBeVisible();
   await expect(page.locator(".social-links a")).toHaveText("");
+  const graph = page.locator(".graph-canvas");
+  const sparklePixels = () =>
+    page.locator(".marriage-effects").evaluate((canvas: HTMLCanvasElement) => {
+      const pixels = canvas
+        .getContext("2d")!
+        .getImageData(0, 0, canvas.width, canvas.height).data;
+      return pixels.some((value, index) => index % 4 === 3 && value > 0);
+    });
+  await graph.evaluate((el) => {
+    const c = (el as HTMLElement & { _cyreg: { cy: Core } })._cyreg.cy;
+    const edge = c.edges("[?married]")[0];
+    edge.source().position({ x: 0, y: 0 });
+    edge.target().position({ x: 150, y: 0 });
+    c.zoom(1);
+    c.pan({ x: c.width() / 2 - 75, y: c.height() / 2 });
+  });
+  await expect.poll(sparklePixels).toBe(true);
+  await graph.evaluate((el) => {
+    (el as HTMLElement & { _cyreg: { cy: Core } })._cyreg.cy.zoom(0.3);
+  });
+  await expect.poll(sparklePixels).toBe(false);
+  await graph.evaluate((el) => {
+    (el as HTMLElement & { _cyreg: { cy: Core } })._cyreg.cy.zoom(0.8);
+  });
+  await expect.poll(sparklePixels).toBe(true);
   await expect(page.locator(".relation-badge")).toContainText("Casados");
   await expect(page.locator(".relation-badge")).toHaveCSS(
     "border-color",
@@ -104,6 +129,9 @@ test("dashboard opening reveals the network only once per session", async ({
     await form
       .getByRole("textbox", { name: "Sobrenombre", exact: true })
       .fill(nickname);
+    await form
+      .getByRole("checkbox", { name: "Conozco directamente a esta persona" })
+      .check();
     await form.getByRole("button", { name: "Guardar", exact: true }).click();
   }
   const saved = await positions();
@@ -118,6 +146,32 @@ test("dashboard opening reveals the network only once per session", async ({
       (await positions()).some(
         (n, i) => Math.hypot(n.x - saved[i].x, n.y - saved[i].y) > 5,
       ),
+    )
+    .toBe(true);
+  await expect
+    .poll(() =>
+      page.locator(".graph-canvas").evaluate((el) => {
+        const c = (el as HTMLElement & { _cyreg: { cy: Core } })._cyreg.cy;
+        return (
+          new Set(
+            c.nodes().map((n) => Math.round(Number(n.style("opacity")) * 10)),
+          ).size > 1
+        );
+      }),
+    )
+    .toBe(true);
+  await expect
+    .poll(() =>
+      page.locator(".graph-canvas").evaluate((el) => {
+        const c = (el as HTMLElement & { _cyreg: { cy: Core } })._cyreg.cy;
+        return c
+          .edges()
+          .some(
+            (e) =>
+              e.style("line-style") === "dashed" &&
+              parseFloat(e.style("line-dash-pattern")) > 0.1,
+          );
+      }),
     )
     .toBe(true);
   await expect(page.locator(".graph-canvas")).toHaveAttribute(

@@ -658,6 +658,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
     let frame = 0,
       last = 0;
     const draw = (time: number) => {
+      frame = 0;
       if (c.destroyed()) return;
       if (time - last < 40 && !reduced) {
         frame = requestAnimationFrame(draw);
@@ -675,7 +676,12 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
       }
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       ctx.clearRect(0, 0, rect.width, rect.height);
-      if (!document.hidden && !canvas.closest("[inert]")) {
+      const visibleEffects =
+        c.zoom() >= 0.65 &&
+        !document.hidden &&
+        !canvas.closest("[inert]") &&
+        container.current?.dataset.entry !== "animating";
+      if (visibleEffects) {
         const edges = c
           .edges("[?married]")
           .filter((e) => !e.hasClass("filtered") && !e.hasClass("muted"));
@@ -688,7 +694,8 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
               : (time / 3500 + j / 3 + i * 0.13) % 1;
             const x = a.x + (b.x - a.x) * phase,
               y = a.y + (b.y - a.y) * phase;
-            const size = 2 + Math.sin(phase * Math.PI) * 2;
+            const size =
+              (2 + Math.sin(phase * Math.PI) * 2) * Math.min(1, c.zoom());
             ctx.globalAlpha = reduced
               ? 0.75
               : 0.25 + 0.7 * Math.sin(phase * Math.PI);
@@ -709,7 +716,7 @@ export const GraphView = forwardRef<GraphControls, Props>(function GraphView(
           }
         });
       }
-      if (!reduced && c.edges("[?married]").length)
+      if (!reduced && visibleEffects && c.edges("[?married]").length)
         frame = requestAnimationFrame(draw);
     };
     const render = () => {
