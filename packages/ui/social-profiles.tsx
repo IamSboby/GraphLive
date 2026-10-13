@@ -8,6 +8,7 @@ import {
   type SocialPlatform,
 } from "../domain/social";
 import { Field } from "./primitives";
+import { SocialLogo } from "./social-logo";
 export function SocialProfiles({
   value,
   onChange,
@@ -38,6 +39,9 @@ export function SocialProfiles({
       </header>
       {value.map((profile, i) => (
         <div className="social-editor-row" key={i}>
+          <span className="social-editor-logo">
+            <SocialLogo platform={profile.platform} />
+          </span>
           <Field label={t("socialPlatform")}>
             <select
               value={profile.platform}
