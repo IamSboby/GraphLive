@@ -28,8 +28,10 @@ describe("supported languages", () => {
     });
   }
   it("safely handles unsupported stored language values", () => {
+    expect(emptySnapshot().preferences.language).toBe("en");
+    expect(resolveLanguage("es")).toBe("es");
     expect(resolveLanguage("it")).toBe("it");
-    expect(resolveLanguage("unknown")).toBe("es");
-    expect(resolveLanguage(null)).toBe("es");
+    expect(resolveLanguage("unknown")).toBe("en");
+    expect(resolveLanguage(null)).toBe("en");
   });
 });

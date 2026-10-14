@@ -9,7 +9,7 @@ export const viewport: Viewport = {
 };
 export const metadata: Metadata = {
   title: "GraphLive",
-  description: "Tu red privada de personas y conexiones.",
+  description: "Your private network of people and connections.",
   robots: { index: false, follow: false },
 };
 export default async function RootLayout({
@@ -19,7 +19,7 @@ export default async function RootLayout({
 }) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <style nonce={nonce}>{defaultThemeCss}</style>
         <script

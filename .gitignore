@@ -18,6 +18,9 @@ docs/verification.md
 /*.md
 !/README.md
 !/README.en.md
+!/README.es.md
+!/CHANGELOG.es.md
+!/THIRD_PARTY_NOTICES.es.md
 !/CHANGELOG.md
 !/THIRD_PARTY_NOTICES.md
 /.*/

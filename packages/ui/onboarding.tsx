@@ -14,6 +14,7 @@ import { prepareGoogleDrive } from "../storage-adapters/google-auth";
 import { useTranslation } from "react-i18next";
 import { signIn, signOut } from "next-auth/react";
 import {
+  Code2,
   Network,
   ArrowUpRight,
   FolderOpen,
@@ -163,7 +164,32 @@ export function Onboarding({
             <LockKeyhole size={15} />
             {t("footer")}
           </div>
-          <h1>{t(page === "home" ? "welcome" : "accessHeading")}</h1>
+          <h1>
+            {page === "home" && (
+              <span className="home-product-title">GraphLive</span>
+            )}
+            {t(page === "home" ? "welcome" : "accessHeading")}
+          </h1>
+          {page === "home" && (
+            <div className="home-project-links">
+              <a
+                href="https://github.com/IamSboby"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Made by Sboby
+              </a>
+              <a
+                href="https://github.com/IamSboby/GraphLive"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Code2 size={17} aria-hidden="true" />
+                GitHub
+                <ArrowUpRight size={15} aria-hidden="true" />
+              </a>
+            </div>
+          )}
           <p>{t(page === "home" ? "intro" : "accessIntro")}</p>
           <div className="welcome-network" aria-hidden="true">
             <svg viewBox="0 0 500 290">
@@ -362,10 +388,29 @@ export function Onboarding({
         </section>
       </div>
       <footer className="welcome-footer">
-        <span>GraphLive · v1.1.1</span>
-        <nav className="legal-links" aria-label="Información legal">
-          <Link href="/privacy/">Política de privacidad</Link>
-          <Link href="/terms/">Condiciones del servicio</Link>
+        <a
+          href="https://github.com/IamSboby/GraphLive"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          GraphLive · v1.1.1
+        </a>
+        <nav
+          className="legal-links"
+          aria-label={
+            i18n.language === "es" ? "Información legal" : "Legal information"
+          }
+        >
+          <Link href="/privacy/">
+            {i18n.language === "es"
+              ? "Política de privacidad"
+              : "Privacy policy"}
+          </Link>
+          <Link href="/terms/">
+            {i18n.language === "es"
+              ? "Condiciones del servicio"
+              : "Terms of service"}
+          </Link>
         </nav>
         <span>{t("footer")}</span>
       </footer>

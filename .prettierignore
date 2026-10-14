@@ -10,3 +10,10 @@ playwright-report
 pages-dist
 
 /*.md
+!/README.md
+!/README.en.md
+!/README.es.md
+!/CHANGELOG.md
+!/CHANGELOG.es.md
+!/THIRD_PARTY_NOTICES.md
+!/THIRD_PARTY_NOTICES.es.md

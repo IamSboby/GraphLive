@@ -1,5 +1,9 @@
 # Third-party notices
 
+English · [Español](THIRD_PARTY_NOTICES.es.md)
+
+Reviewed for GraphLive 1.1.1. Upstream license texts remain unchanged.
+
 ## Font Awesome brand icons
 
 Social platform logos are adapted from Font Awesome Free 7.3.1 by Fonticons, Inc.

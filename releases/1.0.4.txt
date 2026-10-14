@@ -1,3 +1,9 @@
+GraphLive 1.0.4 — mobile fixes
+
+Pinch-to-zoom and touch guidance. Mobile keyboard confirmation and explicit add buttons for tags/interests. Onboarding portrait, camera and crop. Configurable frequency/intensity for direct owner relationships. Tag-aware redistribution respects locked positions and does not create additional relationships.
+
+--- Español ---
+
 GraphLive 1.0.4 — correcciones móviles
 
 - Navegación táctil con pinch-to-zoom y ayuda visible en dispositivos táctiles.

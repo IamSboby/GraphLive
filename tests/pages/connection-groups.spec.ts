@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 
 test("connection picker sorts people and connects an entire tag group in one undoable action", async ({
   page,

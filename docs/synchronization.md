@@ -1,32 +1,15 @@
-# Sincronización y recuperación
+# Synchronization and recovery
 
-```mermaid
-sequenceDiagram
-  participant UI
-  participant Repositorio
-  participant Disco
-  UI->>Repositorio: snapshot + expectedRevision
-  Repositorio->>Disco: adquirir bloqueo, leer revisión
-  alt revisión coincide
-    Repositorio->>Disco: backup previo, commit snapshot, proyecciones
-    Repositorio-->>UI: revisión nueva
-  else revisión distinta
-    Repositorio-->>UI: 409 + versión remota
-    UI->>UI: fusión base/local/remota
-    alt campos independientes
-      UI->>Repositorio: versión fusionada + revisión remota
-    else incompatibles
-      UI->>UI: diálogo, descarga local, elección explícita
-    end
-  end
-```
+English · [Español](synchronization.es.md)
 
-El cliente conserva la versión base. Cada 15 segundos consulta cambios remotos cuando no existen cambios pendientes. No reemplaza la red si el usuario empieza a editar durante la consulta. Los formularios trabajan con borradores; solo enviar el formulario modifica el dominio. Ediciones realizadas mientras hay una escritura se guardan después de ella.
+Updated for GraphLive 1.1.1 · 14 October 2026.
 
-Los objetos se fusionan campo a campo y las entidades por UUID. Arrays como intereses se consideran valores completos: dos cambios incompatibles generan conflicto en lugar de una unión potencialmente errónea. UUID duplicados, contadores incompatibles o referencias colgantes impiden guardar la fusión.
+Edits update local state immediately and enter the durable IndexedDB outbox. A serialized background save loop coalesces subsequent edits instead of blocking theme changes or further editing. Pending writes are scoped to storage/account/network so they cannot silently move to another account.
 
-Para conflictos se conservan la versión local en memoria y la remota en el repositorio. El diálogo permite descargar la local y elegir explícitamente una versión; antes de aplicar la decisión se crea backup remoto. No hay un «último gana» silencioso. Todavía no hay selección visual campo por campo ni una cola offline durable: exportar los cambios pendientes antes de cerrar la pestaña.
+Writes carry the expected revision; Drive also uses conditional file updates. On conflict, the client compares base, local and remote snapshots. Independent changes merge automatically; conflicting fields require an explicit decision. Export the pending version before discarding it. Arrays are treated as complete values rather than blindly unioned.
 
-Reintentos manuales no descartan el borrador. `retry()` ofrece backoff para adaptar operaciones idempotentes futuras, pero las escrituras no se reintentan a ciegas: un commit puede haberse realizado aunque la respuesta se haya perdido.
+While visible and online, shared networks refresh approximately every 3 seconds and other repositories every 15 seconds; failures back off. Returning to the tab or reconnecting also requests refresh. This is polling, not real-time sockets or a guarantee of instantaneous delivery.
 
-Backups automáticos: antes de guardar, si la preferencia está activada. Retención del servidor mediante `BACKUP_KEEP`. Backups manuales y vista previa de restauración disponibles desde configuración. Son snapshots históricos, no una tarea programada mientras la aplicación está cerrada.
+Sharing flushes pending changes before inviting participants. Read/edit permissions and participant revocation are managed through Drive. Revocation prevents future authorized access but cannot erase downloaded copies. Lost access preserves local pending changes for recovery.
+
+Saved node positions remain stable when reopening. Dashboard summaries are a cache, not the authoritative snapshot; background refresh reconciles them with the repository. Do not clear site data while unsynchronized changes are needed.

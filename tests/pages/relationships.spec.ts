@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 
 test("new relationships, saving tags without Enter, normalized filtering and deleting with undo", async ({
   page,

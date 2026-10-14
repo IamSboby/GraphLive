@@ -1,40 +1,17 @@
-# Modelo de datos
+# Data model
 
-El esquema actual es versión 1 y se valida mediante Zod en cliente, servidor e importación. Versiones desconocidas se rechazan sin escribir. `migrate()` es el punto de entrada para futuras migraciones; no se inventa una versión histórica 0.
+English · [Español](data-model.es.md)
 
-```mermaid
-erDiagram
-  SNAPSHOT ||--o{ PERSON : people
-  SNAPSHOT ||--o{ CONNECTION : connections
-  SNAPSHOT ||--o{ TOMBSTONE : tombstones
-  PERSON ||--o{ CONNECTION : sourceId
-  PERSON ||--o{ CONNECTION : targetId
-  PERSON {
-    uuid id PK
-    string storageId UK
-    int revision
-    json profile
-    json display
-  }
-  CONNECTION {
-    uuid id PK
-    uuid sourceId FK
-    uuid targetId FK
-    string canonicalKey UK
-    string relationshipType
-    string sourcePerspective
-    string targetPerspective
-  }
-```
+Updated for GraphLive 1.1.1 · 14 October 2026.
 
-`id` es un UUID inmutable. `storageId` se asigna una sola vez: clasificación inicial M/F/L/U y contador independiente. U es el valor predeterminado; el usuario no está obligado a clasificar a nadie. Cambiar el género no renombra el archivo. Los contadores nunca retroceden durante guardar, restaurar o deshacer.
+The application version is 1.1.1; the snapshot schema remains `schemaVersion: 1`. The authoritative definitions are `packages/domain/model.ts`, `images.ts`, `social.ts` and `packages/appearance/config.ts`. Unknown schema versions and invalid references are rejected.
 
-La clave de conexión ordena ambos UUID y los une con `::`. Una edición desde el otro extremo conserva la misma conexión. Se rechazan autorrelaciones, extremos inexistentes, duplicados de UUID o nombre físico y relaciones a personas borradas.
+A snapshot contains revision, ownerId, deviceId, people, connections, counters, tombstones and preferences. Each network has its own owner identity, name, banner, appearance and layout.
 
-El propietario se referencia en `ownerId`; el color principal se deriva de su conexión con cada persona. Una persona no conectada al propietario se muestra como conocida. Las perspectivas pertenecen a los extremos originales de la conexión, no al orden de la clave canónica.
+People have immutable UUIDs and storage IDs (M/F/L/U plus a counter), profile data, display positions and custom fields. Changing gender does not rename existing files. Profiles support tags, interests, dates, nationalities, notes, a cropped JPEG portrait and up to 20 social profiles. Embedded portrait and banner limits are 120,000 and 300,000 characters respectively; these travel with exports.
 
-Cada borrado normal produce tombstones para la persona y sus relaciones. Deshacer y restaurar son acciones explícitas del usuario, que pueden revertir una eliminación. La eliminación de toda la red conserva una copia recuperable; no se presenta como borrado irrecuperable.
+Connections use a canonical key formed by sorting the two UUIDs and joining them with `::`. Self-links, duplicate pairs and missing endpoints are rejected. Relationships include best friend, close friends, partner, crush and married; the complete enum comes from `relationship-colors.json`.
 
-Afinidad: `round((sum(pesoTipo * intensidad) / sum(intensidad) + 100) / 2)`. Pesos en `packages/graph-engine/metrics.ts`: 100, 75, 70, 45, 35, 20, −25 y −80. Sin relaciones se muestra un valor ausente, no cero. Todas las relaciones registradas, incluidas las finalizadas, participan actualmente en estas estadísticas.
+Both endpoint perspectives are concrete relationship types. Legacy empty/unspecified perspectives normalize to the general type. Automatic-perspective flags keep a side following that type until explicitly customized. Adding a tag group preserves existing connections.
 
-Tamaño: entre 24 y 68 unidades, normalización logarítmica. Grado cuenta vecinos únicos. Puentes usa Tarjan iterativo, sin desbordamiento de pila en cadenas largas. Componentes y rutas usan recorridos lineales.
+Deletions record tombstones. Undo/redo and restore are explicit operations; counters never move backwards. Dates remain ISO in storage and are formatted by language only for display. Preference defaults use English and the system theme; explicit older preferences remain intact.

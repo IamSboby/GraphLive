@@ -1,3 +1,13 @@
+GraphLive 0.2.0-rc.1 — first release candidate
+
+Participant names, email and Google Drive permissions; individual revocation with confirmation; pending saves flushed before invitations; reuse valid authorization. Shared networks refresh every three seconds while visible, on focus and reconnect. Owner protection and local pending edits survive access loss. Shared files follow network renames.
+
+First access requires Google Picker selection. Synchronization depends on connectivity and Drive; conflicting edits require a choice. Revocation does not erase downloaded copies or access inherited from groups/folders.
+
+Automated validation covers types, lint, unit/integration and static browser tests. Invitation/revocation tests simulate Drive; they do not replace verification with two real accounts.
+
+--- Español ---
+
 GraphLive 0.2.0-rc.1 — primera versión candidata
 
 - Gestión de participantes con nombre, correo y permiso de Google Drive.

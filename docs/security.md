@@ -1,28 +1,19 @@
-# Seguridad y privacidad
+# Security and privacy
 
-## Protecciones implementadas
+English · [Español](security.es.md)
 
-- Sin analítica, fuentes remotas ni envío externo de la red. `NEXT_TELEMETRY_DISABLED=1` desactiva también la telemetría de Next durante desarrollo/build.
-- React representa nombres y notas como texto; no se interpreta HTML del usuario.
-- Zod en ambos lados, referencias y claves únicas; límite por bytes durante lectura del cuerpo, además del límite de entidades.
-- API privada comprueba sesión en el servidor cuando `AUTH_ENABLED=true`; ninguna decisión depende de ocultar controles.
-- Comprobación de Origin para PUT/POST; configurar `NEXTAUTH_URL` exactamente con el origen público. OAuth usa state y PKCE. Auth.js gestiona cookies HttpOnly/SameSite; Secure cuando la URL es HTTPS.
-- CSP con nonce aleatorio por respuesta y `strict-dynamic`; sin `unsafe-inline` para scripts. Estilos inline permitidos por la visualización. `unsafe-eval` solo en desarrollo.
-- Protección contra frames, MIME sniffing, referencias y permisos innecesarios del navegador.
-- Rutas relativas restringidas, rechazo de traversal y enlaces simbólicos en componentes administrados por el adaptador. DATA_DIR debe ser controlado por el administrador y no modificable por usuarios locales no confiables.
-- Archivos 0600 y directorios 0700 cuando el sistema los aplica. En Windows, configurar ACL del directorio; los bits POSIX no sustituyen sus permisos.
-- 120 solicitudes por minuto e identidad dentro del proceso; desplegar además rate limiting y límites de conexión en el proxy.
-- Logs estructurados con campos permitidos. No se registran nombres, notas, cuerpos, tokens ni rutas con información privada. El diagnóstico descargable omite datos personales.
-- Secretos solo en variables de entorno; no se exportan. Backups opcionalmente AES-256-GCM con `BACKUP_ENCRYPTION_KEY` de 64 caracteres hexadecimales.
+Updated for GraphLive 1.1.1 · 14 October 2026.
 
-## Riesgos y límites conocidos
+GraphLive has no application analytics or advertising. Network data is processed locally and sent to the storage provider explicitly selected by the user. GitHub Pages serves public application files; Google receives network content when Drive is used.
 
-El modo sin autenticación es una instancia compartida. Los comandos arrancan en loopback; no exponerla a Internet sin autenticación o una protección equivalente. El administrador del servidor puede leer JSON activos: usar cifrado de disco y controles de acceso. El cifrado opcional protege backups, no datos activos ni exportaciones JSON/ZIP. No es cifrado de extremo a extremo.
+Google access uses `drive.appdata` for private application storage and `drive.file` for files created or explicitly selected for sharing. It does not grant unrestricted Drive discovery. Access tokens stay in memory; public OAuth client IDs and a restricted Picker API key are not client secrets. Never commit tokens, passwords, .env files or personal snapshots.
 
-La clave de backups no se almacena con los archivos. Perderla impide restaurarlos; conservarla en un gestor de secretos y guardar copias fuera del dispositivo. Cambiarla requiere conservar las claves anteriores para backups antiguos.
+The Node edition validates sessions when authentication is enabled, request origins, schema and size limits. It restricts filesystem paths, rejects traversal, uses revision checks and process-level rate limits. Its middleware applies nonce-based CSP and security headers; static Pages does not execute that middleware.
 
-El rate limit es por proceso, no distribuido. El formato snapshot completo puede consumir memoria en redes muy grandes. No hay soporte multiinstancia validado, auditoría independiente, pentest ni certificación WCAG. Los proveedores OAuth están configurados en código pero el login real requiere credenciales del propietario y validación contra esas cuentas.
+Active JSON and exported ZIP/JSON files are not end-to-end encrypted. Optional server backup encryption uses AES-256-GCM; it does not encrypt active data. Protect the device, storage permissions and encryption keys. Browser caches and pending writes may contain personal data.
 
-Drive, OneDrive, endpoints arbitrarios y SbobyPiShare no están habilitados: no existe un proxy genérico que acepte URLs del navegador. Esta restricción evita abrir una superficie SSRF no revisada. Implementar DNS pinning, rechazo de IP privadas por defecto, allowlist administrativa, límites, redirects desactivados y credenciales backend antes de habilitarlos.
+Sharing grants access to the complete network, including notes and portraits. Revoking access cannot retract copies already downloaded. Deleting active records does not erase historical backups. Review all storage locations and exports when deleting data permanently.
 
-«Eliminar toda la red» conserva un backup: es recuperable. Para supresión definitiva, detener el servicio y eliminar el espacio y todas sus copias mediante un procedimiento administrativo verificado; no se promete borrado seguro físico de SSD desde la aplicación.
+Unauthenticated server mode is a shared instance and must stay on localhost or behind appropriate access control. No distributed multi-instance guarantee, independent security audit or WCAG certification is claimed.
+
+Public policies: [privacy](https://iamsboby.github.io/GraphLive/privacy/) and [terms](https://iamsboby.github.io/GraphLive/terms/). Contact: Iamsboby@gmail.com.

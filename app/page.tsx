@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import { ApplicationPage } from "@/packages/ui/application-page";
 export const metadata: Metadata = {
-  title: "GraphLive — Tu red personal de personas y conexiones",
+  title: "GraphLive — Your personal network · Made by Sboby",
   description:
-    "Organiza tus contactos, amistades e intereses en un mapa visual privado. Guarda tu red en tu dispositivo o en Google Drive y explora tus conexiones con GraphLive.",
+    "Map your contacts, friendships and interests in a private visual network. Save on your device or Google Drive. Made by Sboby.",
   alternates: { canonical: "https://iamsboby.github.io/GraphLive/" },
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     siteName: "GraphLive",
-    title: "GraphLive — Tu red personal de personas y conexiones",
+    title: "GraphLive — Your personal network · Made by Sboby",
     description:
-      "Un mapa visual privado de las personas que forman parte de tu mundo.",
+      "A private visual map of the people who shape your world. Made by Sboby.",
     url: "https://iamsboby.github.io/GraphLive/",
   },
 };

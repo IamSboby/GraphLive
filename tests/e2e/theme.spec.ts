@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 
 test("welcome follows system theme, persists overrides and shares theme with demo", async ({
   page,

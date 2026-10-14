@@ -9,6 +9,9 @@ updates:
     ignore:
       - dependency-name: typescript
         versions: [">=7.0.0 <8.0.0"]
+      # Match the oldest supported Node runtime.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       next:
         patterns:

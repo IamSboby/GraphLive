@@ -1,62 +1,60 @@
 # Changelog
 
+English · [Español](CHANGELOG.es.md)
+
+## 1.1.1 maintenance — 2026-10-14
+
+- English is the initial/fallback language, with saved language selections preserved.
+- Home page project links, “Made by Sboby” credit and English page metadata.
+- Refreshed technical documentation with English primary and Spanish secondary editions.
+- CI validates both Node and static Pages on pull requests; deployment is restricted to main.
+- Weekly Dependabot configuration, reviewed dependency upgrades and compatibility exclusions.
+- Independent node and connection entrance animations; married sparkles hidden when zoomed out.
+- Social brand icons in person details and labeled choices in the editor.
+
 ## 1.1.1 — 2026-10-12
 
-- Dashboard con caché local, actualización progresiva, orden por última edición e importación de redes JSON/ZIP.
-- Animación de construcción al abrir cada red por primera vez en la sesión y leyenda que se oculta al pasar a lista.
-- Relación Casados en rojo corazón con brillo y destellos; leyenda actualizada.
-- Opciones para ocultar años desconocidos o todos los años, y perfiles de redes sociales por persona.
-- Nuevas personas cerca de quienes comparten etiquetas, conservando las posiciones existentes.
-- Fechas adaptadas al idioma sin cambiar el formato guardado; grupos que preservan conexiones existentes y percepciones que siguen el tipo general hasta personalizarlas.
+- Cached dashboard summaries, progressive refresh, last-edited ordering and JSON/ZIP network import.
+- First-open network construction animation and animated legend collapse in list view.
+- Heart-red married relationship with glow and sparkles; refreshed legend.
+- Hide unknown or all years, and add social profiles per person.
+- Place new people near matching tags without moving existing nodes.
+- Locale-aware date display, group connections preserving existing links, and endpoint perspectives following the general relationship until customized.
 
 ## 1.0.4 — 2026-10-11
 
-Mejoras táctiles, confirmación de etiquetas e intereses, foto inicial y cámara móvil, parámetros de conexión y distribución por etiquetas.
+Touch navigation, tag/interest confirmation, onboarding photo and camera, direct-relationship parameters and tag-aware redistribution.
 
 ## 1.0.3 — 2026-10-10
 
-Primera versión estable. Transiciones entre gráfico y lista sin reiniciar el grafo, fotos recortables y banners, controles animados, selección explícita de países y zoom adaptativo.
+First stable release. Graph/list transitions preserve the graph, cropped portraits and banners, animated controls, explicit country selection and adaptive zoom.
 
 ## 0.2.0-rc.1 — 2026-10-06
 
-- Panel de participantes con nombre, correo, permisos y revocación de accesos individuales.
-- Invitaciones después de guardar los cambios pendientes, reutilizando autorizaciones vigentes.
-- Sincronización compartida cada tres segundos en primer plano, al volver a la pestaña y al recuperar conexión.
-- Protección de cambios locales cuando se pierde el acceso; control de conflictos conservado.
-- Nombres de archivos compartidos actualizados al renombrar la red.
+- Participant names, email, permissions and individual access revocation.
+- Flush pending changes before inviting; reuse valid authorization.
+- Shared-network polling every three seconds while visible, on focus and reconnect.
+- Preserve local edits after access loss and retain conflict handling.
+- Rename shared files with their network.
 
 ## GitHub Pages — 2026-09-19
 
-- Exportación estática con rutas bajo `/GraphLive/`, sin API ni almacenamiento remoto.
-- Almacenamiento IndexedDB local con transacciones, copias y reapertura; despliegue automático con prueba de persistencia.
-- Selector de carpeta vinculado a `window` y errores de permisos/cancelación específicos.
-- Creación inicial usando la revisión cargada para evitar conflictos cuando una red vacía ya tiene historial.
+Initial static export under /GraphLive, without server API or remote storage at that time. IndexedDB persistence and backups, folder permission/cancellation fixes, and revision-aware initialization.
 
-## Conexiones directas opcionales — 2026-09-18
+## Optional direct connections — 2026-09-18
 
-- Las personas nuevas solo se conectan con la persona principal al marcar «Conozco directamente a esta persona», desmarcado por defecto.
-- Editar una persona sin conexión directa conserva esa ausencia de vínculo. Las conexiones existentes siguen siendo editables.
-- Etiqueta disponible en español e inglés y prueba de regresión para ambos casos.
+New people only connect to the owner when explicitly selected. Editing unconnected people preserves the absence of a direct relationship. Added Spanish/English labels and regression coverage.
 
-## Navegación y transiciones — 2026-09-18
+## Navigation and transitions — 2026-09-18
 
-- Páginas independientes de inicio, acceso y grafo (`/`, `/login`, `/graph`).
-- Logotipo enlazado al inicio y acceso para retomar la red abierta sin perder el estado en la navegación interna.
-- Presentación con acciones y ventajas, transiciones de entrada y paneles, animación decorativa y respeto al movimiento reducido.
-- Redirección segura a acceso cuando no hay una red abierta, callbacks OAuth coherentes y selector de tema en las páginas públicas.
+Separate home, login and graph routes; home-linked brand and resume action. Introductory layout, animations and reduced-motion support. Safe login redirects and public theme selector.
 
-## Corrección de zoom — 2026-09-18
+## Flag zoom fix — 2026-09-18
 
-- Dimensiones explícitas en los SVG de banderas para impedir que Chromium recorte el dibujo al ampliar el lienzo.
-- Prueba de regresión que verifica las tres franjas de Francia en siete cambios de zoom y la descarga PNG.
+Explicit SVG dimensions prevent canvas cropping when zooming in Chromium. Regression coverage checks flag stripes and PNG download.
 
 ## 0.1.0-alpha.1 — 2026-09-17
 
-- Primera alpha del núcleo local/servidor de GraphLive, con datos JSON, grafo, relaciones, filtros, métricas, backups y exportación.
-- Selector de género: hombre, mujer, no binario, agénero, género fluido, genderqueer, bigénero, demigénero, otra identidad, sin especificar y prefiero no decirlo.
-- Prefijo M/F/L/U calculado automáticamente al crear una persona, con vista previa del archivo. UUID y nombre de archivo existentes permanecen inmutables; se conserva el género libre de datos anteriores.
-- Iconos SVG de banderas servidos localmente en fichas, formulario, grafo y exportación PNG; independientes de las fuentes de Windows.
-- Interfaz ES/EN, opciones nuevas traducidas y conservación del idioma elegido al entrar en la demo. README adicional en inglés.
-- Docker incluye los recursos públicos de banderas. Pruebas de regresión para idioma, prefijos y carga de iconos.
+First local/server core with JSON storage, graph, relationships, filters, metrics, backups and export. Inclusive gender dropdown with stable M/F/L/U filenames and UUIDs. Local SVG flags in forms, graph and PNG export. Spanish/English interface, Docker public assets and regression tests.
 
-Estado alpha: consultar `docs/status.md` para capacidades pendientes y `docs/verification.md` para verificaciones ejecutadas.
+Historical entries describe their release date; consult the current README for availability.

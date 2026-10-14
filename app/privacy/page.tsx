@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { LegalPage } from "../../packages/ui/legal-page";
 export const metadata: Metadata = {
-  title: "Política de privacidad · GraphLive",
+  title: "Privacy policy · GraphLive",
   description:
-    "Cómo GraphLive utiliza, guarda y comparte tus datos y los permisos de Google Drive.",
+    "How GraphLive uses, stores and shares your data and Google Drive permissions.",
   alternates: { canonical: "https://iamsboby.github.io/GraphLive/privacy/" },
   robots: { index: true, follow: true },
 };
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Política de privacidad">
+    <LegalPage kind="privacy" title="Política de privacidad">
       <h2>Responsable y contacto</h2>
       <p>
         Esta política corresponde a la versión pública de GraphLive alojada en

@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 
 for (const mobile of [false, true])
   test(`animated introduction saves profile before inviting a contact (${mobile ? "mobile" : "desktop"})`, async ({

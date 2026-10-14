@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 import type { Core } from "cytoscape";
 
 test("appearance editor validates imports and persists portable colors and themes", async ({

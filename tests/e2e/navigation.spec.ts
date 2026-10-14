@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 
 test("home, login and graph have separate routes and the brand preserves the open network", async ({
   page,

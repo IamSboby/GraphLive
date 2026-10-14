@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 import type { Core } from "cytoscape";
 test("relationship borders survive selection and photo visibility persists without deleting images", async ({
   page,
@@ -56,6 +56,7 @@ test("relationship borders survive selection and photo visibility persists witho
       counters: { M: 0, F: 0, L: 0, U: 2 },
       tombstones: [],
       preferences: {
+        language: "es",
         introduction: "done",
         relationshipColors: { crush: "#abcdef" },
       },

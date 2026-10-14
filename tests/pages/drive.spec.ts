@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 import type { Snapshot } from "../../packages/domain/model";
 
 test("Drive opens, saves and reopens a network through the browser adapter", async ({

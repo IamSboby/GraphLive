@@ -1,36 +1,20 @@
-# Arquitectura y decisiones
+# Architecture
 
-GraphLive es una aplicación Next.js App Router con runtime Node.js. El repositorio es un único paquete npm con módulos internos; se evita un monorepo de múltiples paquetes publicables hasta necesitarlo. TypeScript estricto comparte tipos y esquemas entre el navegador y las rutas API.
+English · [Español](architecture.es.md)
 
-```mermaid
-flowchart LR
-  UI[React + Radix + i18next] --> State[Zustand / historial]
-  State --> Domain[Dominio y validación Zod]
-  State --> Sync[Revisiones / fusión de tres versiones]
-  Sync --> HTTP[Repositorio HTTP]
-  Sync --> Local[File System Access API]
-  HTTP --> Auth[Sesión Auth.js + origen + límites]
-  Auth --> Repo[Repositorio de servidor]
-  Repo --> JSON[GraphLiveFiles / JSON]
-  Local --> Folder[Carpeta elegida]
-  UI --> Canvas[Cytoscape Canvas]
-  Canvas --> Worker[Graphology + ForceAtlas2 / Worker]
-```
+Updated for GraphLive 1.1.1 · 14 October 2026.
 
-## Decisiones
+GraphLive 1.1.1 uses Next.js App Router, React, strict TypeScript and a single npm package. The same source builds a Node server or a static GitHub Pages site.
 
-- **Next.js y despliegue propio**: se preserva el requisito de archivos JSON en disco privado y Docker. No se sustituye por una base de datos alojada ni se publica una instancia con autenticación desactivada.
-- **Cytoscape + Graphology**: Cytoscape dibuja en canvas y ofrece zoom, selección y arrastre. ForceAtlas2 calcula 150 iteraciones en un Web Worker y después se detiene. Se evita movimiento indefinido. La simulación se reinicia con Recalcular.
-- **Persistencia**: un snapshot validado es el punto de commit; los archivos de personas e índices son proyecciones reparables. Es imposible hacer atómica una transacción que modifica muchos JSON mediante múltiples renombrados independientes.
-- **Zustand**: mantiene red, versión base, estado de escritura, historial de 30 pasos y conflictos. Encola ediciones que llegan durante un guardado. No guarda después de cada tecla del formulario.
-- **Auth.js/next-auth 4 estable**: proveedores Google y Microsoft; identidad del espacio derivada de proveedor y `providerAccountId`, nunca del nombre o del correo. Tokens de proveedores no se guardan en archivos ni se usan para Drive/OneDrive.
-- **i18next**: recursos ES/EN completos para los controles implementados; pruebas de paridad de claves. Códigos técnicos, nombres propios y entradas del usuario no se traducen.
-- **Tailwind + CSS**: Tailwind está configurado; los tokens y componentes visuales están en `app/globals.css` para mantener una identidad coherente sin añadir una segunda biblioteca de componentes.
-- **Nacionalidades**: ISO de dos letras, nombres con `Intl.DisplayNames`, banderas Unicode con nombre accesible. Su apariencia depende del sistema operativo; no equivale a un paquete de SVG idénticos entre plataformas.
+- `app/` owns routes and styles; `packages/ui/` owns the dashboard, editors, graph and Zustand state.
+- `domain/` validates snapshots with Zod. `storage-core/` defines repositories, exports, backup policies and the durable IndexedDB outbox.
+- `storage-adapters/` implements browser, folder, server and Google Drive persistence. `sync-engine/` merges base, local and remote revisions.
+- Cytoscape renders the graph. A Graphology/ForceAtlas2 worker computes layouts; saved positions are preserved when reopening. New nodes are placed near matching tags.
+- Network entry animates nodes and connections independently. Reduced motion disables decorative movement; married-relationship sparkles disappear when zoomed out.
+- The dashboard renders cached network summaries before refreshing details and discovering networks. Its neutral palette is separate from each network's theme.
 
-## Límites deliberados
+English is the initial and fallback language; Spanish, Italian, German, French and Portuguese remain available. Explicit saved language preferences take precedence. Flags and social logos are local SVG assets.
 
-ESLint 10.10.0 se combina con `@eslint/compat` 2.1.1 para los plugins de la configuración de Next que todavía usan APIs anteriores. Se conserva el conjunto de reglas, y el lint real se verificó tras la adaptación. Referencia: [utilidades oficiales de compatibilidad de ESLint](https://eslint.org/blog/2024/05/eslint-compatibility-utilities/).
+The Node edition uses next-auth sessions and private disk storage. The static edition has no server API: Google authorization happens in the browser. These are separate authentication flows.
 
-La centralidad actual es centralidad de grado. «Componente» significa componente conexo real, no una comunidad detectada por Louvain. El modo combinado promedia grado e importancia normalizada. No se hacen inferencias sobre las personas, ni peticiones a servicios de analítica.
-
+Degree centrality, connected components and recorded affinity describe the entered network, not objective personal characteristics. No remote analytics or social inference is performed.

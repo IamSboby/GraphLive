@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 import type { Core } from "cytoscape";
 
 test("positions survive adding people, explicit layout, dragging and reopening; connection search includes tags and interests", async ({

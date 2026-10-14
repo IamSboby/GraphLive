@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 
 test("English onboarding, automatic gender filenames and SVG flags", async ({
   page,

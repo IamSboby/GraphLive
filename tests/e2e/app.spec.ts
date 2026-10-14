@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 test("demo supports graph, CRUD, relationships, language, theme, search, filters, undo and export", async ({
   page,
 }) => {
@@ -154,9 +154,10 @@ test("mobile demo has usable controls and no horizontal overflow", async ({
 
 test("API rejects cross-origin, malformed and stale writes and restores backups", async ({
   request,
+  baseURL,
 }) => {
   const original = await (await request.get("/api/network")).json();
-  const headers = { origin: "http://localhost:3100" };
+  const headers = { origin: new URL(baseURL!).origin };
   expect(
     (
       await request.put("/api/network", {

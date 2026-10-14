@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage } from "../../packages/ui/legal-page";
 export const metadata: Metadata = {
-  title: "Condiciones del servicio · GraphLive",
-  description:
-    "Condiciones de uso de GraphLive y de sus funciones de almacenamiento y redes compartidas.",
+  title: "Terms of service · GraphLive",
+  description: "Terms for using GraphLive, storage and shared networks.",
   alternates: { canonical: "https://iamsboby.github.io/GraphLive/terms/" },
   robots: { index: true, follow: true },
 };
 export default function TermsPage() {
   return (
-    <LegalPage title="Condiciones del servicio">
+    <LegalPage kind="terms" title="Condiciones del servicio">
       <h2>Servicio y contacto</h2>
       <p>
         GraphLive es una aplicación para organizar redes de personas y
@@ -59,10 +58,10 @@ export default function TermsPage() {
         permisos desde Google Drive. La revocación no recupera copias que otras
         personas ya hayan descargado.
       </p>
-      <h2>Disponibilidad y versión preliminar</h2>
+      <h2>Disponibilidad</h2>
       <p>
-        GraphLive está en fase de versión candidata (prerelease). Puede contener
-        errores, cambiar de funcionalidad o sufrir interrupciones. No se promete
+        GraphLive 1.1.1 es una versión publicada. Puede contener errores,
+        cambiar de funcionalidad o sufrir interrupciones. No se promete
         disponibilidad continua ni ausencia de pérdida de datos. Los servicios
         de terceros, incluidos Google Drive y GitHub, se rigen también por sus
         propias condiciones.

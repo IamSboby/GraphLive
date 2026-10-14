@@ -1,5 +1,19 @@
 GraphLive 1.1.1
 
+Cached dashboard summaries appear immediately while details refresh and new networks are discovered. Last-edited sorting and direct JSON/ZIP import.
+
+Independent node and edge construction animations on the first opening in a session. The legend animates out of list view and describes current behavior.
+
+Heart-red married relationships with glow and sparkles hidden when zoomed out. Hide unknown/all years. Social profiles with platform logos and custom links.
+
+New people appear near matching tags without moving existing positions. Group connections preserve existing relationships; automatic endpoint perspectives follow the general type until customized. Locale-aware dates retain the storage format.
+
+Maintenance: English default with saved preferences preserved, GitHub links and Made by Sboby credit, bilingual refreshed documentation, Node/Pages PR checks and reviewed dependency updates.
+
+--- Español ---
+
+GraphLive 1.1.1
+
 Dashboard más rápido: muestra redes conocidas desde la caché local mientras actualiza datos y descubre nuevas redes en paralelo. Orden por última edición e importación directa de archivos JSON y ZIP.
 
 Animación de construcción en la primera apertura de cada red durante la sesión. La leyenda se cierra y se oculta con una transición al cambiar a lista, y sus explicaciones reflejan el comportamiento actual.

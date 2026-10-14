@@ -186,7 +186,7 @@ export const preferencesSchema = z
     lastEditedAt: z.iso.datetime().optional(),
     networkName: z.string().trim().min(1).max(80).optional(),
     ...appearancePreferencesShape,
-    language: z.enum(languageCodes).default("es"),
+    language: z.enum(languageCodes).default("en"),
     theme: z.enum(["light", "dark", "system"]).default("system"),
     hideUnknownYears: z.boolean().default(false),
     hideYears: z.boolean().default(false),

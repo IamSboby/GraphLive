@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 import type { Snapshot } from "../../packages/domain/model";
 
 test("slow Drive saves leave editing enabled and durable changes recover after reload", async ({

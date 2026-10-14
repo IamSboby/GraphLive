@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 import type { Core, NodeSingular } from "cytoscape";
 
 test("SVG flags retain all stripes through zoom changes and PNG export", async ({

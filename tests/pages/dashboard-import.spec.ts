@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 import { zipSync, strToU8 } from "fflate";
 for (const zip of [false, true])
   test(`dashboard imports a new ${zip ? "ZIP" : "JSON"} network`, async ({

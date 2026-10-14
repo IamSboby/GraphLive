@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 test("cached dashboard cards render in edit order while discovery and snapshots are unavailable", async ({
   page,
 }) => {

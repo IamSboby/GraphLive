@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 
 test("legacy network and independent game identity survive switching and reopening", async ({
   page,
@@ -31,6 +31,7 @@ test("legacy network and independent game identity survive switching and reopeni
     counters: { M: 0, F: 0, L: 0, U: 1 },
     tombstones: [],
     preferences: {
+      language: "es",
       introduction: "done",
       theme: "system",
       themePreset: "indigo",

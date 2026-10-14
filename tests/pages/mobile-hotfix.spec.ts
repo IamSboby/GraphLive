@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 import type { Snapshot } from "../../packages/domain/model";
 import type { Core } from "cytoscape";
 test.use({

@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 
 test("owner connections require explicit opt-in and editing does not create one", async ({
   page,

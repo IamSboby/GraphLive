@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 test("Pages persists a local network, reopens it and serves graph assets without APIs", async ({
   page,
 }) => {

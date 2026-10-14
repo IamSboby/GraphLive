@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 for (const mobile of [false, true])
   test(`photo crop confirms, cancels and frames pixels (${mobile ? "mobile" : "desktop"})`, async ({
     page,

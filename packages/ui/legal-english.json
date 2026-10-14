@@ -1,0 +1,83 @@
+{
+  "privacy": [
+    [
+      "Controller and contact",
+      "This policy covers the public GraphLive version hosted at iamsboby.github.io/GraphLive. Contact the person responsible for privacy, support and data requests at Iamsboby@gmail.com. Independent installations may have different controllers and storage arrangements."
+    ],
+    [
+      "Data used by the application",
+      "GraphLive processes the information you enter to create networks: names, profiles, dates, identities, tags, interests, notes, connections, perceptions and graph positions, plus language and appearance preferences. Profiles may include portraits, banners and social links. Some entries may contain sensitive information about you or other people. Only enter necessary information you are authorized to use.",
+      "These data are used to display, edit, search, save, recover and, when requested, share your networks. GraphLive does not include advertising or its own analytics/tracking tools, and does not sell network data."
+    ],
+    [
+      "Where data is stored",
+      "Browser storage keeps networks in that browser's local database. Device-folder storage writes to the chosen folder where supported. Settings and pending synchronization changes may also be retained locally for recovery after closing or reloading.",
+      "When you choose Google Drive, GraphLive transmits network content to Google APIs for storage in your account. Private networks use application data storage; sharing creates a network file in an ordinary Drive folder and uses that common file. GraphLive's static hosting server does not receive network contents as part of this save."
+    ],
+    [
+      "Google permissions and data",
+      "Connecting Google is optional and requires authorization. drive.appdata manages GraphLive's own application data. drive.file, requested for sharing, permits access to files created by GraphLive or explicitly selected with Google Picker; it does not grant general access to your entire Drive.",
+      "GraphLive uses an account identifier provided by Google to separate storage and prevent writes to another account. Access tokens remain in memory during the session. We do not request or store your Google password.",
+      "Use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including its Limited Use requirements. Google data is used for requested storage, recovery and collaboration, not advertising or sale."
+    ],
+    [
+      "Shared networks and recipients",
+      "When you send an invitation, Google receives the recipient's email address and the chosen read/edit permission. The recipient gains access to the complete network file, including people, notes and connections. Share only with authorized people and with appropriate consent or other grounds for third-party information.",
+      "GraphLive backups remain in each participant's private storage. Someone with access may retain copies they have viewed. Removing Drive access prevents future access subject to its permissions, but cannot delete copies already downloaded or saved by others."
+    ],
+    [
+      "Providers and communications",
+      "GitHub Pages serves public website files and may process technical connection data such as IP addresses under its own policies. Google processes transmitted data and authorization when Drive is used. These providers may process information in different countries. Consult the GitHub and Google privacy policies linked below.",
+      "If you email support, the controller receives your address and the content you send to handle the request. Avoid complete networks or sensitive attachments unless needed. Communications are kept for as long as necessary to handle the request and applicable obligations."
+    ],
+    [
+      "Retention, deletion and revocation",
+      "Networks remain in your selected storage until you delete them. Removing people from the active network does not immediately delete earlier backups. Automatic copies rotate; manual or exported copies may remain until explicitly removed.",
+      "You can edit/delete information and export data. To remove all copies, also review backups, exports, the selected folder, browser data and, where relevant, Drive files and trash. Private application data can be managed in Google Drive Settings → Manage apps. Clearing local data may remove unsynchronized changes.",
+      "You can revoke the connection through your Google account connections. Revocation stops future authorized access but does not itself delete saved files. Before reconnecting, also remove any local pending changes you do not want restored."
+    ],
+    [
+      "Requests and security",
+      "For questions or applicable access, correction, deletion, objection, restriction or portability requests, email Iamsboby@gmail.com. The controller cannot access networks stored only on your device or Drive by default, but can help you manage them without sending them.",
+      "Protect your device and Google account. GraphLive uses HTTPS with Google and Drive permissions, but does not add its own end-to-end encryption to JSON files. Absolute security is not guaranteed."
+    ],
+    [
+      "Policy changes",
+      "Updates will be published here with their date. If new data uses require additional authorization, it will be requested before they are enabled."
+    ]
+  ],
+  "terms": [
+    [
+      "Service and contact",
+      "GraphLive organizes networks of people and connections. These terms cover the public version at iamsboby.github.io/GraphLive. Contact: Iamsboby@gmail.com.",
+      "By using GraphLive you must follow these terms and applicable law. If you disagree, stop using the application; you may keep the copies of your data you have exported."
+    ],
+    [
+      "Permitted use and content",
+      "You retain your applicable rights in content you enter. You authorize only processing needed to display, edit and save it in your chosen storage, and to share it when requested.",
+      "You are responsible for having sufficient authorization or grounds to record and share information about others. Do not use GraphLive for illegal activities, harassment, unauthorized disclosure, infringement of others' rights or unauthorized access to their networks."
+    ],
+    [
+      "Storage and backups",
+      "You choose storage. Browser data depends on the device and can disappear when cleared. Local folders depend on permissions and availability. Google Drive requires an account, authorization and Google's service availability.",
+      "Pending changes may be stored locally and synchronized later. Check save status and retain exports of important information. Automatic backups have retention limits and do not replace your own copies."
+    ],
+    [
+      "Collaboration",
+      "Sharing grants access to the entire network with the chosen permission. Editors may modify it. Simultaneous changes may require conflict resolution. Check recipients before inviting them and manage or revoke permissions through GraphLive or Drive. Revocation does not retrieve copies already downloaded."
+    ],
+    [
+      "Availability",
+      "GraphLive 1.1.1 is a released version. It may contain errors, change functionality or experience interruptions. Continuous availability and freedom from data loss are not promised. Third-party services, including Google Drive and GitHub, also have their own terms.",
+      "GraphLive does not replace professional records and must not be the only copy of critical information. These terms do not exclude mandatory user rights or liabilities that cannot legally be limited."
+    ],
+    [
+      "Privacy",
+      "The privacy policy explains the data GraphLive uses, where it is stored, Google permissions and options to delete data or revoke access."
+    ],
+    [
+      "Ending use and changes",
+      "You may stop using GraphLive, export your information, revoke Google access and delete copies you control at any time. Changes to these terms will be published here with their update date. Questions and incidents: Iamsboby@gmail.com."
+    ]
+  ]
+}

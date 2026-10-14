@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 
 test("icon menus support keyboard, outside dismissal, mobile and reduced motion", async ({
   page,

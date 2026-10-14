@@ -1,3 +1,11 @@
+GraphLive 1.0.3 — stable release
+
+Graph/list transitions preserve zoom and positions. Cropped portraits, relationship borders, photo visibility, network banners, animated controls and legend. Explicit country confirmation and adaptive zoom. Multiple networks with independent identities, local storage and shared Google Drive networks.
+
+Animations respect reduced motion. Publication follows automated checks and browser tests. Animated redistribution and grouped Undo/Redo controls.
+
+--- Español ---
+
 GraphLive 1.0.3 — versión estable
 
 - Transición suave entre gráfico y lista, conservando el zoom y la posición del grafo.

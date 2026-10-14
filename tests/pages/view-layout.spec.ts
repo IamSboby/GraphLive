@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 import type { Core } from "cytoscape";
 test("view transitions preserve viewport and animated layout can be undone and redone", async ({
   page,

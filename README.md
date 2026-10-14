@@ -1,88 +1,80 @@
-# GraphLive — 1.1.1 Relase
+# GraphLive — 1.1.1
 
-Edición web sin servidor: [GraphLive en GitHub Pages](https://iamsboby.github.io/GraphLive/). Guarda la red en Google Drive, en el navegador o en una carpeta local. [Despliegue y límites de almacenamiento](docs/github-pages.md).
+English · [Español](README.es.md)
 
-Español · [English](README.en.md)
+**Made by [Sboby](https://github.com/IamSboby).** [Open GraphLive](https://iamsboby.github.io/GraphLive/) · [GitHub project](https://github.com/IamSboby/GraphLive)
 
-Red privada de personas y relaciones, con grafo interactivo, archivos JSON, interfaz en español e inglés y modo claro/oscuro. Proyecto TypeScript estricto, React y Next.js, preparado para instalarse en un servidor propio.
+A visual workspace for people and relationships. Create independent networks for real life, fiction or games, each with its own identity, theme and banner. English is the default; Spanish, Italian, German, French and Portuguese are available. Saved language choices are respected.
 
+## What you can do
 
-## Personalización y copias en Drive
+- Manage, rename and import JSON/ZIP networks from a dashboard with cached previews and background refresh.
+- Add people with cropped portraits, nationalities, tags, interests and social links. Use the camera where supported.
+- Build relationships with separate endpoint perceptions, frequency and intensity. Add tag groups without overwriting existing connections.
+- Explore the graph or list, search names/tags/interests, pan and pinch to zoom, undo/redo and rearrange by tag affinity. Saved positions survive reopening.
+- Customize relationship colors and light/dark themes, hide portraits or years and export appearance files. The owner has a distinct gradient.
+- Store networks in this browser, a permitted local folder, Google Drive or an optional private Node server.
+- Share authorized Drive networks with read/edit access and revoke individual permissions. Editing and background saves do not lock the interface.
 
-En **Configuración → Personalizar colores y temas** puedes editar los colores de las relaciones, elegir un estilo y personalizar sus variantes clara y oscura. Los archivos `relationship-colors.json` y `themes.json` se importan y exportan por separado. La apariencia se guarda con la red y el círculo principal utiliza un degradado propio.
+## Run locally
 
-Con las copias automáticas activadas, Drive crea como máximo una cada 15 minutos al guardar y conserva las 20 más recientes. Las copias manuales nuevas no se eliminan automáticamente. **Revisar copias antiguas** permite confirmar la eliminación permanente del excedente anterior, conservando las 20 últimas; esas copias antiguas no distinguían entre manuales y automáticas. La limpieza ocurre al usar la aplicación, no mientras está cerrada.
-
-## Inicio rápido
-
-Node.js 22.13+ (rama 22) o 24+ y npm:
+Use Node.js 22.13+ on the 22 release line, or 24+, and npm.
 
 ```sh
 npm ci
-touch .env.local
 npm run dev
 ```
 
-En Windows, `New-Item .env.local -ItemType File` y, si hace falta, `npm.cmd`. Abrir **http://localhost:3000**. Elegir almacenamiento, crear el perfil principal y añadir personas. «Explorar una red ficticia» usa 28 personas aisladas en memoria.
+Open http://localhost:3000. The fictional demo stays in memory. Server authentication is disabled by default: keep it on localhost or configure access control before exposing it. Keep environment files and private data out of Git.
 
-Sin autenticación, la instancia es compartida: los comandos escuchan solo en loopback. Antes de exponerla a otras personas, configurar OAuth o protección externa. No colocar `DATA_DIR` dentro de una carpeta pública.
+## Routes
 
-## Páginas
+| Route                 | Purpose                                                |
+| --------------------- | ------------------------------------------------------ |
+| /                     | Introduction, demo, GitHub links and author credit     |
+| /login/               | Storage selection and authorization                    |
+| /dashboard/           | Independent networks, import and shared-network access |
+| /graph/               | Graph/list editor                                      |
+| /privacy/ and /terms/ | Public policies and contact                            |
 
-- `/`: presentación, acceso a la demo y regreso a la red abierta.
-- `/login`: acceso, selección de almacenamiento y apertura de una red.
-- `/graph`: editor del grafo. Si se abre sin una red en memoria, vuelve a `/login`.
+Clicking the GraphLive brand returns home. Each network has an independent owner profile. Motion preferences are respected.
 
-El logotipo GraphLive vuelve al inicio sin cerrar la red durante la navegación interna. Una recarga completa requiere volver a abrir los datos guardados; la demo vive solo en memoria. Las transiciones respetan la preferencia de movimiento reducido.
+## Checks and deployment
 
-## Uso
+```sh
+npm run check
+npm run build
+npm run test:e2e
+npm run build:pages
+npx playwright test --config playwright.pages.config.ts
+```
 
-- Añadir/editar personas y relaciones desde la ficha; cada conexión aparece en ambos extremos.
-- Arrastrar nodos, fijarlos, ampliar, centrar y recalcular el layout. El cálculo se detiene tras estabilizarse.
-- Buscar sin distinguir acentos, combinar filtros, consultar rutas y usar la vista de tabla o la lista con teclado.
-- Configuración: tamaño por métrica, etiquetas, perfil principal, búsqueda privada por notas, backups y transferencia JSON/ZIP.
-- En conflicto: descargar el borrador, revisar la decisión y conservar explícitamente una versión. No se sobrescribe silenciosamente.
+Local browser tests use Edge by default; CI installs Chromium. Pages publishes only after its checks pass. Pull requests test both editions without deploying. Dependabot reviews npm and GitHub Actions weekly; incompatible updates are not merged.
 
-## Comandos
+## Data and limits
 
-| Comando                        | Función                                           |
-| ------------------------------ | ------------------------------------------------- |
-| `npm run dev`                  | desarrollo en localhost:3000                      |
-| `npm run typecheck`            | TypeScript estricto                               |
-| `npm run lint`                 | ESLint                                            |
-| `npm test`                     | unitarias e integración                           |
-| `npm run check`                | tipos + lint + pruebas                            |
-| `npm run build`                | compilación de producción                         |
-| `npm run start`                | servidor de producción                            |
-| `npm run test:e2e`             | Playwright sobre producción; ejecutar build antes |
-| `npm run benchmark`            | 500/1.000 nodos, validación y métricas            |
-| `npm run format`               | Prettier                                          |
-| `docker compose up --build -d` | despliegue opcional con volumen                   |
+Background writes first preserve pending edits locally. “Saved locally” is not confirmation of cloud synchronization. Shared networks poll while visible; collaboration is not instantaneous. Conflicting edits require a decision.
 
-Las pruebas E2E usan Microsoft Edge de forma predeterminada y puerto 3100. Para Chromium: instalarlo con Playwright y establecer `PLAYWRIGHT_CHANNEL=chromium`. No necesitan cuentas cloud.
+Drive keeps up to 20 automatic backups, at most one per 15 minutes when saving. New manual copies are retained until explicitly removed. Browser copies and exports are device-local; clearing site data can remove unsynchronized changes. Export independent backups.
 
-## Documentación
+Drive permissions cover application data and explicitly authorized shared files, not unrestricted access to every file. Recipients can access the whole shared network, including notes. Revocation cannot erase downloaded copies. OneDrive and SbobyPiShare storage remain unavailable.
 
-- [Arquitectura y decisiones](docs/architecture.md)
-- [Modelo de datos](docs/data-model.md)
-- [Persistencia, archivos y recuperación](docs/storage.md)
-- [Sincronización y conflictos](docs/synchronization.md)
-- [Seguridad y riesgos](docs/security.md)
-- [Instalación, configuración, variables, OAuth y Docker](docs/deployment.md)
-- [SbobyPiShare: endpoints reales y requisitos pendientes](docs/sbobypishare-integration.md)
-- [Contribución](docs/contributing.md)
-- [Árbol del repositorio](docs/repository-tree.md)
+Active JSON and exported data are not end-to-end encrypted. ZIP exports include the current network and embedded pictures, not backup history. The optional Node backend is designed for a single instance with private local disk.
 
-## Estructura
+## Documentation
 
-`app/` contiene rutas y estilos; `packages/domain` el esquema y operaciones; `graph-engine` métricas y Worker; `storage-core` contratos y exportación; `storage-adapters` persistencia; `sync-engine` fusión; `auth`, `security` y `config` infraestructura; `ui` componentes; `i18n` traducciones. El proyecto mantiene un solo paquete npm para simplificar instalación y build.
+- [Architecture](docs/architecture.md)
+- [Data model](docs/data-model.md)
+- [Storage and backups](docs/storage.md)
+- [Synchronization](docs/synchronization.md)
+- [Security and privacy](docs/security.md)
+- [Installation and deployment](docs/deployment.md)
+- [GitHub Pages and Drive](docs/github-pages.md)
+- [SbobyPiShare status](docs/sbobypishare-integration.md)
+- [Contributing](docs/contributing.md)
+- [Repository map](docs/repository-tree.md)
+- [Changelog](CHANGELOG.md) · [Third-party notices](THIRD_PARTY_NOTICES.md)
 
-## Captura
+![GraphLive fictional network](docs/screenshots/network.png)
 
-![Red ficticia de GraphLive](docs/screenshots/network.png)
-
-## Límites principales
-
-Los datos activos son JSON sin cifrar; usar disco cifrado. Backups del servidor pueden cifrarse con AES-256-GCM. Una carpeta local no sincroniza dispositivos. El repositorio servidor se prueba con una instancia y disco local, no con un clúster distribuido. Login OAuth requiere credenciales propias y una prueba real de despliegue. Google Drive está disponible para cuentas OAuth de prueba; OneDrive, SbobyPiShare, avatares y creación de aristas por arrastre siguen pendientes. El ZIP representa la red actual y no incluye el historial de backups.
-
-Licencia MIT. Dependencias fijadas mediante `package-lock.json`.
+MIT license. Dependency versions are pinned in package-lock.json. Support: Iamsboby@gmail.com.

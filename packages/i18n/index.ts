@@ -735,8 +735,8 @@ if (!i18next.isInitialized)
       languageCodes.map((code) => [code, { translation: translations[code] }]),
     ),
     supportedLngs: [...languageCodes],
-    lng: "es",
-    fallbackLng: "es",
+    lng: "en",
+    fallbackLng: "en",
     interpolation: { escapeValue: false },
   });
 export default i18next;

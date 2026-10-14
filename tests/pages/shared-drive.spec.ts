@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 import type { snapshotSchema } from "../../packages/domain/model";
 import type { z } from "zod";
 type StoredSnapshot = z.input<typeof snapshotSchema>;
@@ -33,6 +33,7 @@ test("Drive invitations and Picker open the canonical shared network with reader
     counters: { M: 0, F: 0, L: 0, U: 1 },
     tombstones: [],
     preferences: {
+      language: "es",
       networkName: "Friends",
       introduction: "done",
       autoBackup: false,

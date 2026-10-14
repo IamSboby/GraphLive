@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 import { readFileSync } from "node:fs";
 import { languageNames, type Language } from "../../packages/i18n/languages";
 

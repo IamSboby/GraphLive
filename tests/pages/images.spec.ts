@@ -1,5 +1,5 @@
 import type { Core } from "cytoscape";
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../spanish-fixture";
 test("photos and banners survive saving, reopening and removal", async ({
   page,
 }) => {
@@ -33,7 +33,11 @@ test("photos and banners survive saving, reopening and removal", async ({
     connections: [],
     counters: { M: 0, F: 0, L: 0, U: 1 },
     tombstones: [],
-    preferences: { introduction: "done", networkName: "Photo network" },
+    preferences: {
+      language: "es",
+      introduction: "done",
+      networkName: "Photo network",
+    },
   };
   await page.goto("./login/");
   await page.evaluate(async (data) => {
