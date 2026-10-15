@@ -162,6 +162,11 @@ test("Drive invitations and Picker open the canonical shared network with reader
       return route.fulfill({ status: 204, body: "" });
     }
     if (req.method() === "GET" && id === "permissions") {
+      if (url.searchParams.get("pageToken") === "")
+        return route.fulfill({
+          status: 403,
+          json: { error: { errors: [{ reason: "pageTokenExpired" }] } },
+        });
       if (permissionFailure)
         return route.fulfill({
           status: 403,

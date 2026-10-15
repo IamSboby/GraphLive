@@ -20,6 +20,8 @@ function setup(editable = true) {
     .spyOn(session, "request")
     .mockImplementation(async (url, init) => {
       const u = new URL(url);
+      if (u.searchParams.has("pageToken"))
+        expect(u.searchParams.get("pageToken")).not.toBe("");
       if (init?.method === "PATCH") {
         redirect = true;
         return Response.json({});
@@ -188,6 +190,7 @@ it("lists participant names across pages and revokes only a direct non-owner per
   request.mockImplementation(async (url, init) => {
     if (init?.method === "DELETE") return new Response(null, { status: 204 });
     if (url.includes("/permissions?")) {
+      expect(new URL(url).searchParams.get("pageToken")).not.toBe("");
       return new URL(url).searchParams.get("pageToken")
         ? Response.json({ items: members.slice(1) })
         : Response.json({

@@ -88,7 +88,7 @@ export class GoogleDriveRepository implements Repository {
           q: "trashed = false and ((properties has { key='graphlive' and value='network' and visibility='PUBLIC' } and properties has { key='graphlivePublished' and value='true' and visibility='PUBLIC' }) or (sharedWithMe = true and mimeType = 'application/json'))",
           fields: "items(id,title,properties),nextPageToken",
           maxResults: "1000",
-          pageToken,
+          ...(pageToken ? { pageToken } : {}),
         });
         const page = await (
           await this.session.request(api + "?" + query)
@@ -137,7 +137,7 @@ export class GoogleDriveRepository implements Repository {
         q: "trashed = false",
         maxResults: "1000",
         fields: "items(id,title,etag,properties),nextPageToken",
-        pageToken,
+        ...(pageToken ? { pageToken } : {}),
       });
       const page = await (await this.session.request(api + "?" + query)).json();
       files.push(...(page.items ?? []));
@@ -526,7 +526,7 @@ export class GoogleDriveRepository implements Repository {
         fields:
           "items(id,name,emailAddress,role,type,deleted,permissionDetails(inherited)),nextPageToken",
         maxResults: "100",
-        pageToken,
+        ...(pageToken ? { pageToken } : {}),
       });
       const page = await (
         await this.session.request(
