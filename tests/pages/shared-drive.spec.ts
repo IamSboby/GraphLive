@@ -62,6 +62,7 @@ test("Drive invitations and Picker open the canonical shared network with reader
   const invitations: unknown[] = [];
   const removals: string[] = [];
   let invited = false;
+  let permissionFailure = false;
   let revoked = false;
   const writes: string[] = [];
   await page.addInitScript(() => {
@@ -161,6 +162,11 @@ test("Drive invitations and Picker open the canonical shared network with reader
       return route.fulfill({ status: 204, body: "" });
     }
     if (req.method() === "GET" && id === "permissions") {
+      if (permissionFailure)
+        return route.fulfill({
+          status: 403,
+          json: { error: { errors: [{ reason: "appNotAuthorizedToFile" }] } },
+        });
       return route.fulfill({
         json: {
           items: [
@@ -258,6 +264,7 @@ test("Drive invitations and Picker open the canonical shared network with reader
           ? file.data
           : {
               ...file,
+              ownedByMe: !reader,
               owners: [
                 {
                   displayName: "Alex Owner",
@@ -338,6 +345,29 @@ test("Drive invitations and Picker open the canonical shared network with reader
     0,
   );
   await dialog.getByRole("button", { name: "Cerrar", exact: true }).click();
+  await expect(
+    page.getByText("Tu red · Puedes gestionar el acceso", { exact: true }),
+  ).toBeVisible();
+  permissionFailure = true;
+  await page
+    .getByRole("button", { name: "Compartir red", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText("appNotAuthorizedToFile");
+  await expect(
+    page.getByText("Esta red todavía es privada.", { exact: true }),
+  ).toHaveCount(0);
+  permissionFailure = false;
+  await page
+    .getByRole("button", { name: "Actualizar redes", exact: true })
+    .click();
+  await expect(
+    page.getByRole("dialog").getByText("Alex Owner", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Cerrar", exact: true })
+    .click();
   await page.setViewportSize({ width: 1280, height: 900 });
   reader = true;
   const other = structuredClone(files.get("shared-file")!);

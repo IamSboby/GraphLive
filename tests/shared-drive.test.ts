@@ -41,6 +41,7 @@ function setup(editable = true) {
           etag,
           properties,
           capabilities: { canEdit: editable, canShare: editable },
+          ownedByMe: editable,
         });
       if (u.pathname.endsWith("/original"))
         return Response.json({
@@ -109,6 +110,7 @@ describe("shared networks", () => {
     const oldDevice = new GoogleDriveRepository(session);
     expect(oldDevice.journalScope).toBe(scope);
     const data = await oldDevice.load();
+    expect(oldDevice.ownedByMe).toBe(true);
     data.preferences.networkName = "Shared name";
     await oldDevice.save(data, data.revision);
     expect(
@@ -121,6 +123,7 @@ describe("shared networks", () => {
     const repo = new GoogleDriveRepository(session, "shared:shared-file");
     const data = await repo.load();
     expect(repo.readOnly).toBe(true);
+    expect(repo.ownedByMe).toBe(false);
     await expect(repo.save(data, data.revision)).rejects.toThrow(
       "sharedReadOnly",
     );

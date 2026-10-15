@@ -174,6 +174,10 @@ export function Dashboard({
                     summarizeNetwork(id, data, {
                       readOnly: repo.readOnly,
                       shared: repo.shared,
+                      ownedByMe:
+                        repo instanceof GoogleDriveRepository
+                          ? repo.ownedByMe
+                          : undefined,
                       ownerLabel:
                         repo instanceof GoogleDriveRepository
                           ? repo.ownerLabel
@@ -765,12 +769,20 @@ export function Dashboard({
                 )}
                 {entry.shared && (
                   <p className="muted-copy">
-                    {t(entry.readOnly ? "sharedReadOnly" : "sharedEditable")}
+                    {t(
+                      entry.ownedByMe
+                        ? "sharedOwnNetwork"
+                        : entry.readOnly
+                          ? "sharedReadOnly"
+                          : "sharedEditable",
+                    )}
                   </p>
                 )}
                 <p className="network-identity">
                   {t(
-                    entry.shared ? "sharedCentralProfile" : "networkIdentity",
+                    entry.shared && !entry.ownedByMe
+                      ? "sharedCentralProfile"
+                      : "networkIdentity",
                     {
                       name: entry.identity || t("me"),
                     },

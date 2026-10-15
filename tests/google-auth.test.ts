@@ -1,5 +1,30 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { GoogleSession } from "../packages/storage-adapters/google-auth";
+import { DriveRequestError } from "../packages/storage-adapters/google-auth";
+
+it("preserves a safe Drive rejection reason without exposing the response or credentials", async () => {
+  const fetch = mockGoogle();
+  const session = new GoogleSession();
+  await session.connect();
+  fetch.mockResolvedValueOnce(
+    Response.json(
+      {
+        error: {
+          message: "private detail",
+          errors: [{ reason: "appNotAuthorizedToFile" }],
+        },
+      },
+      { status: 403 },
+    ),
+  );
+  const error = await session
+    .request("https://www.googleapis.com/drive/v2/files/example/permissions")
+    .catch((e) => e);
+  expect(error).toBeInstanceOf(DriveRequestError);
+  expect(error.reason).toBe("appNotAuthorizedToFile");
+  expect(error.message).toBe("drivePermission");
+  expect(JSON.stringify(error)).not.toContain("private detail");
+});
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();

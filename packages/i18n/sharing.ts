@@ -1,5 +1,6 @@
 export const sharingTranslations = {
   es: {
+    sharedOwnNetwork: "Tu red · Puedes gestionar el acceso",
     networkView: "Vista de redes",
     allNetworks: "Todas",
     sharedNetworks: "Compartidas",
@@ -52,6 +53,7 @@ export const sharingTranslations = {
       "El destinatario debe iniciar sesión en GraphLive con Google Drive y pulsar «Buscar redes en Drive» para seleccionar el archivo. Los cambios se sincronizan periódicamente; si ambos editan el mismo dato, se pedirá resolver el conflicto.",
   },
   en: {
+    sharedOwnNetwork: "Your network · You can manage access",
     networkView: "Network view",
     allNetworks: "All",
     sharedNetworks: "Shared",
@@ -104,6 +106,7 @@ export const sharingTranslations = {
       "The recipient must sign in to GraphLive with Google Drive and use “Find networks in Drive” to select the file. Changes sync periodically; conflicting edits to the same field require resolution.",
   },
   it: {
+    sharedOwnNetwork: "La tua rete · Puoi gestire gli accessi",
     networkView: "Vista delle reti",
     allNetworks: "Tutte",
     sharedNetworks: "Condivise",
@@ -154,6 +157,7 @@ export const sharingTranslations = {
       "Il destinatario deve accedere a GraphLive con Google Drive e selezionare il file da «Cerca reti in Drive». Le modifiche si sincronizzano periodicamente; i conflitti sullo stesso dato richiedono una scelta.",
   },
   de: {
+    sharedOwnNetwork: "Dein Netzwerk · Zugriff verwalten",
     networkView: "Netzwerkansicht",
     allNetworks: "Alle",
     sharedNetworks: "Geteilt",
@@ -206,6 +210,7 @@ export const sharingTranslations = {
       "Der Empfänger meldet sich mit Google Drive bei GraphLive an und wählt die Datei über „Netzwerke in Drive suchen“. Änderungen werden regelmäßig synchronisiert; widersprüchliche Änderungen am selben Feld müssen aufgelöst werden.",
   },
   fr: {
+    sharedOwnNetwork: "Votre réseau · Vous pouvez gérer les accès",
     networkView: "Vue des réseaux",
     allNetworks: "Tous",
     sharedNetworks: "Partagés",
@@ -258,6 +263,7 @@ export const sharingTranslations = {
       "Le destinataire doit se connecter à GraphLive avec Google Drive et sélectionner le fichier via « Chercher des réseaux dans Drive ». Les changements sont synchronisés périodiquement ; les modifications contradictoires doivent être résolues.",
   },
   pt: {
+    sharedOwnNetwork: "A tua rede · Podes gerir o acesso",
     networkView: "Vista de redes",
     allNetworks: "Todas",
     sharedNetworks: "Partilhadas",

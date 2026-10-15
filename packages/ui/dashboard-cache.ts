@@ -11,6 +11,7 @@ const entrySchema = z.object({
   shared: z.boolean().optional(),
   readOnly: z.boolean().optional(),
   ownerLabel: z.string().optional(),
+  ownedByMe: z.boolean().optional(),
 });
 export function summarizeNetwork(
   id: string,
@@ -37,6 +38,7 @@ export function summarizeNetwork(
     shared: flags.shared,
     readOnly: flags.readOnly,
     ownerLabel: flags.ownerLabel,
+    ownedByMe: flags.ownedByMe,
   };
 }
 export function sortNetworks(entries: NetworkEntry[]) {

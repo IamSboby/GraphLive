@@ -14,6 +14,7 @@ import {
 } from "../storage-adapters/google-drive";
 import type { NetworkEntry, NetworkLibrary } from "./library";
 import { Field, Modal } from "./primitives";
+import { DriveRequestError } from "../storage-adapters/google-auth";
 
 export function NetworkSharing({
   entry,
@@ -39,20 +40,31 @@ export function NetworkSharing({
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"reader" | "writer">("reader");
   const [error, setError] = useState("");
+  const [diagnostic, setDiagnostic] = useState("");
+  function showError(e: unknown) {
+    setError(e instanceof Error ? e.message : "storageError");
+    setDiagnostic(
+      e instanceof DriveRequestError
+        ? `Google Drive: ${e.status} · ${e.reason}`
+        : "",
+    );
+  }
   const [notice, setNotice] = useState("");
   const [removing, setRemoving] = useState<DriveMember | null>(null);
   const [reload, setReload] = useState(0);
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setAccess(null);
+    setError("");
+    setDiagnostic("");
     void repo
       .access()
       .then((value) => {
         if (!cancelled) setAccess(value);
       })
       .catch((e) => {
-        if (!cancelled)
-          setError(e instanceof Error ? e.message : "storageError");
+        if (!cancelled) showError(e);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -82,7 +94,7 @@ export function NetworkSharing({
       onInvited();
       setReload((v) => v + 1);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "storageError");
+      showError(e);
     } finally {
       setBusy(false);
     }
@@ -107,7 +119,7 @@ export function NetworkSharing({
       setNotice("sharedRevoked");
       setReload((v) => v + 1);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "storageError");
+      showError(e);
     } finally {
       setBusy(false);
     }
@@ -142,7 +154,7 @@ export function NetworkSharing({
           </div>
           {loading ? (
             <p role="status">{t("loading")}</p>
-          ) : !access?.members.length ? (
+          ) : !access ? null : !access.members.length ? (
             <p className="muted-copy">{t("sharedNoMembers")}</p>
           ) : (
             <ul className="sharing-members">
@@ -262,6 +274,7 @@ export function NetworkSharing({
         {error && (
           <p role="alert" className="error">
             {t(error)}
+            {diagnostic && <small className="block">{diagnostic}</small>}
           </p>
         )}
       </div>

@@ -20,12 +20,13 @@ type DriveFile = {
   capabilities?: { canEdit?: boolean; canShare?: boolean };
   parents?: { id: string }[];
   owners?: { displayName?: string; emailAddress?: string }[];
+  ownedByMe?: boolean;
 };
 const sharedId = (id: string) => /^[-\w]+$/.test(id) && id.length <= 200;
 const property = (f: DriveFile, key: string) =>
   f.properties?.find((p) => p.key === key)?.value;
 const fields =
-  "id,title,etag,properties,capabilities(canEdit,canShare),parents(id),owners(displayName,emailAddress)";
+  "id,title,etag,properties,ownedByMe,capabilities(canEdit,canShare),parents(id),owners(displayName,emailAddress)";
 export type DriveMember = {
   id: string;
   name?: string;
@@ -44,6 +45,7 @@ export class GoogleDriveRepository implements Repository {
   requiresMigration = false;
   readOnly = false;
   ownerLabel = "";
+  ownedByMe = false;
   private sharedFileId = "";
   get shared() {
     return Boolean(this.sharedFileId);
@@ -180,6 +182,7 @@ export class GoogleDriveRepository implements Repository {
       )
         throw new Error("invalidData");
       this.readOnly = file.capabilities?.canEdit !== true;
+      this.ownedByMe = file.ownedByMe === true;
       this.ownerLabel =
         file.owners
           ?.map((p) =>

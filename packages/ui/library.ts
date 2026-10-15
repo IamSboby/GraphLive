@@ -19,6 +19,7 @@ export type NetworkEntry = {
   modifiedAt: string;
   shared?: boolean;
   ownerLabel?: string;
+  ownedByMe?: boolean;
   readOnly?: boolean;
 };
 export type NetworkLibrary = {

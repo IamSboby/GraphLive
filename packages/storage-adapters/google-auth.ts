@@ -2,6 +2,16 @@ const clientId =
   "225177671658-gktplsqqjhb9dfma1oj3f05rih9fko40.apps.googleusercontent.com";
 const scope = "https://www.googleapis.com/auth/drive.appdata";
 const fileScope = "https://www.googleapis.com/auth/drive.file";
+
+export class DriveRequestError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly reason: string,
+  ) {
+    super(message);
+  }
+}
 type TokenResult = {
   access_token?: string;
   expires_in?: number;
@@ -137,7 +147,15 @@ export class GoogleSession {
       this.token = "";
       throw new Error("driveExpired");
     }
-    if (response.status === 403) throw new Error("drivePermission");
+    if (response.status === 403 || response.status === 429) {
+      const body = await response.json().catch(() => null);
+      const raw = body?.error?.errors?.[0]?.reason;
+      const reason =
+        typeof raw === "string" && /^[a-zA-Z0-9_]{1,100}$/.test(raw)
+          ? raw
+          : "unknown";
+      throw new DriveRequestError("drivePermission", response.status, reason);
+    }
     if (response.status === 404) throw new Error("driveNotFound");
     if (!response.ok && response.status !== 412)
       throw new Error("storageError");
