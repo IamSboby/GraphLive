@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
-import { countryCodes, flagUrl } from "./flags";
+import { flagUrl } from "./flags";
+import { searchCountries } from "./country-search";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -179,17 +180,7 @@ export function CountryPicker({
   const [active, setActive] = useState(0);
   const listId = useId();
   const names = new Intl.DisplayNames([i18n.language], { type: "region" });
-  const countries = countryCodes.map((code) => ({
-    code,
-    name: names.of(code) ?? code,
-  }));
-  const matches = countries
-    .filter(
-      (c) =>
-        !value.includes(c.code) &&
-        normalize(c.name + " " + c.code).includes(normalize(query)),
-    )
-    .sort((a, b) => a.name.localeCompare(b.name, i18n.language));
+  const matches = searchCountries(i18n.language, query, value);
   const choose = (code: string) => {
     if (value.length < 20 && !value.includes(code)) onChange([...value, code]);
     setQuery("");

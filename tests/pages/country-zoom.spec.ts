@@ -14,6 +14,15 @@ test("PCW:400 typing countries requires confirmation; adaptive zoom stays anchor
     .click();
   const dialog = page.getByRole("dialog");
   const country = dialog.getByRole("combobox", { name: "Añadir nacionalidad" });
+  await country.fill("es");
+  await expect(
+    dialog
+      .getByRole("listbox", { name: "Añadir nacionalidad" })
+      .getByRole("option")
+      .first(),
+  ).toHaveText("España (ES)");
+  await expect(dialog.locator(".chips .flag-icon")).toHaveCount(0);
+  await country.fill("");
   await country.pressSequentially("Italia");
   await expect(dialog.locator(".chips .flag-icon")).toHaveCount(0);
   await country.press("ArrowDown");
