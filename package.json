@@ -33,7 +33,7 @@
     "next-auth": "4.24.15",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-i18next": "17.0.16",
+    "react-i18next": "17.0.20",
     "tailwindcss": "4.3.3",
     "zod": "4.6.5",
     "zustand": "5.0.15"
