@@ -43,7 +43,7 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon assembleDebug assembleDebugAndroidTest
+          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
       - name: Record APK integrity and certificate
         run: |
           mkdir -p android-artifacts
