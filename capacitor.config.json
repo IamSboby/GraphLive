@@ -1,0 +1,6 @@
+{
+  "appId": "com.graphlive.android",
+  "appName": "GraphLive",
+  "webDir": "pages-dist",
+  "server": { "androidScheme": "https" }
+}

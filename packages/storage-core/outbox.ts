@@ -1,4 +1,5 @@
 import { snapshotSchema, type Snapshot } from "../domain/model";
+import { androidCall, isAndroid } from "../storage-adapters/android-bridge";
 
 export type PendingWrite = {
   id: string;
@@ -40,33 +41,46 @@ async function transaction<T>(
 }
 export const outbox = {
   list: (scope: string) =>
-    transaction<PendingWrite[]>("readonly", (store, done) => {
-      const r = store.getAll();
-      r.onsuccess = () => {
-        try {
-          done(
-            r.result
-              .filter((v: PendingWrite) => v.scope === scope)
-              .map((v: PendingWrite) => ({
-                ...v,
-                base: snapshotSchema.parse(v.base),
-                data: snapshotSchema.parse(v.data),
-              })),
-          );
-        } catch {
-          store.transaction.abort();
-        }
-      };
-    }),
+    isAndroid()
+      ? androidCall<{ values: PendingWrite[] }>("journalList", { scope }).then(
+          (r) =>
+            r.values.map((v) => ({
+              ...v,
+              base: snapshotSchema.parse(v.base),
+              data: snapshotSchema.parse(v.data),
+            })),
+        )
+      : transaction<PendingWrite[]>("readonly", (store, done) => {
+          const r = store.getAll();
+          r.onsuccess = () => {
+            try {
+              done(
+                r.result
+                  .filter((v: PendingWrite) => v.scope === scope)
+                  .map((v: PendingWrite) => ({
+                    ...v,
+                    base: snapshotSchema.parse(v.base),
+                    data: snapshotSchema.parse(v.data),
+                  })),
+              );
+            } catch {
+              store.transaction.abort();
+            }
+          };
+        }),
   put: (value: PendingWrite) =>
-    transaction<void>("readwrite", (store) => {
-      store.put(value);
-    }),
+    isAndroid()
+      ? androidCall<void>("journalPut", { value })
+      : transaction<void>("readwrite", (store) => {
+          store.put(value);
+        }),
   remove: (value: PendingWrite) =>
-    transaction<void>("readwrite", (store) => {
-      const r = store.get(value.id);
-      r.onsuccess = () => {
-        if (r.result?.version === value.version) store.delete(value.id);
-      };
-    }),
+    isAndroid()
+      ? androidCall<void>("journalRemove", { value })
+      : transaction<void>("readwrite", (store) => {
+          const r = store.get(value.id);
+          r.onsuccess = () => {
+            if (r.result?.version === value.version) store.delete(value.id);
+          };
+        }),
 };

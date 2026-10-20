@@ -25,3 +25,9 @@ docs/verification.md
 !/THIRD_PARTY_NOTICES.md
 /.*/
 !/.github/
+
+# Android generated builds and signing material
+/android/
+*.keystore
+*.jks
+local.properties
