@@ -3164,3 +3164,104 @@ th {
     animation: none !important;
   }
 }
+
+/* Initial HTML includes the logo, so it is visible before hydration as well. */
+.startup {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: #f5f8ff;
+  color: #244575;
+  animation: startup-release 300ms ease 8s forwards;
+}
+html[data-theme="dark"] .startup {
+  background: #101827;
+  color: #e3ecff;
+}
+.startup[data-phase="leaving"] {
+  animation: startup-release 700ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.startup-brand {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+}
+.startup-logo {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  border-radius: 26px;
+  box-shadow: 0 16px 48px #335eaa30;
+}
+.startup-halo {
+  position: absolute;
+  top: -34px;
+  width: 172px;
+  height: 172px;
+  border: 1px solid #7598d33a;
+  border-radius: 50%;
+  box-shadow: 0 0 0 18px #7598d30a;
+  animation: startup-breathe 1800ms ease-in-out infinite alternate;
+}
+.startup-orbit {
+  transform-origin: 32px 32px;
+  animation: startup-orbit 2400ms linear infinite;
+}
+.startup-link {
+  stroke-dasharray: 1;
+  animation: startup-connect 1200ms ease-in-out infinite;
+}
+.startup-link:nth-child(2) {
+  animation-delay: -400ms;
+}
+.startup-link:nth-child(3) {
+  animation-delay: -800ms;
+}
+.startup-name {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.6px;
+}
+@keyframes startup-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes startup-connect {
+  0%,
+  100% {
+    stroke-dashoffset: 1;
+    opacity: 0.2;
+  }
+  45%,
+  65% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+@keyframes startup-breathe {
+  to {
+    transform: scale(1.08);
+    opacity: 0.4;
+  }
+}
+@keyframes startup-release {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .startup-orbit,
+  .startup-link,
+  .startup-halo {
+    animation: none;
+  }
+  .startup[data-phase="leaving"] {
+    animation-duration: 1ms;
+  }
+}

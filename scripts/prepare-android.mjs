@@ -79,3 +79,33 @@ for (const name of ["ic_launcher", "ic_launcher_round"]) {
 </adaptive-icon>`,
   );
 }
+
+// Match the platform launch screen to the in-app animated logo.
+for (const [directory, background] of [
+  ["values", "#f5f8ff"],
+  ["values-night", "#101827"],
+]) {
+  mkdirSync(join(res, directory), { recursive: true });
+  writeFileSync(
+    join(res, directory, "graphlive-startup.xml"),
+    `<resources><color name="graphlive_startup">${background}</color></resources>`,
+  );
+}
+const stylesPath = join(res, "values/styles.xml");
+const launchTheme = `<style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+    <item name="android:background">@color/graphlive_startup</item>
+    <item name="windowSplashScreenBackground">@color/graphlive_startup</item>
+    <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+    <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+  </style>`;
+const styles = readFileSync(stylesPath, "utf8");
+if (!styles.includes('name="AppTheme.NoActionBarLaunch"')) {
+  throw new Error("Capacitor launch theme missing");
+}
+writeFileSync(
+  stylesPath,
+  styles.replace(
+    /<style name="AppTheme.NoActionBarLaunch"[^>]*>[\s\S]*?<\/style>/,
+    launchTheme,
+  ),
+);
