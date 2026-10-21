@@ -1,0 +1,62 @@
+name: Android debug APK
+on:
+  push:
+    branches: [main, android/offline-drive]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: android-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      GRAPHLIVE_ANDROID: "true"
+      PAGES_BASE_PATH: ""
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: Validate shared web and Android code
+        run: npm run check
+      - name: Export Android UI
+        run: node scripts/build-pages.mjs
+      - name: Generate native application
+        run: |
+          npx cap add android
+          npx cap sync android
+          node scripts/prepare-android.mjs
+          node scripts/build-android-worker.mjs
+      - name: Compile APK and device tests
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon :app:assembleDebug :app:assembleDebugAndroidTest
+      - name: Record APK integrity and certificate
+        run: |
+          mkdir -p android-artifacts
+          cp android/app/build/outputs/apk/debug/app-debug.apk android-artifacts/
+          cp android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk android-artifacts/
+          sha256sum android-artifacts/*.apk > android-artifacts/SHA256SUMS.txt
+          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner" verify --print-certs android-artifacts/app-debug.apk > android-artifacts/certificate.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: graphlive-android-debug
+          path: android-artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
