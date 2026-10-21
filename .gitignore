@@ -31,3 +31,7 @@ docs/verification.md
 *.keystore
 *.jks
 local.properties
+
+*.p12
+*.pfx
+*.dpapi

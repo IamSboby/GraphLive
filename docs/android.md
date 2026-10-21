@@ -27,3 +27,8 @@ The static export and Capacitor sync completed on the NAS. Native compilation is
 
 ## Compilación remota de desarrollo
 El workflow Android debug APK compila en Ubuntu con Node 24 y JDK 21. Se activa al enviar la rama android/offline-drive. Genera APK de aplicación y de pruebas instrumentadas, SHA256 y certificado público; no publica claves de firma, .env ni notas locales. Los artefactos caducan a los 14 días. La firma debug generada por el runner es temporal: antes de registrar OAuth definitivo se debe estabilizar la clave de desarrollo con almacenamiento privado. Compilar las pruebas no significa ejecutarlas en un teléfono.
+
+## Firma persistente y continuidad con la web
+Las compilaciones remotas generan artefactos de desarrollo; antes de instalarlos se firman con scripts/sign-android.ps1 usando la clave privada persistente del NAS. La contraseña se protege con DPAPI del usuario Windows. No se suben clave, contraseña ni archivos DPAPI a GitHub. Conservar esta clave y el acceso al perfil Windows: regenerarla cambia la identidad de instalación. El script exige que entrada y salida permanezcan dentro del NAS y verifica ambas firmas.
+
+La web conserva su workflow Pages: check, exportación y pruebas de navegador antes de desplegar main. Android se comprueba en PR y se compila desde main y la rama de desarrollo, con npm run check antes del APK. Esto automatiza la construcción validada; todavía no equivale a distribución automática ni instalación silenciosa de la app. La firma local y publicación del APK estable siguen siendo pasos necesarios. No fusionar el borrador Android hasta completar OAuth y pruebas reales de Drive.

@@ -1,12 +1,14 @@
 name: Android debug APK
 on:
   push:
-    branches: [android/offline-drive]
+    branches: [main, android/offline-drive]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: android-${{ github.ref }}
+  group: android-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
   apk:
@@ -29,8 +31,8 @@ jobs:
           distribution: temurin
           java-version: 21
       - run: npm ci
-      - name: Validate shared offline engine
-        run: npx vitest run tests/offline.test.ts tests/android-worker.test.ts tests/google-auth.test.ts tests/google-drive.test.ts tests/shared-drive.test.ts tests/store.test.ts
+      - name: Validate shared web and Android code
+        run: npm run check
       - name: Export Android UI
         run: node scripts/build-pages.mjs
       - name: Generate native application
@@ -57,3 +59,4 @@ jobs:
           path: android-artifacts/
           if-no-files-found: error
           retention-days: 14
+
