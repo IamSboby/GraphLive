@@ -54,6 +54,8 @@ $variables = Join-Path $project 'android\variables.gradle'
 (Get-Content $variables -Raw) -replace 'minSdkVersion = \d+', 'minSdkVersion = 26' | Set-Content $variables -Encoding utf8
 $manifest = Join-Path $project 'android\app\src\main\AndroidManifest.xml'
 (Get-Content $manifest -Raw).Replace('android:allowBackup="true"', 'android:allowBackup="false"') | Set-Content $manifest -Encoding utf8
+node (Join-Path $PSScriptRoot 'prepare-android.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Android resources preparation failed' }
 node (Join-Path $PSScriptRoot 'build-android-worker.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Background engine build failed' }
 # Invoke the wrapper through Java: cmd.exe cannot use a UNC current directory.
@@ -63,6 +65,7 @@ if ($NativeOnly) { return }
 $apk = Join-Path $project 'android\app\build\outputs\apk\debug\app-debug.apk'
 Get-Item $apk | Select-Object FullName,Length
 Get-FileHash $apk -Algorithm SHA256
+
 
 
 

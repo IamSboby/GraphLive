@@ -131,9 +131,10 @@ export function OfflineControls({
   };
   return (
     <div className="offline-controls" aria-live="polite">
-      <label>
+      <label className="offline-toggle" data-busy={busy || undefined}>
         <input
           type="checkbox"
+          role="switch"
           checked={Boolean(record)}
           disabled={busy}
           onChange={() =>
@@ -156,8 +157,13 @@ export function OfflineControls({
               }
             })
           }
-        />{" "}
-        {es ? "Disponible sin conexión" : "Available offline"}
+        />
+        <span className="offline-toggle-track" aria-hidden="true">
+          <span className="offline-toggle-thumb" />
+        </span>
+        <span className="offline-toggle-label">
+          {es ? "Disponible sin conexión" : "Available offline"}
+        </span>
       </label>
       {record && (
         <>
