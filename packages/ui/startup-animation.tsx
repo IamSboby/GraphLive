@@ -36,23 +36,20 @@ export function StartupAnimation() {
       }}
     >
       <div className="startup-brand">
-        <div className="startup-halo" />
         <svg className="startup-logo" viewBox="0 0 64 64" fill="none">
-          <rect width="64" height="64" rx="16" fill="#335eaa" />
           <g className="startup-orbit">
-            <g stroke="white" strokeWidth="3" strokeLinecap="round">
+            <g stroke="currentColor" strokeWidth="3" strokeLinecap="round">
               <path className="startup-link" pathLength="1" d="M18 19L45 25" />
               <path className="startup-link" pathLength="1" d="M45 25L29 46" />
               <path className="startup-link" pathLength="1" d="M29 46L18 19" />
             </g>
-            <g fill="white">
+            <g fill="currentColor">
               <circle cx="18" cy="19" r="7" />
               <circle cx="45" cy="25" r="6" />
               <circle cx="29" cy="46" r="5" />
             </g>
           </g>
         </svg>
-        <span className="startup-name">GraphLive</span>
       </div>
     </div>
   );

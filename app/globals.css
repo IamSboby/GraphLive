@@ -3175,14 +3175,14 @@ th {
   pointer-events: none;
   background: #f5f8ff;
   color: #244575;
-  animation: startup-release 300ms ease 8s forwards;
+  animation: startup-release 1ms step-end 8s forwards;
 }
 html[data-theme="dark"] .startup {
   background: #101827;
   color: #e3ecff;
 }
 .startup[data-phase="leaving"] {
-  animation: startup-release 700ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: startup-release 700ms step-end forwards;
 }
 .startup-brand {
   position: relative;
@@ -3194,18 +3194,7 @@ html[data-theme="dark"] .startup {
   position: relative;
   width: 104px;
   height: 104px;
-  border-radius: 26px;
-  box-shadow: 0 16px 48px #335eaa30;
-}
-.startup-halo {
-  position: absolute;
-  top: -34px;
-  width: 172px;
-  height: 172px;
-  border: 1px solid #7598d33a;
-  border-radius: 50%;
-  box-shadow: 0 0 0 18px #7598d30a;
-  animation: startup-breathe 1800ms ease-in-out infinite alternate;
+  color: #335eaa;
 }
 .startup-orbit {
   transform-origin: 32px 32px;
@@ -3220,11 +3209,6 @@ html[data-theme="dark"] .startup {
 }
 .startup-link:nth-child(3) {
   animation-delay: -800ms;
-}
-.startup-name {
-  font-size: 22px;
-  font-weight: 650;
-  letter-spacing: -0.6px;
 }
 @keyframes startup-orbit {
   to {
@@ -3243,22 +3227,14 @@ html[data-theme="dark"] .startup {
     opacity: 1;
   }
 }
-@keyframes startup-breathe {
-  to {
-    transform: scale(1.08);
-    opacity: 0.4;
-  }
-}
 @keyframes startup-release {
   to {
-    opacity: 0;
     visibility: hidden;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .startup-orbit,
-  .startup-link,
-  .startup-halo {
+  .startup-link {
     animation: none;
   }
   .startup[data-phase="leaving"] {
