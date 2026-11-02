@@ -5,6 +5,10 @@ import { BrowserRepository } from "../storage-adapters/indexeddb";
 import { GoogleDriveRepository } from "../storage-adapters/google-drive";
 import type { GoogleSession } from "../storage-adapters/google-auth";
 import {
+  CachedDriveRepository,
+  offlineNetworks,
+} from "../storage-adapters/offline-repository";
+import {
   LocalRepository,
   HttpRepository,
   type Directory,
@@ -43,8 +47,21 @@ export function driveLibrary(root: GoogleDriveRepository): NetworkLibrary {
     provider: "drive",
     session: root.session,
     multiple: true,
-    ids: () => root.networkIds(),
-    repository: (id) => new GoogleDriveRepository(root.session, id),
+    ids: async () => {
+      const cached = await offlineNetworks.storage.list(root.session.accountId);
+      try {
+        return [
+          ...new Set([
+            ...(await root.networkIds()),
+            ...cached.map((r) => r.network),
+          ]),
+        ];
+      } catch (e) {
+        if (cached.length) return cached.map((r) => r.network);
+        throw e;
+      }
+    },
+    repository: (id) => new CachedDriveRepository(root.session, id),
   };
 }
 export function folderLibrary(root: Directory): NetworkLibrary {

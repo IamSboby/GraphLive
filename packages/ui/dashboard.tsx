@@ -38,6 +38,7 @@ import { useLibrary, type NetworkEntry } from "./library";
 import { useNetwork } from "./store";
 import { NetworkSharing } from "./network-sharing";
 import { Field, Modal } from "./primitives";
+import { OfflineControls } from "./offline-controls";
 import { IconSelect } from "./icon-select";
 import {
   languageCodes,
@@ -760,6 +761,12 @@ export function Dashboard({
                   )}
                 </div>
                 <h2>{title(entry)}</h2>
+                {library?.session && (
+                  <OfflineControls
+                    session={library.session}
+                    network={entry.id}
+                  />
+                )}
                 {entry.modifiedAt && (
                   <p className="muted-copy">
                     <time dateTime={entry.modifiedAt}>

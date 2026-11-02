@@ -35,6 +35,7 @@ import {
 import type { Repository } from "../storage-core";
 import { useNetwork } from "./store";
 import { Field } from "./primitives";
+import { isAndroid } from "../storage-adapters/android-bridge";
 export function Onboarding({
   page,
   theme,
@@ -66,6 +67,19 @@ export function Onboarding({
         .then(() => setDriveReady(true))
         .catch(() => setError("driveUnavailable"));
   }, [provider]);
+  useEffect(() => {
+    if (!isAndroid() || useLibrary.getState().library) return;
+    const drive = new GoogleDriveRepository();
+    void drive.session
+      .restoreAndroid()
+      .then((restored) => {
+        if (restored) {
+          useLibrary.getState().connect(driveLibrary(drive), "");
+          router.replace("/dashboard");
+        }
+      })
+      .catch(() => setError("localSaveFailed"));
+  }, [router]);
   const openNetwork = useNetwork((s) => s.open);
   const open = async (
     data: Snapshot,

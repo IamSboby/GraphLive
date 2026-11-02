@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
+import { StartupAnimation } from "../packages/ui/startup-animation";
 import { defaultThemeCss } from "../packages/appearance/config";
 export const viewport: Viewport = {
   width: "device-width",
@@ -30,7 +31,10 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <StartupAnimation />
+        {children}
+      </body>
     </html>
   );
 }

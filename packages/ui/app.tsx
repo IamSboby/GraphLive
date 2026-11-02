@@ -7,6 +7,8 @@ import {
 } from "../i18n/languages";
 import { dashboardPalette } from "../appearance/dashboard";
 import { Dashboard } from "./dashboard";
+import { useOfflineSync } from "./offline-controls";
+import { CachedDriveRepository } from "../storage-adapters/offline-repository";
 import { useLibrary } from "./library";
 import { Legend } from "./legend";
 import { IconSelect } from "./icon-select";
@@ -77,6 +79,7 @@ export function App({
   authenticated: boolean;
   authError: boolean;
 }) {
+  useOfflineSync();
   const router = useRouter();
   const animateEntry = useLibrary((s) =>
     Boolean(s.animationId && s.animationId === s.activeId),
@@ -479,7 +482,10 @@ export function App({
                         ? "saving"
                         : s.dirty
                           ? "unsaved"
-                          : "saved",
+                          : s.repo instanceof CachedDriveRepository &&
+                              s.repo.localReplica
+                            ? "savedLocally"
+                            : "saved",
             )}
           </span>
         </div>

@@ -1,3 +1,4 @@
+import { androidCall, isAndroid } from "./android-bridge";
 const clientId =
   "225177671658-gktplsqqjhb9dfma1oj3f05rih9fko40.apps.googleusercontent.com";
 const scope = "https://www.googleapis.com/auth/drive.appdata";
@@ -34,6 +35,7 @@ let loading: Promise<void> | undefined;
 const identity = () =>
   (window as unknown as { google?: GoogleIdentity }).google;
 export function prepareGoogleDrive() {
+  if (isAndroid()) return Promise.resolve();
   if (identity()) return Promise.resolve();
   return (loading ??= new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
@@ -53,6 +55,16 @@ export class GoogleSession {
   private expires = 0;
   private account = "";
   hasFileAccess = false;
+  async restoreAndroid() {
+    if (!isAndroid()) return false;
+    const value = await androidCall<{
+      account: string;
+      hasFileAccess: boolean;
+    }>("session");
+    this.account = value.account;
+    this.hasFileAccess = value.hasFileAccess;
+    return Boolean(this.account);
+  }
   get pickerToken() {
     if (!this.token || Date.now() >= this.expires)
       throw new Error("driveExpired");
@@ -68,6 +80,16 @@ export class GoogleSession {
     return this.connect(true);
   }
   connect(shared = this.hasFileAccess): Promise<void> {
+    if (isAndroid())
+      return androidCall<{ account: string; hasFileAccess: boolean }>(
+        "authorize",
+        { shared },
+      ).then((value) => {
+        if (this.account && this.account !== value.account)
+          throw Error("driveAccountChanged");
+        this.account = value.account;
+        this.hasFileAccess = value.hasFileAccess;
+      });
     const google = identity();
     if (!google) return Promise.reject(new Error("driveUnavailable"));
     let expired = false;
@@ -133,6 +155,37 @@ export class GoogleSession {
   async request(url: string, options: RequestInit = {}) {
     if (!/^https:\/\/www\.googleapis\.com\/(?:upload\/)?drive\/v2\//.test(url))
       throw new Error("invalidPath");
+    if (isAndroid()) {
+      const headers = Object.fromEntries(
+        new Headers(options.headers).entries(),
+      );
+      const result = await androidCall<{ status: number; body: string }>(
+        "driveRequest",
+        {
+          url,
+          account: this.account,
+          method: options.method ?? "GET",
+          headers,
+          body: typeof options.body === "string" ? options.body : undefined,
+        },
+      );
+      if (result.status === 401) throw Error("driveExpired");
+      if (result.status === 403 || result.status === 429)
+        throw new DriveRequestError(
+          "drivePermission",
+          result.status,
+          "unknown",
+        );
+      if (result.status === 404) throw Error("driveNotFound");
+      if (
+        (result.status < 200 || result.status >= 300) &&
+        result.status !== 412
+      )
+        throw Error("storageError");
+      return new Response(result.status === 204 ? null : result.body, {
+        status: result.status,
+      });
+    }
     if (!this.token || Date.now() >= this.expires)
       throw new Error("driveExpired");
     const headers = new Headers(options.headers);
