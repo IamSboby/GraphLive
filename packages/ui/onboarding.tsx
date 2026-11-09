@@ -412,6 +412,16 @@ export function Onboarding({
               : "Terms of service"}
           </Link>
         </nav>
+        {page === "home" && (
+          <a
+            className="android-download-link"
+            href="https://github.com/IamSboby/GraphLive-Mobile/releases/latest/download/GraphLive-Android.apk"
+          >
+            {i18n.language === "es"
+              ? "Descargar para Android"
+              : "Download for Android"}
+          </a>
+        )}
         <span>{t("footer")}</span>
       </footer>
     </main>

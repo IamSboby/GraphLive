@@ -3077,3 +3077,8 @@ th {
     transform: none;
   }
 }
+
+.welcome-footer .android-download-link {
+  font-size: 0.8125rem;
+  text-underline-offset: 0.2em;
+}
