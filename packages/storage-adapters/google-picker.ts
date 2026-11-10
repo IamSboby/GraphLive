@@ -1,7 +1,6 @@
 import type { GoogleSession } from "./google-auth";
 
-// Public browser key, restricted in Google Cloud to Picker and allowed websites.
-const developerKey = "AIzaSyBxMUwsq-DpK-QAtWMA0Hm8hLAdENXb4V8";
+const developerKey = process.env.NEXT_PUBLIC_GOOGLE_PICKER_API_KEY;
 type PickerResult = { action: string; docs?: { id: string }[] };
 type View = {
   setMimeTypes(types: string): View;
@@ -70,6 +69,7 @@ export async function pickSharedNetworks(
   session: GoogleSession,
   labels: { networks: string; allJson: string },
 ): Promise<string[]> {
+  if (!developerKey) throw new Error("driveUnavailable");
   await preparePicker();
   const api = (window as unknown as PickerWindow).google?.picker;
   if (!api) throw new Error("driveUnavailable");
