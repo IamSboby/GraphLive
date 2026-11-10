@@ -23,6 +23,8 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run build:pages
+        env:
+          NEXT_PUBLIC_GOOGLE_PICKER_API_KEY: ${{ secrets.GOOGLE_PICKER_API_KEY }}
       - run: npx playwright install --with-deps chromium
         timeout-minutes: 10
       - run: npx playwright test --config playwright.pages.config.ts
