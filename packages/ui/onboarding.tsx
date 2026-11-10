@@ -415,7 +415,7 @@ export function Onboarding({
         {page === "home" && (
           <a
             className="android-download-link"
-            href="https://github.com/IamSboby/GraphLive-Mobile/releases/latest/download/GraphLive-Android.apk"
+            href="https://github.com/IamSboby/GraphLive/releases/download/android-1.1.2/GraphLive-Android.apk"
           >
             {i18n.language === "es"
               ? "Descargar para Android"
